@@ -16,8 +16,8 @@
   <style>
     :root {
       --bg-dark: #040814;
-      --panel-bg: rgba(8, 14, 30, 0.82);
-      --panel-border: rgba(0, 240, 255, 0.3);
+      --panel-bg: rgba(8, 14, 30, 0.86);
+      --panel-border: rgba(0, 240, 255, 0.32);
       --panel-glow: rgba(0, 240, 255, 0.15);
       
       --cyan: #00f0ff;
@@ -38,7 +38,7 @@
       --font-sci: 'Orbitron', monospace, sans-serif;
 
       --safe-top: max(12px, env(safe-area-inset-top));
-      --safe-bottom: max(12px, env(safe-area-inset-bottom));
+      --safe-bottom: max(14px, env(safe-area-inset-bottom));
       --safe-left: max(12px, env(safe-area-inset-left));
       --safe-right: max(12px, env(safe-area-inset-right));
     }
@@ -72,56 +72,38 @@
       z-index: 1;
     }
 
-    /* ===== SHARED GLASSMORPHISM STYLES ===== */
+    .interactive {
+      pointer-events: auto !important;
+    }
+
+    /* Glassmorphism Base */
     .glass-panel {
       background: var(--panel-bg);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       border: 1px solid var(--panel-border);
-      border-radius: 18px;
+      border-radius: 20px;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 0 12px var(--panel-glow);
       color: var(--text-main);
       transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .interactive {
-      pointer-events: auto;
-    }
-
-    /* Floating Tooltip */
-    #canvas-tooltip {
-      position: absolute;
-      pointer-events: none;
-      background: rgba(5, 10, 25, 0.9);
-      border: 1px solid var(--cyan);
-      color: #fff;
-      padding: 6px 12px;
-      border-radius: 10px;
-      font-size: 12px;
-      font-weight: 500;
-      box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
-      transform: translate(-50%, -130%);
-      display: none;
-      z-index: 50;
-      white-space: nowrap;
-    }
-
     /* Toast Notification */
     #toast-msg {
       position: fixed;
-      top: calc(var(--safe-top) + 60px);
+      top: calc(var(--safe-top) + 64px);
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(8, 14, 30, 0.92);
+      background: rgba(8, 14, 30, 0.94);
       border: 1px solid var(--cyan);
-      backdrop-filter: blur(14px);
+      backdrop-filter: blur(16px);
       color: #fff;
-      padding: 8px 20px;
-      border-radius: 24px;
+      padding: 8px 18px;
+      border-radius: 30px;
       font-size: 13px;
       font-weight: 600;
       box-shadow: 0 0 25px rgba(0, 240, 255, 0.5);
-      z-index: 200;
+      z-index: 500;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.3s, transform 0.3s;
@@ -135,271 +117,475 @@
     }
 
     /* ========================================================
-       MODE 1: STANDARD UI (Desktop / Mobile 3D Classroom View)
+       TOP HEADER BAR (Works seamlessly in both Standard & AR)
        ======================================================== */
-    #standard-hud {
+    #top-nav {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 10;
+      top: var(--safe-top);
+      left: var(--safe-left);
+      right: var(--safe-right);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
       pointer-events: none;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
-      transition: opacity 0.3s, transform 0.3s;
     }
 
-    /* Header Bar */
-    header#top-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 8px 16px;
-      border-radius: 16px;
-    }
-
-    .brand-group {
+    .top-pill {
       display: flex;
       align-items: center;
       gap: 10px;
+      padding: 8px 14px;
+      border-radius: 30px;
+      pointer-events: auto;
     }
 
-    .brand-icon {
-      font-size: 24px;
-      color: var(--cyan);
-      filter: drop-shadow(0 0 8px var(--cyan));
-      animation: spinSlow 20s linear infinite;
-    }
-
-    @keyframes spinSlow {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-
-    .brand-text h1 {
+    .top-pill .brand-title {
       font-family: var(--font-sci);
-      font-size: 15px;
-      letter-spacing: 1.2px;
+      font-size: 13px;
+      font-weight: 700;
       color: #fff;
       display: flex;
       align-items: center;
       gap: 6px;
     }
 
-    .brand-text h1 span.badge {
+    .top-pill .brand-title span.badge {
       background: linear-gradient(135deg, #00f0ff, #7928ca);
       font-size: 9px;
       padding: 2px 6px;
-      border-radius: 10px;
+      border-radius: 8px;
       font-weight: 700;
     }
 
-    .brand-text p {
-      font-size: 10px;
-      color: var(--text-muted);
-    }
-
-    .top-actions {
+    .top-nav-actions {
       display: flex;
       align-items: center;
       gap: 6px;
+      pointer-events: auto;
     }
 
-    .hud-btn {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      color: var(--text-main);
-      padding: 8px 12px;
-      min-height: 40px;
-      border-radius: 12px;
+    .circle-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
       cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .circle-btn:active {
+      transform: scale(0.92);
+      border-color: var(--cyan);
+      background: rgba(0, 240, 255, 0.2);
+    }
+
+    .circle-btn.primary {
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.3), rgba(121, 40, 202, 0.4));
+      border-color: var(--cyan);
+      color: var(--cyan);
+      font-weight: 700;
+    }
+
+    /* Container for WebXR AR Button */
+    #ar-button-slot button {
+      background: linear-gradient(135deg, #00f0ff, #7928ca) !important;
+      border: none !important;
+      color: #040814 !important;
+      font-family: var(--font-body) !important;
+      font-size: 12px !important;
+      font-weight: 700 !important;
+      padding: 8px 14px !important;
+      border-radius: 20px !important;
+      height: 40px !important;
+      cursor: pointer !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 6px !important;
+      box-shadow: 0 0 16px rgba(0, 240, 255, 0.5) !important;
+      white-space: nowrap !important;
+    }
+
+    /* ========================================================
+       FLOATING CONTROLS BOTTOM (Designed specifically for Mobile & AR)
+       ======================================================== */
+    #bottom-floating-controls {
+      position: absolute;
+      bottom: var(--safe-bottom);
+      left: var(--safe-left);
+      right: var(--safe-right);
+      max-width: 500px;
+      margin: 0 auto;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    /* 1. Element Horizontal Scroll Strip */
+    .element-strip-scroll {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 5px 8px;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 20px;
+      pointer-events: auto;
+    }
+    .element-strip-scroll::-webkit-scrollbar { display: none; }
+
+    .elem-strip-btn {
+      padding: 5px 11px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #fff;
+      font-family: var(--font-sci);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s;
+    }
+
+    .elem-strip-btn span.num {
+      font-size: 9px;
+      color: var(--cyan);
+      opacity: 0.8;
+    }
+
+    .elem-strip-btn.active {
+      background: var(--cyan);
+      color: #040814;
+      border-color: var(--cyan);
+      box-shadow: 0 0 12px var(--cyan);
+    }
+    .elem-strip-btn.active span.num {
+      color: #040814;
+      font-weight: 800;
+    }
+
+    /* 2. Visual Mode Segmented Switcher (Never wraps!) */
+    .mode-segmented-bar {
+      display: flex;
+      background: var(--panel-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--panel-border);
+      border-radius: 18px;
+      padding: 4px;
+      gap: 4px;
+      pointer-events: auto;
+    }
+
+    .mode-seg-item {
+      flex: 1;
+      padding: 7px 4px;
+      border-radius: 14px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
       font-family: var(--font-body);
       font-size: 12px;
       font-weight: 500;
-      display: inline-flex;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      white-space: nowrap !important;
+      transition: all 0.2s;
+    }
+
+    .mode-seg-item.active {
+      background: rgba(0, 240, 255, 0.22);
+      color: var(--cyan);
+      font-weight: 700;
+      box-shadow: 0 0 10px rgba(0, 240, 255, 0.35);
+    }
+
+    /* 3. Action Toolbar (Spawn, Scale, Quantum, Info) */
+    .mobile-action-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 7px 10px;
+      border-radius: 24px;
+      pointer-events: auto;
+    }
+
+    /* Primary Spawn Button */
+    .spawn-anchor-btn {
+      flex: 1.2;
+      background: linear-gradient(135deg, #00f0ff, #7928ca);
+      border: none;
+      color: #040814;
+      font-family: var(--font-body);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 9px 12px;
+      border-radius: 18px;
+      cursor: pointer;
+      display: flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
-      transition: all 0.2s ease;
+      white-space: nowrap;
+      box-shadow: 0 0 16px rgba(0, 240, 255, 0.5);
+    }
+    .spawn-anchor-btn:active {
+      transform: scale(0.94);
     }
 
-    .hud-btn:hover, .hud-btn:active {
-      background: rgba(0, 240, 255, 0.2);
-      border-color: var(--cyan);
-      color: #fff;
-      box-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
-    }
-
-    .hud-btn.primary {
-      background: linear-gradient(135deg, rgba(0, 240, 255, 0.35), rgba(121, 40, 202, 0.45));
-      border-color: var(--cyan);
-      color: var(--cyan);
-      font-weight: 700;
-      box-shadow: 0 0 15px rgba(0, 240, 255, 0.35);
-    }
-
-    /* Middle Layout */
-    .workspace-middle {
+    .action-icon-pill {
       display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      flex: 1;
-      margin: 10px 0;
-      pointer-events: none;
-      position: relative;
+      align-items: center;
+      gap: 4px;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 3px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
     }
 
-    /* Sidebar Drawer */
-    #sidebar-overlay {
+    .mini-tool-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.06);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .mini-tool-btn:active {
+      transform: scale(0.9);
+      background: var(--cyan);
+      color: #040814;
+    }
+
+    .scale-indicator {
+      font-family: var(--font-sci);
+      font-size: 10px;
+      color: var(--cyan);
+      padding: 0 4px;
+      font-weight: 600;
+    }
+
+    /* ========================================================
+       FLOATING SUBATOMIC INSPECTOR CARD (When tapping particle)
+       ======================================================== */
+    #subatomic-popover {
+      position: absolute;
+      bottom: calc(var(--safe-bottom) + 140px);
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      width: calc(100vw - 32px);
+      max-width: 380px;
+      padding: 14px 16px;
+      z-index: 120;
+      display: none;
+      opacity: 0;
+      transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: auto;
+    }
+    #subatomic-popover.active {
+      display: block;
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .popover-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+    }
+
+    .popover-header h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--cyan);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .popover-close-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .popover-body {
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .popover-specs {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 6px 0;
+      font-size: 11px;
+    }
+    .popover-specs td {
+      padding: 3px 4px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .popover-specs td.lbl { color: var(--text-muted); width: 38%; }
+    .popover-specs td.val { font-family: var(--font-sci); color: #fff; }
+
+    /* ========================================================
+       FULL SCIENCE DRAWER / BOTTOM SHEET
+       ======================================================== */
+    #science-drawer {
       position: fixed;
-      top: 0;
+      bottom: 0;
       left: 0;
       width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(4px);
-      z-index: 80;
-      display: none;
-    }
-    #sidebar-overlay.active { display: block; }
-
-    #sidebar {
-      width: 320px;
-      max-height: calc(100vh - 220px);
+      max-height: 82vh;
+      background: var(--panel-bg);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-top: 2px solid var(--cyan);
+      border-radius: 24px 24px 0 0;
+      box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.8);
+      z-index: 250;
+      padding: 12px 18px var(--safe-bottom) 18px;
       overflow-y: auto;
-      overflow-x: hidden;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      scrollbar-width: thin;
-      scrollbar-color: var(--cyan) transparent;
-      z-index: 85;
-      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      transform: translateY(105%);
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #science-drawer.open {
+      transform: translateY(0);
     }
 
-    .sidebar-section-title {
-      font-family: var(--font-sci);
-      font-size: 11px;
-      letter-spacing: 1.2px;
-      color: var(--cyan);
-      text-transform: uppercase;
-      margin-bottom: 8px;
+    .drawer-handle-bar {
+      width: 40px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 2px;
+      margin: 0 auto 10px auto;
+    }
+
+    .drawer-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
+      margin-bottom: 12px;
     }
 
-    /* Element grid pills */
-    .element-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 6px;
-    }
-
-    .elem-pill {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 8px;
-      padding: 6px 2px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .elem-pill .symbol {
-      font-family: var(--font-sci);
+    .drawer-header h2 {
+      font-size: 16px;
       font-weight: 700;
-      font-size: 15px;
-      display: block;
       color: #fff;
-    }
-
-    .elem-pill .name {
-      font-size: 9px;
-      color: var(--text-muted);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      display: block;
-    }
-
-    .elem-pill .num {
-      font-size: 9px;
-      font-family: var(--font-sci);
-      color: var(--cyan);
-    }
-
-    .elem-pill.active {
-      border-color: var(--cyan);
-      background: rgba(0, 240, 255, 0.25);
-      box-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
-    }
-
-    /* Mode List */
-    .mode-list {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .mode-btn {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 9px 12px;
-      border-radius: 12px;
+      gap: 8px;
+    }
+
+    /* Elemental Overview Grid */
+    .drawer-summary-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      color: var(--text-main);
-      cursor: pointer;
-      font-size: 12px;
-      transition: all 0.2s;
-      text-align: left;
+      border-radius: 16px;
+      padding: 12px;
+      margin-bottom: 12px;
     }
 
-    .mode-btn.active {
-      border-color: var(--cyan);
-      background: rgba(0, 240, 255, 0.2);
-      box-shadow: inset 0 0 10px rgba(0, 240, 255, 0.2);
-    }
-
-    /* Sliders */
-    .slider-group {
+    .symbol-square {
+      width: 58px;
+      height: 58px;
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(121, 40, 202, 0.25));
+      border: 1px solid var(--cyan);
+      border-radius: 12px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      background: rgba(0, 0, 0, 0.25);
-      padding: 12px;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .symbol-square .z-sub { position: absolute; top: 2px; left: 5px; font-size: 9px; font-family: var(--font-sci); color: var(--cyan); }
+    .symbol-square .a-sub { position: absolute; bottom: 2px; right: 5px; font-size: 9px; font-family: var(--font-sci); color: var(--gold); }
+    .symbol-square .sym-big { font-size: 26px; font-weight: 900; font-family: var(--font-sci); color: #fff; }
+
+    /* Particles 3 cards */
+    .drawer-particles-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .particle-p-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 8px;
+      cursor: pointer;
+      text-align: center;
+    }
+    .particle-p-card.p { border-color: rgba(255, 51, 102, 0.3); }
+    .particle-p-card.n { border-color: rgba(59, 130, 246, 0.3); }
+    .particle-p-card.e { border-color: rgba(0, 240, 255, 0.3); }
+
+    .particle-p-card .cnt { font-family: var(--font-sci); font-size: 18px; font-weight: 700; color: #fff; }
+    .particle-p-card .sub-lbl { font-size: 9px; color: var(--text-muted); }
+
+    /* Custom Sandbox Sliders */
+    .sandbox-box {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 12px;
     }
 
     .slider-row {
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 2px;
+      margin-bottom: 8px;
     }
+    .slider-row:last-child { margin-bottom: 0; }
 
-    .slider-label {
+    .slider-row-lbl {
       display: flex;
       justify-content: space-between;
       font-size: 11px;
       color: var(--text-muted);
     }
-
-    .slider-label span.val {
-      font-family: var(--font-sci);
-      font-weight: 700;
-    }
-
-    .slider-row.protons .val { color: var(--proton-red); }
-    .slider-row.neutrons .val { color: var(--neutron-blue); }
-    .slider-row.electrons .val { color: var(--electron-cyan); }
+    .slider-row-lbl span.val { font-family: var(--font-sci); font-weight: 700; }
+    .slider-row.p span.val { color: var(--proton-red); }
+    .slider-row.n span.val { color: var(--neutron-blue); }
+    .slider-row.e span.val { color: var(--cyan); }
 
     input[type=range] {
       -webkit-appearance: none;
@@ -409,7 +595,6 @@
       border-radius: 3px;
       outline: none;
     }
-
     input[type=range]::-webkit-slider-thumb {
       -webkit-appearance: none;
       width: 18px;
@@ -420,540 +605,19 @@
       box-shadow: 0 0 10px rgba(0, 240, 255, 0.8);
     }
 
-    .quantum-actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-    }
-
-    .action-btn {
-      padding: 10px;
-      font-size: 11px;
-      font-weight: 500;
-      border-radius: 10px;
-      cursor: pointer;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      background: rgba(255, 255, 255, 0.04);
-      color: var(--text-main);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-    }
-
-    /* Floating tools right */
-    .floating-tools {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      pointer-events: auto;
-    }
-
-    .tool-circle-btn {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      color: #fff;
-      background: var(--panel-bg);
-      border: 1px solid var(--panel-border);
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .tool-circle-btn:active {
-      transform: scale(0.92);
-      border-color: var(--cyan);
-    }
-
-    /* ===== COLLAPSIBLE BOTTOM SHEET ===== */
-    #bottom-deck {
-      display: flex;
-      flex-direction: column;
-      border-radius: 20px 20px 16px 16px;
-      padding: 10px 16px 14px 16px;
-      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-      position: relative;
-    }
-
-    /* Drag handle indicator */
-    .sheet-handle-bar {
-      width: 38px;
-      height: 4px;
-      background: rgba(255, 255, 255, 0.28);
-      border-radius: 2px;
-      margin: 0 auto 6px auto;
-      cursor: pointer;
-      display: none;
-    }
-
-    .sheet-compact-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      width: 100%;
-    }
-
-    .sheet-body-content {
-      display: grid;
-      grid-template-columns: 240px 1fr 240px;
-      gap: 16px;
-      margin-top: 10px;
-      transition: opacity 0.25s;
-    }
-
-    /* Atom identity */
-    .atom-identity {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .element-symbol-box {
-      width: 60px;
-      height: 60px;
-      background: linear-gradient(135deg, rgba(0, 240, 255, 0.18), rgba(121, 40, 202, 0.25));
-      border: 1px solid var(--cyan);
-      border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0, 240, 255, 0.25);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      flex-shrink: 0;
-    }
-
-    .symbol-atomic-num {
-      position: absolute;
-      top: 3px;
-      left: 5px;
-      font-family: var(--font-sci);
-      font-size: 10px;
-      color: var(--cyan);
-    }
-
-    .symbol-mass-num {
-      position: absolute;
-      bottom: 3px;
-      right: 5px;
-      font-family: var(--font-sci);
-      font-size: 9px;
-      color: var(--gold);
-    }
-
-    .symbol-main {
-      font-family: var(--font-sci);
-      font-size: 26px;
-      font-weight: 900;
-      color: #fff;
-      text-shadow: 0 0 10px var(--cyan);
-    }
-
-    .atom-names h2 {
-      font-size: 17px;
-      font-weight: 700;
-      color: #fff;
-    }
-
-    .atom-names p.en-name {
-      font-size: 12px;
-      color: var(--cyan);
-      font-family: var(--font-sci);
-    }
-
-    .atom-status-badge {
-      display: inline-block;
-      font-size: 9px;
-      padding: 2px 7px;
-      border-radius: 8px;
-      background: rgba(6, 214, 160, 0.15);
-      border: 1px solid var(--green);
-      color: var(--green);
-      margin-top: 3px;
-    }
-
-    /* Subatomic stats */
-    .particle-stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-    }
-
-    .stat-card {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 12px;
-      padding: 8px 10px;
-      cursor: pointer;
-    }
-
-    .stat-card:hover, .stat-card:active {
-      transform: translateY(-2px);
-      background: rgba(255, 255, 255, 0.08);
-    }
-
-    .stat-card.protons { border-color: rgba(255, 51, 102, 0.3); }
-    .stat-card.neutrons { border-color: rgba(59, 130, 246, 0.3); }
-    .stat-card.electrons { border-color: rgba(0, 240, 255, 0.3); }
-
-    .stat-card-header {
-      display: flex;
-      justify-content: space-between;
-      font-size: 10px;
-      color: var(--text-muted);
-    }
-    .stat-card.protons i { color: var(--proton-red); }
-    .stat-card.neutrons i { color: var(--neutron-blue); }
-    .stat-card.electrons i { color: var(--cyan); }
-
-    .stat-card-val {
-      font-family: var(--font-sci);
-      font-size: 18px;
-      font-weight: 700;
-      color: #fff;
-    }
-
-    .stat-card-detail {
-      font-size: 9px;
-      color: var(--text-muted);
-    }
-
-    /* Quantum Info */
-    .quantum-info {
-      border-left: 1px solid rgba(255, 255, 255, 0.1);
-      padding-left: 14px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 5px;
-    }
-
-    .quantum-info-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-    }
-
-    .quantum-info-row span.value {
-      font-family: var(--font-sci);
-      color: var(--cyan);
-      font-weight: 600;
-    }
-
-    .shell-diagram {
-      display: flex;
-      gap: 4px;
-      margin-top: 2px;
-    }
-
-    .shell-dot {
-      background: rgba(0, 240, 255, 0.12);
-      border: 1px solid var(--cyan);
-      padding: 2px 6px;
-      border-radius: 6px;
-      font-size: 9px;
-      font-family: var(--font-sci);
-    }
-
-    /* ========================================================
-       MODE 2: AR-NATIVE HUD (Vision Pro / Spatial AR Experience)
-       ======================================================== */
-    #ar-hud {
-      position: absolute;
+    /* Drawer backdrop */
+    #drawer-backdrop {
+      position: fixed;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 100;
-      pointer-events: none;
-      display: none; /* Shown only in AR session */
-      flex-direction: column;
-      justify-content: space-between;
-      padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
-      box-sizing: border-box;
-    }
-
-    /* AR Top Floating Island */
-    #ar-island {
-      align-self: center;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 6px 14px;
-      border-radius: 30px;
-      background: rgba(8, 14, 30, 0.82);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid var(--cyan);
-      box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
-      pointer-events: auto;
-    }
-
-    .ar-island-badge {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .ar-island-badge .sym {
-      font-family: var(--font-sci);
-      font-weight: 700;
-      color: var(--cyan);
-      font-size: 15px;
-    }
-
-    .ar-island-badge .txt {
-      font-size: 12px;
-      font-weight: 600;
-    }
-
-    .ar-island-actions {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      border-left: 1px solid rgba(255, 255, 255, 0.15);
-      padding-left: 10px;
-    }
-
-    .ar-icon-btn {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 13px;
-    }
-
-    .ar-icon-btn:active {
-      transform: scale(0.9);
-      background: var(--cyan);
-      color: #040814;
-    }
-
-    /* AR Bottom Action Dock */
-    #ar-dock {
-      width: 100%;
-      max-width: 480px;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      pointer-events: auto;
-    }
-
-    /* Element Thumb-Scroll Strip */
-    .ar-element-strip {
-      display: flex;
-      gap: 6px;
-      overflow-x: auto;
-      padding: 4px;
-      scrollbar-width: none;
-      -webkit-overflow-scrolling: touch;
-      background: rgba(8, 14, 30, 0.7);
-      backdrop-filter: blur(14px);
-      border-radius: 20px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    .ar-element-strip::-webkit-scrollbar { display: none; }
-
-    .ar-strip-chip {
-      padding: 5px 12px;
-      border-radius: 14px;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      color: #fff;
-      font-family: var(--font-sci);
-      font-size: 13px;
-      font-weight: 700;
-      white-space: nowrap;
-      cursor: pointer;
-      flex-shrink: 0;
-      transition: all 0.2s;
-    }
-
-    .ar-strip-chip.active {
-      background: var(--cyan);
-      color: #040814;
-      border-color: var(--cyan);
-      box-shadow: 0 0 12px var(--cyan);
-    }
-
-    /* Main AR Control Bar */
-    .ar-action-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      background: rgba(8, 14, 30, 0.85);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid var(--panel-border);
-      border-radius: 26px;
-      padding: 8px 12px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-    }
-
-    /* Segmented Mode Control */
-    .ar-segmented-modes {
-      display: flex;
-      background: rgba(0, 0, 0, 0.35);
-      border-radius: 18px;
-      padding: 3px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .ar-mode-seg-btn {
-      padding: 6px 10px;
-      border-radius: 14px;
-      border: none;
-      background: transparent;
-      color: var(--text-muted);
-      font-size: 12px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .ar-mode-seg-btn.active {
-      background: rgba(0, 240, 255, 0.25);
-      color: var(--cyan);
-      font-weight: 600;
-      box-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
-    }
-
-    /* Big Main Spawn Anchor Button */
-    .ar-spawn-main-btn {
-      background: linear-gradient(135deg, #00f0ff, #7928ca);
-      border: none;
-      color: #040814;
-      font-family: var(--font-body);
-      font-size: 13px;
-      font-weight: 700;
-      padding: 10px 18px;
-      border-radius: 20px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      box-shadow: 0 0 18px rgba(0, 240, 255, 0.6);
-      animation: pulseGlow 2.5s infinite;
-      white-space: nowrap;
-    }
-
-    @keyframes pulseGlow {
-      0%, 100% { box-shadow: 0 0 15px rgba(0, 240, 255, 0.5); }
-      50% { box-shadow: 0 0 25px rgba(0, 240, 255, 0.9); }
-    }
-
-    .ar-spawn-main-btn:active {
-      transform: scale(0.94);
-    }
-
-    /* Scale & Quantum buttons */
-    .ar-quick-tools {
-      display: flex;
-      gap: 6px;
-    }
-
-    /* In AR Mode: Switch body state */
-    body.ar-active #standard-hud {
-      display: none !important;
-    }
-    body.ar-active #ar-hud {
-      display: flex !important;
-    }
-
-    /* Focus View (Clean Screen) */
-    body.clean-view #standard-hud,
-    body.clean-view #ar-hud {
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    /* Floating Exit Clean View Button */
-    #btn-exit-clean {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: rgba(8, 14, 30, 0.85);
-      border: 1px solid var(--cyan);
-      color: var(--cyan);
-      font-size: 18px;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 240;
       display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 300;
-      box-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
-      cursor: pointer;
     }
-    body.clean-view #btn-exit-clean { display: flex; }
-
-    /* ===== INSPECTOR & MODALS ===== */
-    #particle-inspector {
-      position: absolute;
-      top: 80px;
-      right: 20px;
-      width: 300px;
-      max-width: calc(100vw - 40px);
-      padding: 16px;
-      display: none;
-      z-index: 60;
-    }
-
-    .inspector-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      padding-bottom: 8px;
-      margin-bottom: 10px;
-    }
-
-    .inspector-header h3 {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--cyan);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .close-inspector-btn {
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      font-size: 18px;
-      cursor: pointer;
-    }
-
-    .spec-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 6px 0;
-      font-size: 11px;
-    }
-
-    .spec-table td {
-      padding: 4px 6px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    }
-    .spec-table td.spec-name { color: var(--text-muted); width: 40%; }
-    .spec-table td.spec-val { font-family: var(--font-sci); color: #fff; }
+    #drawer-backdrop.active { display: block; }
 
     /* Quiz Modal */
     #quiz-modal {
@@ -964,7 +628,7 @@
       height: 100vh;
       background: rgba(0, 0, 0, 0.85);
       backdrop-filter: blur(10px);
-      z-index: 150;
+      z-index: 600;
       display: none;
       align-items: center;
       justify-content: center;
@@ -973,39 +637,12 @@
 
     .quiz-container {
       width: 100%;
-      max-width: 540px;
+      max-width: 480px;
       background: var(--panel-bg);
       border: 1px solid var(--cyan);
       border-radius: 20px;
       padding: 20px;
-      box-shadow: 0 0 40px rgba(0, 240, 255, 0.3);
-    }
-
-    .quiz-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 14px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      padding-bottom: 10px;
-    }
-
-    .quiz-header h2 {
-      font-family: var(--font-sci);
-      font-size: 16px;
-      color: var(--cyan);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .quiz-badge {
-      font-size: 10px;
-      padding: 2px 8px;
-      border-radius: 10px;
-      background: rgba(255, 209, 102, 0.15);
-      border: 1px solid var(--gold);
-      color: var(--gold);
+      box-shadow: 0 0 35px rgba(0, 240, 255, 0.35);
     }
 
     .quiz-options {
@@ -1015,116 +652,59 @@
       margin-top: 12px;
     }
 
-    .quiz-option-btn {
-      padding: 12px 14px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.15);
+    .quiz-opt-btn {
+      padding: 10px 14px;
       border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.05);
       color: #fff;
       font-family: var(--font-body);
       font-size: 13px;
       text-align: left;
       cursor: pointer;
     }
+    .quiz-opt-btn.correct { background: rgba(6, 214, 160, 0.25); border-color: var(--green); }
+    .quiz-opt-btn.wrong { background: rgba(255, 51, 102, 0.25); border-color: var(--proton-red); }
 
-    .quiz-option-btn.correct { background: rgba(6, 214, 160, 0.25); border-color: var(--green); }
-    .quiz-option-btn.wrong { background: rgba(255, 51, 102, 0.25); border-color: var(--proton-red); }
-
-    .quiz-feedback {
-      margin-top: 14px;
+    .quiz-feedback-box {
+      margin-top: 12px;
       padding: 10px;
       border-radius: 10px;
       font-size: 12px;
-      line-height: 1.5;
       display: none;
+      line-height: 1.4;
     }
 
-    .quiz-footer {
-      display: flex;
-      justify-content: space-between;
+    /* Clean View Mode (Hide all UI for pure AR camera photo) */
+    body.clean-view #top-nav,
+    body.clean-view #bottom-floating-controls,
+    body.clean-view #subatomic-popover {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #btn-exit-clean {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: rgba(8, 14, 30, 0.9);
+      border: 1px solid var(--cyan);
+      color: var(--cyan);
+      font-size: 18px;
+      display: none;
       align-items: center;
-      margin-top: 16px;
+      justify-content: center;
+      z-index: 400;
+      box-shadow: 0 0 20px var(--cyan);
+      cursor: pointer;
     }
-
-    /* ========================================================
-       MOBILE RESPONSIVE RULES (Max Width 768px)
-       ======================================================== */
-    @media (max-width: 768px) {
-      /* Brand compact */
-      .brand-text p { display: none; }
-      .brand-text h1 { font-size: 13px; }
-      #txt-btn-quiz, #txt-btn-control { display: none; }
-      .hud-btn { padding: 8px 10px; }
-
-      /* Mobile Drawer for Sidebar */
-      #sidebar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        width: 82vw;
-        max-width: 320px;
-        max-height: 100vh;
-        border-radius: 0 20px 20px 0;
-        transform: translateX(-110%);
-        padding: calc(var(--safe-top) + 10px) 16px var(--safe-bottom) 16px;
-      }
-      #sidebar.open {
-        transform: translateX(0);
-      }
-
-      /* Collapsible Bottom Sheet Behavior */
-      .sheet-handle-bar { display: block; }
-      
-      #bottom-deck {
-        border-radius: 24px 24px 0 0;
-        margin: 0 -12px -12px -12px;
-        padding-bottom: max(16px, env(safe-area-inset-bottom));
-        max-height: 70px;
-        overflow: hidden;
-      }
-
-      #bottom-deck.expanded {
-        max-height: 80vh;
-        overflow-y: auto;
-      }
-
-      .sheet-body-content {
-        grid-template-columns: 1fr;
-        gap: 12px;
-      }
-
-      .quantum-info {
-        border-left: none;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-        padding-left: 0;
-        padding-top: 10px;
-      }
-
-      .floating-tools {
-        position: absolute;
-        right: 0;
-        top: 10px;
-        gap: 6px;
-      }
-      .tool-circle-btn {
-        width: 40px;
-        height: 40px;
-        font-size: 14px;
-      }
-
-      /* AR Controls on mobile */
-      .ar-action-bar {
-        padding: 6px 10px;
-      }
-      .ar-spawn-main-btn {
-        padding: 8px 14px;
-        font-size: 12px;
-      }
-    }
+    body.clean-view #btn-exit-clean { display: flex; }
   </style>
 
-  <!-- Three.js Import Map -->
+  <!-- Import maps polyfill & Three.js Modules -->
   <script type="importmap">
     {
       "imports": {
@@ -1136,11 +716,8 @@
 </head>
 
 <body>
-  <!-- 3D Canvas Container -->
+  <!-- 3D WebGL Canvas -->
   <div id="webgl-canvas-container"></div>
-
-  <!-- Floating 3D Pointer Tooltip -->
-  <div id="canvas-tooltip">อนุภาค</div>
 
   <!-- Toast Notification -->
   <div id="toast-msg">แจ้งเตือน</div>
@@ -1151,366 +728,235 @@
   </button>
 
   <!-- ========================================================
-       MODE 1: STANDARD HUD (Classroom & 3D Web)
+       TOP NAVIGATION BAR
        ======================================================== -->
-  <div id="standard-hud">
-    
-    <!-- Top Bar -->
-    <header id="top-bar" class="glass-panel interactive">
-      <div class="brand-group">
-        <i class="fa-solid fa-atom brand-icon"></i>
-        <div class="brand-text">
-          <h1>ATOMIC LAB <span class="badge">AR 3.0</span></h1>
-          <p id="txt-subtitle">สื่อการเรียนรู้โครงสร้างอะตอม 3 มิติและเทคโนโลยี AR</p>
-        </div>
+  <nav id="top-nav">
+    <div class="top-pill glass-panel">
+      <i class="fa-solid fa-atom" style="color: var(--cyan); font-size: 18px;"></i>
+      <div class="brand-title">
+        <span id="top-pill-symbol">C</span>
+        <span id="top-pill-name">คาร์บอน (Z=6)</span>
+        <span class="badge">PRO 3.0</span>
       </div>
-
-      <div class="top-actions">
-        <!-- AR Button Container -->
-        <span id="ar-btn-wrapper"></span>
-
-        <button id="btn-toggle-sidebar" class="hud-btn" title="แผงปรับแต่ง">
-          <i class="fa-solid fa-sliders"></i>
-          <span id="txt-btn-control">ปรับแต่ง</span>
-        </button>
-
-        <button id="btn-quiz" class="hud-btn" title="ทำแบบทดสอบ">
-          <i class="fa-solid fa-graduation-cap" style="color: var(--gold);"></i>
-          <span id="txt-btn-quiz">ควิซ</span>
-        </button>
-
-        <button id="btn-lang" class="hud-btn" title="สลับภาษา">
-          <i class="fa-solid fa-globe"></i>
-          <span>TH</span>
-        </button>
-
-        <button id="btn-toggle-sound" class="hud-btn" title="เปิด/ปิดเสียง">
-          <i class="fa-solid fa-volume-high"></i>
-        </button>
-      </div>
-    </header>
-
-    <!-- Workspace Middle -->
-    <div class="workspace-middle">
-      
-      <!-- Drawer Backdrop for mobile -->
-      <div id="sidebar-overlay"></div>
-
-      <!-- Sidebar Drawer -->
-      <aside id="sidebar" class="glass-panel interactive">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-          <h3 style="font-size: 14px; color: var(--cyan);"><i class="fa-solid fa-sliders"></i> ควบคุมและปรับแต่ง</h3>
-          <button id="btn-close-sidebar" class="close-inspector-btn" style="display: none;">&times;</button>
-        </div>
-
-        <!-- Quick Pick Elements -->
-        <div>
-          <div class="sidebar-section-title">
-            <span id="txt-elements-title">⚛️ เลือกธาตุเคมี (Element)</span>
-            <span class="num">Presets</span>
-          </div>
-          <div class="element-grid" id="element-presets-container">
-            <!-- Populated via JS -->
-          </div>
-        </div>
-
-        <!-- Visual Modes -->
-        <div>
-          <div class="sidebar-section-title">
-            <span id="txt-modes-title">🔭 โหมดแบบจำลอง (Visual Mode)</span>
-          </div>
-          <div class="mode-list">
-            <button class="mode-btn active" data-mode="bohr">
-              <i class="fa-solid fa-circle-nodes" style="color: var(--cyan);"></i>
-              <div>
-                <strong id="mode-bohr-title">แบบจำลองโบร์ (Bohr Model)</strong>
-                <div style="font-size: 10px; color: var(--text-muted);" id="mode-bohr-desc">วงโคจรระดับพลังงานอิเล็กตรอนชัดเจน</div>
-              </div>
-            </button>
-            <button class="mode-btn" data-mode="cloud">
-              <i class="fa-solid fa-cloud" style="color: var(--cyan);"></i>
-              <div>
-                <strong id="mode-cloud-title">กลุ่มหมอกควอนตัม (Quantum Cloud)</strong>
-                <div style="font-size: 10px; color: var(--text-muted);" id="mode-cloud-desc">ความน่าจะเป็นในการพบอิเล็กตรอน</div>
-              </div>
-            </button>
-            <button class="mode-btn" data-mode="nucleus_zoom">
-              <i class="fa-solid fa-magnifying-glass-plus" style="color: var(--quark-up);"></i>
-              <div>
-                <strong id="mode-quark-title">เจาะลึกนิวเคลียส & ควาร์ก (Quarks)</strong>
-                <div style="font-size: 10px; color: var(--text-muted);" id="mode-quark-desc">ผ่าดูโปรตอน นิวตรอน และ Up/Down Quarks</div>
-              </div>
-            </button>
-          </div>
-        </div>
-
-        <!-- Custom Atom Sandbox Sliders -->
-        <div>
-          <div class="sidebar-section-title">
-            <span id="txt-sandbox-title">🛠️ ปรับแต่งอะตอม (Atom Sandbox)</span>
-          </div>
-          <div class="slider-group">
-            <div class="slider-row protons">
-              <div class="slider-label">
-                <span id="txt-label-proton">โปรตอน (Protons - p⁺)</span>
-                <span class="val" id="lbl-protons-count">6</span>
-              </div>
-              <input type="range" id="range-protons" min="1" max="18" value="6">
-            </div>
-
-            <div class="slider-row neutrons">
-              <div class="slider-label">
-                <span id="txt-label-neutron">นิวตรอน (Neutrons - n⁰)</span>
-                <span class="val" id="lbl-neutrons-count">6</span>
-              </div>
-              <input type="range" id="range-neutrons" min="0" max="22" value="6">
-            </div>
-
-            <div class="slider-row electrons">
-              <div class="slider-label">
-                <span id="txt-label-electron">อิเล็กตรอน (Electrons - e⁻)</span>
-                <span class="val" id="lbl-electrons-count">6</span>
-              </div>
-              <input type="range" id="range-electrons" min="0" max="18" value="6">
-            </div>
-          </div>
-        </div>
-
-        <!-- Quantum Leap Buttons -->
-        <div>
-          <div class="sidebar-section-title">
-            <span id="txt-photon-title">⚡ ปรากฏการณ์ควอนตัม</span>
-          </div>
-          <div class="quantum-actions">
-            <button class="action-btn" id="btn-absorb-photon">
-              <i class="fa-solid fa-bolt" style="color: var(--gold);"></i>
-              <span id="txt-absorb-btn">ดูดกลืนโฟตอน</span>
-            </button>
-            <button class="action-btn" id="btn-emit-photon">
-              <i class="fa-solid fa-sun" style="color: var(--cyan);"></i>
-              <span id="txt-emit-btn">คายโฟตอน</span>
-            </button>
-          </div>
-        </div>
-      </aside>
-
-      <!-- Floating Quick Actions (Right side) -->
-      <div class="floating-tools">
-        <button class="tool-circle-btn" id="btn-reset-cam" title="รีเซ็ตมุมกล้อง">
-          <i class="fa-solid fa-crosshairs"></i>
-        </button>
-        <button class="tool-circle-btn" id="btn-toggle-rotation" title="เริ่ม/หยุด หมุน">
-          <i class="fa-solid fa-rotate"></i>
-        </button>
-        <button class="tool-circle-btn" id="btn-toggle-labels" title="แสดง/ซ่อน ป้าย 3D">
-          <i class="fa-solid fa-tag"></i>
-        </button>
-        <button class="tool-circle-btn" id="btn-clean-view" title="โหมดโฟกัส (ซ่อน HUD)">
-          <i class="fa-regular fa-eye"></i>
-        </button>
-        <button class="tool-circle-btn" id="btn-screenshot" title="ถ่ายภาพโมเดล">
-          <i class="fa-solid fa-camera"></i>
-        </button>
-      </div>
-
-      <!-- Particle Inspector Card -->
-      <div id="particle-inspector" class="glass-panel interactive">
-        <div class="inspector-header">
-          <h3 id="insp-title"><i class="fa-solid fa-circle-info"></i> ข้อมูลอนุภาค</h3>
-          <button class="close-inspector-btn" id="btn-close-inspector">&times;</button>
-        </div>
-        <div class="inspector-body">
-          <p id="insp-desc" style="font-size: 12px; margin-bottom: 8px;">รายละเอียดอนุภาค</p>
-          <table class="spec-table" id="insp-table"></table>
-          <div style="font-size: 11px; color: var(--gold); margin-top: 6px;" id="insp-fun-fact">
-            💡 <strong>เกร็ดน่ารู้:</strong> มวลส่วนใหญ่ของอะตอมกระจุกตัวอยู่ที่นิวเคลียส
-          </div>
-        </div>
-      </div>
-
     </div>
 
-    <!-- Collapsible Bottom Sheet -->
-    <footer id="bottom-deck" class="glass-panel interactive">
-      <!-- Handle for mobile swipe/tap -->
-      <div class="sheet-handle-bar" id="sheet-handle"></div>
+    <div class="top-nav-actions">
+      <!-- WebXR AR Button -->
+      <span id="ar-button-slot"></span>
 
-      <!-- Compact Header (Always visible) -->
-      <div class="sheet-compact-header">
-        <div class="atom-identity">
-          <div class="element-symbol-box">
-            <span class="symbol-atomic-num" id="deck-z-num">6</span>
-            <span class="symbol-main" id="deck-symbol">C</span>
-            <span class="symbol-mass-num" id="deck-a-num">12</span>
-          </div>
-          <div class="atom-names">
-            <h2 id="deck-th-name">คาร์บอน</h2>
-            <p class="en-name" id="deck-en-name">Carbon (C)</p>
-            <span class="atom-status-badge" id="deck-status">อะตอมเป็นกลาง</span>
-          </div>
-        </div>
+      <!-- Open Science & Sandbox Drawer -->
+      <button class="circle-btn primary" id="btn-open-drawer" title="แผงข้อมูลวิทยาศาสตร์และปรับแต่ง">
+        <i class="fa-solid fa-bars"></i>
+      </button>
 
-        <button id="btn-toggle-sheet" class="hud-btn" style="padding: 6px 12px;">
-          <i class="fa-solid fa-chevron-up" id="sheet-chevron-icon"></i>
-          <span id="txt-sheet-toggle">ข้อมูลวิทยาศาสตร์</span>
-        </button>
+      <!-- Quiz -->
+      <button class="circle-btn" id="btn-open-quiz" title="ทำแบบทดสอบ">
+        <i class="fa-solid fa-graduation-cap" style="color: var(--gold);"></i>
+      </button>
+
+      <!-- Screenshot Photo -->
+      <button class="circle-btn" id="btn-take-photo" title="ถ่ายภาพโมเดล">
+        <i class="fa-solid fa-camera"></i>
+      </button>
+
+      <!-- Toggle Sound -->
+      <button class="circle-btn" id="btn-toggle-sound" title="เปิด/ปิดเสียง">
+        <i class="fa-solid fa-volume-high"></i>
+      </button>
+
+      <!-- Clean Mode -->
+      <button class="circle-btn" id="btn-clean-mode" title="โหมดโฟกัส">
+        <i class="fa-regular fa-eye-slash"></i>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ========================================================
+       FLOATING CONTROLS BOTTOM (For Mobile & AR)
+       ======================================================== */ -->
+  <div id="bottom-floating-controls">
+    
+    <!-- 1. Horizontal Scrollable Element Strip -->
+    <div class="element-strip-scroll glass-panel" id="element-strip-scroll">
+      <!-- Generated via JS -->
+    </div>
+
+    <!-- 2. Segmented Model Switcher (Never wraps!) -->
+    <div class="mode-segmented-bar">
+      <button class="mode-seg-item active" data-mode="bohr" title="แบบจำลองโบร์">
+        <span>🪐</span> <span>โบร์</span>
+      </button>
+      <button class="mode-seg-item" data-mode="cloud" title="กลุ่มหมอกควอนตัม">
+        <span>☁️</span> <span>หมอก</span>
+      </button>
+      <button class="mode-seg-item" data-mode="nucleus_zoom" title="ผ่าดูควาร์ก">
+        <span>🔬</span> <span>ควาร์ก</span>
+      </button>
+    </div>
+
+    <!-- 3. Mobile Action Bar (Spawn Anchor, Scale, Quantum, Info) -->
+    <div class="mobile-action-bar glass-panel">
+      <!-- Dedicated Spawn Anchor Button -->
+      <button class="spawn-anchor-btn" id="btn-spawn-anchor">
+        <i class="fa-solid fa-location-crosshairs"></i>
+        <span id="txt-spawn-btn">วางตรงหน้า</span>
+      </button>
+
+      <!-- Scale Control Group -->
+      <div class="action-icon-pill">
+        <button class="mini-tool-btn" id="btn-scale-down" title="ย่อขนาด">-</button>
+        <span class="scale-indicator" id="scale-indicator-txt">1.0x</span>
+        <button class="mini-tool-btn" id="btn-scale-up" title="ขยายขนาด">+</button>
       </div>
 
-      <!-- Expanded Detailed Content -->
-      <div class="sheet-body-content" id="sheet-body">
-        
-        <!-- 3 Subatomic Cards -->
-        <div class="particle-stats">
-          <div class="stat-card protons" id="card-click-proton" title="คลิกดูข้อมูล">
-            <div class="stat-card-header">
-              <span>โปรตอน (p⁺)</span>
-              <i class="fa-solid fa-circle-plus"></i>
-            </div>
-            <div class="stat-card-val" id="stat-protons-val">6</div>
-            <div class="stat-card-detail">ประจุบวก (+1)</div>
-          </div>
+      <!-- Quantum Leap Button -->
+      <button class="circle-btn" id="btn-quantum-leap" title="กระตุ้นโฟตอน" style="width: 38px; height: 38px; color: var(--gold);">
+        <i class="fa-solid fa-bolt"></i>
+      </button>
 
-          <div class="stat-card neutrons" id="card-click-neutron" title="คลิกดูข้อมูล">
-            <div class="stat-card-header">
-              <span>นิวตรอน (n⁰)</span>
-              <i class="fa-solid fa-circle"></i>
-            </div>
-            <div class="stat-card-val" id="stat-neutrons-val">6</div>
-            <div class="stat-card-detail">เป็นกลาง (0)</div>
-          </div>
-
-          <div class="stat-card electrons" id="card-click-electron" title="คลิกดูข้อมูล">
-            <div class="stat-card-header">
-              <span>อิเล็กตรอน (e⁻)</span>
-              <i class="fa-solid fa-circle-minus"></i>
-            </div>
-            <div class="stat-card-val" id="stat-electrons-val">6</div>
-            <div class="stat-card-detail">ประจุลบ (-1)</div>
-          </div>
-        </div>
-
-        <!-- Quantum Configuration -->
-        <div class="quantum-info">
-          <div class="quantum-info-row">
-            <span class="label" id="txt-lbl-electron-config">การจัดเรียง e⁻:</span>
-            <span class="value" id="deck-electron-config">2, 4</span>
-          </div>
-          <div class="quantum-info-row">
-            <span class="label" id="txt-lbl-valence">เวเลนซ์ e⁻:</span>
-            <span class="value" id="deck-valence">4 e⁻</span>
-          </div>
-          <div class="quantum-info-row">
-            <span class="label" id="txt-lbl-net-charge">ประจุสุทธิ:</span>
-            <span class="value" id="deck-net-charge">0 (เป็นกลาง)</span>
-          </div>
-          <div class="shell-diagram" id="deck-shell-pills">
-            <span class="shell-dot">K: 2</span>
-            <span class="shell-dot">L: 4</span>
-          </div>
-        </div>
-
-      </div>
-    </footer>
+      <!-- 3D Labels Toggle -->
+      <button class="circle-btn" id="btn-toggle-labels" title="เปิด/ปิดป้ายชื่อ 3D" style="width: 38px; height: 38px;">
+        <i class="fa-solid fa-tag"></i>
+      </button>
+    </div>
 
   </div>
 
   <!-- ========================================================
-       MODE 2: AR-NATIVE HUD (Vision Pro / Spatial AR Experience)
+       FLOATING SUBATOMIC INSPECTOR CARD (When tapping particle)
        ======================================================== -->
-  <div id="ar-hud">
+  <div id="subatomic-popover" class="glass-panel">
+    <div class="popover-header">
+      <h3 id="popover-title">🔴 โปรตอน (Proton, p⁺)</h3>
+      <button class="popover-close-btn" id="btn-close-popover">&times;</button>
+    </div>
+    <div class="popover-body">
+      <p id="popover-desc" style="font-size: 11px; margin-bottom: 6px; color: #e2e8f0;"></p>
+      <table class="popover-specs" id="popover-specs-table"></table>
+      <div style="font-size: 10px; color: var(--gold); margin-top: 4px;" id="popover-fact"></div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       SCIENCE & SANDBOX DRAWER / BOTTOM SHEET
+       ======================================================== -->
+  <div id="drawer-backdrop"></div>
+  <div id="science-drawer">
+    <div class="drawer-handle-bar" id="drawer-handle"></div>
     
-    <!-- AR Top Floating Island -->
-    <div id="ar-island">
-      <div class="ar-island-badge">
-        <i class="fa-solid fa-atom" style="color: var(--cyan); font-size: 16px;"></i>
-        <span class="sym" id="ar-island-symbol">C</span>
-        <span class="txt" id="ar-island-name">คาร์บอน (Z=6)</span>
-      </div>
+    <div class="drawer-header">
+      <h2><i class="fa-solid fa-atom" style="color: var(--cyan);"></i> ข้อมูลวิทยาศาสตร์และห้องทดลอง</h2>
+      <button class="circle-btn" id="btn-close-drawer" style="width: 32px; height: 32px;">&times;</button>
+    </div>
 
-      <div class="ar-island-actions">
-        <button class="ar-icon-btn" id="btn-ar-sound" title="เปิด/ปิดเสียง">
-          <i class="fa-solid fa-volume-high"></i>
-        </button>
-        <button class="ar-icon-btn" id="btn-ar-photo" title="ถ่ายรูป AR">
-          <i class="fa-solid fa-camera"></i>
-        </button>
-        <button class="ar-icon-btn" id="btn-ar-clean" title="ซ่อน UI เพื่อมองเต็มตา">
-          <i class="fa-solid fa-eye-slash"></i>
-        </button>
+    <!-- Summary Box -->
+    <div class="drawer-summary-card">
+      <div class="symbol-square">
+        <span class="z-sub" id="drw-z">6</span>
+        <span class="sym-big" id="drw-sym">C</span>
+        <span class="a-sub" id="drw-a">12</span>
+      </div>
+      <div>
+        <h3 id="drw-name-th" style="font-size: 16px; color: #fff;">คาร์บอน</h3>
+        <p id="drw-name-en" style="font-size: 12px; color: var(--cyan); font-family: var(--font-sci);">Carbon (C)</p>
+        <div style="font-size: 11px; margin-top: 3px; color: var(--green);" id="drw-charge-status">อะตอมเป็นกลาง (ประจุสุทธิ 0)</div>
       </div>
     </div>
 
-    <!-- AR Floating Bottom Dock -->
-    <div id="ar-dock">
-      
-      <!-- Horizontal Thumb-scrollable Element Chips -->
-      <div class="ar-element-strip" id="ar-element-strip">
-        <!-- Generated via JS -->
+    <!-- 3 Particle Cards -->
+    <div class="drawer-particles-grid">
+      <div class="particle-p-card p" id="drw-card-proton">
+        <div class="sub-lbl" style="color: var(--proton-red);">โปรตอน (p⁺)</div>
+        <div class="cnt" id="drw-protons-val">6</div>
+        <div class="sub-lbl">ประจุบวก</div>
       </div>
-
-      <!-- Main Action Floating Bar -->
-      <div class="ar-action-bar">
-        
-        <!-- Segmented Mode Controls -->
-        <div class="ar-segmented-modes">
-          <button class="ar-mode-seg-btn active" data-mode="bohr" title="แบบจำลองโบร์">
-            🪐 <span style="font-size: 11px;">โบร์</span>
-          </button>
-          <button class="ar-mode-seg-btn" data-mode="cloud" title="กลุ่มหมอกควอนตัม">
-            ☁️ <span style="font-size: 11px;">หมอก</span>
-          </button>
-          <button class="ar-mode-seg-btn" data-mode="nucleus_zoom" title="ผ่าดูควาร์ก">
-            🔬 <span style="font-size: 11px;">ควาร์ก</span>
-          </button>
-        </div>
-
-        <!-- Big Main Anchor/Spawn Button -->
-        <button class="ar-spawn-main-btn" id="btn-ar-spawn-anchor">
-          <i class="fa-solid fa-location-crosshairs"></i>
-          <span>วางตรงหน้า</span>
-        </button>
-
-        <!-- Quick Scale & Quantum -->
-        <div class="ar-quick-tools">
-          <button class="ar-icon-btn" id="btn-ar-scale-down" title="ย่อขนาด">-</button>
-          <button class="ar-icon-btn" id="btn-ar-scale-up" title="ขยายขนาด">+</button>
-          <button class="ar-icon-btn" id="btn-ar-quantum-leap" title="กระตุ้นควอนตัมโฟตอน" style="color: var(--gold);">⚡</button>
-        </div>
-
+      <div class="particle-p-card n" id="drw-card-neutron">
+        <div class="sub-lbl" style="color: var(--neutron-blue);">นิวตรอน (n⁰)</div>
+        <div class="cnt" id="drw-neutrons-val">6</div>
+        <div class="sub-lbl">เป็นกลาง</div>
       </div>
-
+      <div class="particle-p-card e" id="drw-card-electron">
+        <div class="sub-lbl" style="color: var(--cyan);">อิเล็กตรอน (e⁻)</div>
+        <div class="cnt" id="drw-electrons-val">6</div>
+        <div class="sub-lbl">ประจุลบ</div>
+      </div>
     </div>
 
+    <!-- Quantum Configuration info -->
+    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 10px; margin-bottom: 12px; font-size: 11px;">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+        <span style="color: var(--text-muted);">การจัดเรียงระดับพลังงาน:</span>
+        <strong style="color: var(--cyan); font-family: var(--font-sci);" id="drw-config-txt">2, 4</strong>
+      </div>
+      <div style="display: flex; justify-content: space-between;">
+        <span style="color: var(--text-muted);">เวเลนซ์อิเล็กตรอน:</span>
+        <strong style="color: var(--gold); font-family: var(--font-sci);" id="drw-valence-txt">4 e⁻</strong>
+      </div>
+    </div>
+
+    <!-- Atom Sandbox Sliders -->
+    <div class="sandbox-box">
+      <div style="font-family: var(--font-sci); font-size: 11px; color: var(--cyan); margin-bottom: 8px;">
+        🛠️ ปรับแต่งอะตอมอิสระ (Sandbox)
+      </div>
+      <div class="slider-row p">
+        <div class="slider-row-lbl">
+          <span>โปรตอน (Protons)</span>
+          <span class="val" id="drw-lbl-p">6</span>
+        </div>
+        <input type="range" id="drw-range-p" min="1" max="18" value="6">
+      </div>
+      <div class="slider-row n">
+        <div class="slider-row-lbl">
+          <span>นิวตรอน (Neutrons)</span>
+          <span class="val" id="drw-lbl-n">6</span>
+        </div>
+        <input type="range" id="drw-range-n" min="0" max="22" value="6">
+      </div>
+      <div class="slider-row e">
+        <div class="slider-row-lbl">
+          <span>อิเล็กตรอน (Electrons)</span>
+          <span class="val" id="drw-lbl-e">6</span>
+        </div>
+        <input type="range" id="drw-range-e" min="0" max="18" value="6">
+      </div>
+    </div>
+
+    <!-- Additional Quick Actions -->
+    <div style="display: flex; gap: 8px; margin-top: 10px;">
+      <button class="spawn-anchor-btn" id="btn-drw-absorb" style="background: rgba(255,209,102,0.25); color: #ffd166; border: 1px solid var(--gold);">
+        ⚡ ดูดกลืนโฟตอน
+      </button>
+      <button class="spawn-anchor-btn" id="btn-drw-emit" style="background: rgba(0,240,255,0.2); color: var(--cyan); border: 1px solid var(--cyan);">
+        ✨ คายโฟตอน
+      </button>
+    </div>
   </div>
 
   <!-- Quiz Modal -->
   <div id="quiz-modal">
     <div class="quiz-container">
-      <div class="quiz-header">
-        <h2><i class="fa-solid fa-atom"></i> <span id="txt-quiz-modal-title">แบบทดสอบโครงสร้างอะตอม</span></h2>
-        <span class="quiz-badge" id="quiz-progress">ข้อ 1 / 5</span>
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; margin-bottom: 12px;">
+        <h2 style="font-family: var(--font-sci); font-size: 15px; color: var(--cyan);"><i class="fa-solid fa-graduation-cap"></i> แบบทดสอบอะตอม</h2>
+        <span style="font-size: 10px; padding: 2px 8px; border-radius: 10px; background: rgba(255,209,102,0.2); color: var(--gold);" id="quiz-progress-txt">ข้อ 1 / 5</span>
       </div>
 
-      <div class="question-box">
-        <div class="question-text" id="quiz-question-text" style="font-size: 15px; font-weight: 500; line-height: 1.5;">
-          คำถามกำลังโหลด...
-        </div>
-        <div class="quiz-options" id="quiz-options-container"></div>
-        <div class="quiz-feedback" id="quiz-feedback-box"></div>
-      </div>
+      <div id="quiz-question-txt" style="font-size: 14px; font-weight: 500; line-height: 1.5; margin-bottom: 10px;"></div>
+      <div class="quiz-options" id="quiz-options-box"></div>
+      <div class="quiz-feedback-box" id="quiz-feedback-box"></div>
 
-      <div class="quiz-footer">
-        <div style="font-size: 13px; font-weight: 600;" id="quiz-score-badge">คะแนน: 0</div>
-        <div style="display: flex; gap: 8px;">
-          <button class="hud-btn" id="btn-close-quiz">ปิด</button>
-          <button class="hud-btn primary" id="btn-next-quiz" style="display: none;">ข้อถัดไป ➔</button>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px;">
+        <span style="font-size: 12px; font-weight: 600;" id="quiz-score-txt">คะแนน: 0</span>
+        <div style="display: flex; gap: 6px;">
+          <button class="circle-btn" id="btn-close-quiz" style="width: 34px; height: 34px;">&times;</button>
+          <button class="spawn-anchor-btn" id="btn-next-quiz" style="display: none; padding: 6px 14px; font-size: 12px;">ข้อถัดไป ➔</button>
         </div>
       </div>
     </div>
   </div>
 
   <!-- ==========================================
-       MAIN JAVASCRIPT LOGIC
+       MAIN THREE.JS & INTERACTIVE SCRIPT
        ========================================== -->
   <script type="module">
     import * as THREE from 'three';
@@ -1521,121 +967,104 @@
        1. DATA DEFINITIONS
        ======================================================== */
     const ELEMENTS_DATA = [
-      { z: 1,  symbol: 'H',  nameTh: 'ไฮโดรเจน',   nameEn: 'Hydrogen',   protons: 1,  neutrons: 0,  electrons: 1,  mass: 1.008 },
-      { z: 2,  symbol: 'He', nameTh: 'ฮีเลียม',     nameEn: 'Helium',     protons: 2,  neutrons: 2,  electrons: 2,  mass: 4.0026 },
-      { z: 3,  symbol: 'Li', nameTh: 'ลิเทียม',     nameEn: 'Lithium',    protons: 3,  neutrons: 4,  electrons: 3,  mass: 6.94 },
-      { z: 4,  symbol: 'Be', nameTh: 'เบริลเลียม',   nameEn: 'Beryllium',  protons: 4,  neutrons: 5,  electrons: 4,  mass: 9.0122 },
-      { z: 5,  symbol: 'B',  nameTh: 'โบรอน',       nameEn: 'Boron',      protons: 5,  neutrons: 6,  electrons: 5,  mass: 10.81 },
-      { z: 6,  symbol: 'C',  nameTh: 'คาร์บอน',     nameEn: 'Carbon',     protons: 6,  neutrons: 6,  electrons: 6,  mass: 12.011 },
-      { z: 7,  symbol: 'N',  nameTh: 'ไนโตรเจน',   nameEn: 'Nitrogen',   protons: 7,  neutrons: 7,  electrons: 7,  mass: 14.007 },
-      { z: 8,  symbol: 'O',  nameTh: 'ออกซิเจน',   nameEn: 'Oxygen',     protons: 8,  neutrons: 8,  electrons: 8,  mass: 15.999 },
-      { z: 9,  symbol: 'F',  nameTh: 'ฟลูออรีน',   nameEn: 'Fluorine',   protons: 9,  neutrons: 10, electrons: 9,  mass: 18.998 },
-      { z: 10, symbol: 'Ne', nameTh: 'นีออน',       nameEn: 'Neon',       protons: 10, neutrons: 10, electrons: 10, mass: 20.180 },
-      { z: 11, symbol: 'Na', nameTh: 'โซเดียม',     nameEn: 'Sodium',     protons: 11, neutrons: 12, electrons: 11, mass: 22.990 },
-      { z: 12, symbol: 'Mg', nameTh: 'แมกนีเซียม', nameEn: 'Magnesium',  protons: 12, neutrons: 12, electrons: 12, mass: 24.305 },
-      { z: 13, symbol: 'Al', nameTh: 'อะลูมิเนียม', nameEn: 'Aluminium',  protons: 13, neutrons: 14, electrons: 13, mass: 26.982 },
-      { z: 14, symbol: 'Si', nameTh: 'ซิลิคอน',     nameEn: 'Silicon',    protons: 14, neutrons: 14, electrons: 14, mass: 28.085 },
-      { z: 17, symbol: 'Cl', nameTh: 'คลอรีน',     nameEn: 'Chlorine',   protons: 17, neutrons: 18, electrons: 17, mass: 35.45 },
-      { z: 18, symbol: 'Ar', nameTh: 'อาร์กอน',     nameEn: 'Argon',      protons: 18, neutrons: 22, electrons: 18, mass: 39.948 }
+      { z: 1,  symbol: 'H',  nameTh: 'ไฮโดรเจน',   nameEn: 'Hydrogen',   protons: 1,  neutrons: 0,  electrons: 1 },
+      { z: 2,  symbol: 'He', nameTh: 'ฮีเลียม',     nameEn: 'Helium',     protons: 2,  neutrons: 2,  electrons: 2 },
+      { z: 3,  symbol: 'Li', nameTh: 'ลิเทียม',     nameEn: 'Lithium',    protons: 3,  neutrons: 4,  electrons: 3 },
+      { z: 4,  symbol: 'Be', nameTh: 'เบริลเลียม',   nameEn: 'Beryllium',  protons: 4,  neutrons: 5,  electrons: 4 },
+      { z: 5,  symbol: 'B',  nameTh: 'โบรอน',       nameEn: 'Boron',      protons: 5,  neutrons: 6,  electrons: 5 },
+      { z: 6,  symbol: 'C',  nameTh: 'คาร์บอน',     nameEn: 'Carbon',     protons: 6,  neutrons: 6,  electrons: 6 },
+      { z: 7,  symbol: 'N',  nameTh: 'ไนโตรเจน',   nameEn: 'Nitrogen',   protons: 7,  neutrons: 7,  electrons: 7 },
+      { z: 8,  symbol: 'O',  nameTh: 'ออกซิเจน',   nameEn: 'Oxygen',     protons: 8,  neutrons: 8,  electrons: 8 },
+      { z: 9,  symbol: 'F',  nameTh: 'ฟลูออรีน',   nameEn: 'Fluorine',   protons: 9,  neutrons: 10, electrons: 9 },
+      { z: 10, symbol: 'Ne', nameTh: 'นีออน',       nameEn: 'Neon',       protons: 10, neutrons: 10, electrons: 10 },
+      { z: 11, symbol: 'Na', nameTh: 'โซเดียม',     nameEn: 'Sodium',     protons: 11, neutrons: 12, electrons: 11 },
+      { z: 12, symbol: 'Mg', nameTh: 'แมกนีเซียม', nameEn: 'Magnesium',  protons: 12, neutrons: 12, electrons: 12 },
+      { z: 13, symbol: 'Al', nameTh: 'อะลูมิเนียม', nameEn: 'Aluminium',  protons: 13, neutrons: 14, electrons: 13 },
+      { z: 14, symbol: 'Si', nameTh: 'ซิลิคอน',     nameEn: 'Silicon',    protons: 14, neutrons: 14, electrons: 14 },
+      { z: 17, symbol: 'Cl', nameTh: 'คลอรีน',     nameEn: 'Chlorine',   protons: 17, neutrons: 18, electrons: 17 },
+      { z: 18, symbol: 'Ar', nameTh: 'อาร์กอน',     nameEn: 'Argon',      protons: 18, neutrons: 22, electrons: 18 }
     ];
 
     const SUBATOMIC_DETAILS = {
       proton: {
-        titleTh: 'โปรตอน (Proton - p⁺)',
-        titleEn: 'Proton (p⁺)',
-        descTh: 'อนุภาคมูลฐานภายในนิวเคลียส ค้นพบโดย เออร์เนสต์ รัทเทอร์ฟอร์ด (1917) มีประจุบวก ประกอบด้วย 2 Up Quarks และ 1 Down Quark',
-        descEn: 'Subatomic nucleon in nucleus discovered by Rutherford (1917). Made of 2 Up + 1 Down quarks.',
+        title: 'โปรตอน (Proton, p⁺)',
+        desc: 'อนุภาคมูลฐานภายในนิวเคลียส ค้นพบโดย เออร์เนสต์ รัทเทอร์ฟอร์ด (1917) มีประจุไฟฟ้าบวก และประกอบขึ้นจากควาร์ก 3 ตัว',
         specs: [
           { name: 'ประจุไฟฟ้า', val: '+1 (+1.602 × 10⁻¹⁹ C)' },
           { name: 'มวลสัมบูรณ์', val: '1.6726 × 10⁻²⁷ kg (1.007 u)' },
           { name: 'องค์ประกอบควาร์ก', val: '2 Up + 1 Down (uud)' }
         ],
-        factTh: 'จำนวนโปรตอน (Z) เป็นตัวกำหนดชนิดของธาตุเคมี'
+        fact: 'จำนวนโปรตอน (Z) เป็นตัวกำหนดชนิดและสมบัติทางเคมีของธาตุ'
       },
       neutron: {
-        titleTh: 'นิวตรอน (Neutron - n⁰)',
-        titleEn: 'Neutron (n⁰)',
-        descTh: 'อนุภาคไร้ประจุไฟฟ้า ค้นพบโดย เจมส์ แชดวิก (1932) ช่วยลดแรงผลักระหว่างโปรตอน ทำให้นิวเคลียสเสถียร',
-        descEn: 'Neutral nucleon discovered by Chadwick (1932). Counters electrostatic repulsion.',
+        title: 'นิวตรอน (Neutron, n⁰)',
+        desc: 'อนุภาคที่เป็นกลางทางไฟฟ้า ค้นพบโดย เจมส์ แชดวิก (1932) ช่วยยึดเกาะโปรตอนเข้าด้วยกันและลดแรงผลักคูลอมบ์',
         specs: [
           { name: 'ประจุไฟฟ้า', val: '0 C (เป็นกลาง)' },
           { name: 'มวลสัมบูรณ์', val: '1.6749 × 10⁻²⁷ kg (1.008 u)' },
           { name: 'องค์ประกอบควาร์ก', val: '1 Up + 2 Down (udd)' }
         ],
-        factTh: 'นิวตรอนหนักกว่าโปรตอนเล็กน้อย'
+        fact: 'นิวตรอนมีมวลมากกว่าโปรตอนเล็กน้อย และผลรวมโปรตอน+นิวตรอนคือเลขมวล (A)'
       },
       electron: {
-        titleTh: 'อิเล็กตรอน (Electron - e⁻)',
-        titleEn: 'Electron (e⁻)',
-        descTh: 'อนุภาคมูลฐานชนิดเลปตอน ค้นพบโดย เจ.เจ. ทอมสัน (1897) โคจรรอบนอกด้วยความเร็วสูงมาก',
-        descEn: 'Elementary lepton discovered by J.J. Thomson (1897). Orbits the nucleus.',
+        title: 'อิเล็กตรอน (Electron, e⁻)',
+        desc: 'อนุภาคมูลฐานชนิดเลปตอน ค้นพบโดย เจ.เจ. ทอมสัน (1897) โคจรรอบนอกนิวเคลียสด้วยพฤติกรรมทวิภาคคลื่น-อนุภาค',
         specs: [
           { name: 'ประจุไฟฟ้า', val: '-1 (-1.602 × 10⁻¹⁹ C)' },
           { name: 'มวลสัมบูรณ์', val: '9.109 × 10⁻³¹ kg (≈ 1/1836 u)' },
-          { name: 'โครงสร้างย่อย', val: 'อนุภาคมูลฐาน (ไม่มีโครงสร้างย่อย)' }
+          { name: 'การจัดระดับพลังงาน', val: 'เชลล์ K, L, M ตามสูตร 2n²' }
         ],
-        factTh: 'เวเลนซ์อิเล็กตรอนชั้นนอกสุดกำหนดปฏิกิริยาเคมีและพันธะ'
+        fact: 'อิเล็กตรอนชั้นนอกสุด (Valence) กำหนดการสร้างพันธะเคมีของสารประกอบ'
       },
       quark: {
-        titleTh: 'ควาร์ก (Quarks - Up & Down)',
+        title: 'ควาร์ก (Quarks - Up & Down)',
         titleEn: 'Quarks (Up & Down)',
-        descTh: 'อนุภาคมูลฐานที่ประกอบขึ้นเป็นโปรตอนและนิวตรอน ยึดกันด้วยแรงนิวเคลียร์อย่างเข้มผ่านกลูออน (Gluon)',
-        descEn: 'Fundamental particles that make up nucleons, bound by gluons.',
+        desc: 'อนุภาคมูลฐานที่แท้จริงซึ่งรวมกันเป็นนิวคลีออน ยึดกันไว้ด้วยแรงนิวเคลียร์อย่างเข้มผ่านอนุภาคสื่อนำแรงกลูออน (Gluon)',
         specs: [
-          { name: 'Up Quark', val: 'ประจุ +2/3 e' },
-          { name: 'Down Quark', val: 'ประจุ -1/3 e' },
+          { name: 'Up Quark (u)', val: 'ประจุ +2/3 e' },
+          { name: 'Down Quark (d)', val: 'ประจุ -1/3 e' },
           { name: 'แรงเหนี่ยวนำ', val: 'Strong Nuclear Force' }
         ],
-        factTh: 'ควาร์กไม่สามารถอยู่อย่างโดดเดี่ยวตามลำพังในธรรมชาติได้'
+        fact: 'ควาร์กไม่สามารถอยู่อย่างโดดเดี่ยวในธรรมชาติได้ (Color Confinement)'
       }
     };
 
     const QUIZ_QUESTIONS = [
       {
-        questionTh: 'ใจกลางของอะตอม (นิวเคลียส) ประกอบด้วยอนุภาคมูลฐานชนิดใดบ้าง?',
-        questionEn: 'Which particles make up the atomic nucleus?',
-        optionsTh: ['โปรตอน และ อิเล็กตรอน', 'โปรตอน และ นิวตรอน', 'นิวตรอน และ อิเล็กตรอน', 'ควาร์ก และ โฟตอน'],
+        question: 'ใจกลางของอะตอม (นิวเคลียส) ประกอบด้วยอนุภาคมูลฐานชนิดใดบ้าง?',
+        options: ['โปรตอน และ อิเล็กตรอน', 'โปรตอน และ นิวตรอน', 'นิวตรอน และ อิเล็กตรอน', 'ควาร์ก และ โฟตอน'],
         correctIndex: 1,
-        explanationTh: 'ถูกต้อง! นิวเคลียสประกอบด้วยโปรตอน (ประจุบวก) และนิวตรอน (เป็นกลาง) ส่วนอิเล็กตรอนโคจรรอบนอก'
+        explanation: 'ถูกต้อง! นิวเคลียสประกอบด้วยโปรตอน (ประจุบวก) และนิวตรอน (เป็นกลาง) ส่วนอิเล็กตรอนโคจรรอบนอก'
       },
       {
-        questionTh: 'อนุภาคใดมีมวลน้อยที่สุด และค้นพบโดยหลอดรังสีแคโทดของ เจ.เจ. ทอมสัน?',
-        questionEn: 'Which particle has the smallest mass and was discovered by J.J. Thomson?',
-        optionsTh: ['โปรตอน (Proton)', 'นิวตรอน (Neutron)', 'อิเล็กตรอน (Electron)', 'แอลฟา'],
+        question: 'อนุภาคใดมีมวลน้อยที่สุด และค้นพบโดยการทดลองหลอดรังสีแคโทดของ ทอมสัน?',
+        options: ['โปรตอน (Proton)', 'นิวตรอน (Neutron)', 'อิเล็กตรอน (Electron)', 'แอลฟา'],
         correctIndex: 2,
-        explanationTh: 'ถูกต้อง! อิเล็กตรอนมีมวลเพียง 1/1836 เท่าของโปรตอนเท่านั้น ค้นพบในปี ค.ศ. 1897'
+        explanation: 'ถูกต้อง! อิเล็กตรอนมีมวลเบามากเพียงประมาณ 1/1836 เท่าของโปรตอนเท่านั้น'
       },
       {
-        questionTh: 'โปรตอน 1 ตัว ประกอบด้วยควาร์กชนิดใดบ้าง?',
-        questionEn: 'What quark combination forms a proton?',
-        optionsTh: ['2 Up Quarks + 1 Down Quark (uud)', '1 Up + 2 Down (udd)', '3 Up Quarks (uuu)', '2 Down + 1 Strange'],
+        question: 'โปรตอน 1 ตัว ประกอบด้วยอนุภาคควาร์ก (Quarks) ชนิดใดบ้าง?',
+        options: ['2 Up Quarks + 1 Down Quark (uud)', '1 Up + 2 Down (udd)', '3 Up Quarks (uuu)', '2 Down + 1 Strange'],
         correctIndex: 0,
-        explanationTh: 'ถูกต้อง! Up Quark มีประจุ +2/3 และ Down Quark มีประจุ -1/3 รวม uud (+2/3 + 2/3 - 1/3) ได้ประจุ +1'
+        explanation: 'ถูกต้อง! Up Quark มีประจุ +2/3 และ Down Quark มีประจุ -1/3 รวม uud ได้ประจุ +1 พอดี'
       },
       {
-        questionTh: 'เมื่ออิเล็กตรอนดูดกลืนพลังงานแสง (โฟตอน) แล้วกระโดดขึ้นสู่วงโคจรสูงขึ้น เรียกว่าสถานะใด?',
-        questionEn: 'When an electron absorbs a photon and leaps higher, what state is it?',
-        optionsTh: ['สถานะพื้น (Ground State)', 'สถานะกระตุ้น (Excited State)', 'สถานะพลาสมา', 'สถานะไอออน'],
+        question: 'เมื่ออิเล็กตรอนดูดกลืนพลังงานแสง (โฟตอน) และกระโดดขึ้นไปสู่วงโคจรสูงขึ้น เรียกว่าสถานะใด?',
+        options: ['สถานะพื้น (Ground State)', 'สถานะกระตุ้น (Excited State)', 'สถานะพลาสมา', 'สถานะไอออน'],
         correctIndex: 1,
-        explanationTh: 'ถูกต้อง! เมื่อรับพลังงานจะกลายเป็นสถานะกระตุ้น (Excited State) และเมื่อตกลงมาจะคายโฟตอนแสงออกมา'
+        explanation: 'ถูกต้อง! การได้รับพลังงานจะทำให้ขึ้นสู่สถานะกระตุ้น (Excited State) และเมื่อตกลงมาชั้นเดิมจะคายโฟตอนแสงออกมา'
       },
       {
-        questionTh: 'ระดับพลังงานหลักชั้นที่ 2 (เชลล์ L) บรรจุอิเล็กตรอนได้สูงสุดกี่ตัวตามสูตร 2n²?',
-        questionEn: 'What is the max electrons for the 2nd shell (L shell) using 2n²?',
-        optionsTh: ['2 ตัว', '6 ตัว', '8 ตัว', '18 ตัว'],
+        question: 'ระดับพลังงานหลักชั้นที่ 2 (เชลล์ L) สามารถบรรจุอิเล็กตรอนได้สูงสุดกี่ตัวตามสูตร 2n²?',
+        options: ['2 ตัว', '6 ตัว', '8 ตัว', '18 ตัว'],
         correctIndex: 2,
-        explanationTh: 'ถูกต้อง! คำนวณจากสูตร 2n² เมื่อ n=2 จะได้ 2 × (2)² = 8 ตัว'
+        explanation: 'ถูกต้อง! คำนวณจาก 2n² เมื่อ n=2 จะได้ 2 × (2)² = 8 ตัว'
       }
     ];
 
-    /* ========================================================
-       2. WEB AUDIO SYNTHESIZER
-       ======================================================== */
+    /* Sound Engine */
     class SoundEngine {
-      constructor() {
-        this.ctx = null;
-        this.muted = false;
-      }
+      constructor() { this.ctx = null; this.muted = false; }
       init() {
         if (!this.ctx) {
           const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -1660,7 +1089,11 @@
           osc.stop(this.ctx.currentTime + duration);
         } catch (e) {}
       }
-      playSelect() { this.playTone(850, 'sine', 0.08, 0.08); }
+      playSelect() { this.playTone(880, 'sine', 0.08, 0.08); }
+      playChime() {
+        this.playTone(523, 'triangle', 0.15, 0.1);
+        setTimeout(() => this.playTone(784, 'triangle', 0.2, 0.12), 80);
+      }
       playWarp() {
         if (this.muted) return;
         this.init();
@@ -1669,38 +1102,20 @@
           const osc = this.ctx.createOscillator();
           const gain = this.ctx.createGain();
           osc.type = 'triangle';
-          osc.frequency.setValueAtTime(320, this.ctx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.2);
+          osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(900, this.ctx.currentTime + 0.22);
           gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.2);
+          gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.22);
           osc.connect(gain);
           gain.connect(this.ctx.destination);
           osc.start();
-          osc.stop(this.ctx.currentTime + 0.2);
-        } catch (e) {}
-      }
-      playQuantumLeap() {
-        if (this.muted) return;
-        this.init();
-        if (!this.ctx) return;
-        try {
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(500, this.ctx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(1300, this.ctx.currentTime + 0.3);
-          gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.3);
-          osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.start();
-          osc.stop(this.ctx.currentTime + 0.3);
+          osc.stop(this.ctx.currentTime + 0.22);
         } catch (e) {}
       }
       playSuccess() {
         this.playTone(523, 'triangle', 0.12, 0.1);
-        setTimeout(() => this.playTone(659, 'triangle', 0.12, 0.1), 90);
-        setTimeout(() => this.playTone(784, 'triangle', 0.2, 0.1), 180);
+        setTimeout(() => this.playTone(659, 'triangle', 0.12, 0.1), 80);
+        setTimeout(() => this.playTone(784, 'triangle', 0.2, 0.1), 160);
       }
       playWrong() {
         this.playTone(220, 'sawtooth', 0.2, 0.12);
@@ -1709,12 +1124,15 @@
     }
     const sound = new SoundEngine();
 
+    function haptic() {
+      if (navigator.vibrate) navigator.vibrate(15);
+    }
+
     /* ========================================================
-       3. STATE MANAGEMENT
+       2. STATE MANAGEMENT
        ======================================================== */
     const state = {
-      lang: 'th',
-      currentElement: ELEMENTS_DATA[5], // Carbon default
+      currentElement: ELEMENTS_DATA[5], // Carbon C
       protons: 6,
       neutrons: 6,
       electrons: 6,
@@ -1724,18 +1142,12 @@
       showLabels: true,
       isARMode: false,
       arScale: 0.65,
-      sheetExpanded: false,
       quizIndex: 0,
       quizScore: 0
     };
 
-    /* Haptic Feedback Helper */
-    function haptic() {
-      if (navigator.vibrate) navigator.vibrate(15);
-    }
-
     /* ========================================================
-       4. THREE.JS 3D SCENE & WEBXR ENGINE
+       3. THREE.JS ENGINE SETUP
        ======================================================== */
     let scene, camera, renderer, controls;
     let atomRootGroup;
@@ -1746,17 +1158,17 @@
     const mouse = new THREE.Vector2();
 
     const container = document.getElementById('webgl-canvas-container');
-    const tooltip = document.getElementById('canvas-tooltip');
     const toast = document.getElementById('toast-msg');
+    const popover = document.getElementById('subatomic-popover');
 
     function init3D() {
       scene = new THREE.Scene();
 
       // Camera
       camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.02, 50);
-      camera.position.set(0, 0.3, 1.3);
+      camera.position.set(0, 0.25, 1.25);
 
-      // WebGL Renderer with High-DPI and AR support
+      // WebGL Renderer with High-DPI and WebXR support
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.setSize(window.innerWidth, window.innerHeight);
@@ -1785,10 +1197,10 @@
       dirLight2.position.set(-3, -2, -3);
       scene.add(dirLight2);
 
-      // Background dust particles
+      // Background dust
       createBackgroundStars();
 
-      // Setup WebXR AR Button
+      // WebXR AR Button setup
       setupWebXR();
 
       // Main Model Hierarchy
@@ -1807,51 +1219,47 @@
       atomRootGroup.add(cloudGroup);
       atomRootGroup.add(labelsGroup);
 
-      // Touch & Pointer Listeners
+      // Event Listeners for Raycasting & Resize
       window.addEventListener('resize', onWindowResize);
-      window.addEventListener('pointermove', onPointerMove);
+      
+      // Tap on screen -> inspect particle ONLY! DO NOT move model!
       window.addEventListener('pointerdown', onPointerDown);
 
-      // Multi-touch gestures for AR (Pinch to scale & Rotate)
-      setupTouchGestures();
-
-      // Initial Build
+      // Build model
       rebuildAtomModel();
 
-      // Start Animation Loop
+      // Animation loop
       renderer.setAnimationLoop(animate);
     }
 
-    /* WebXR AR Integration */
+    /* WebXR AR Setup */
     function setupWebXR() {
-      const arWrapper = document.getElementById('ar-btn-wrapper');
+      const arSlot = document.getElementById('ar-button-slot');
       
       const arBtn = ARButton.createButton(renderer, {
-        optionalFeatures: ['dom-overlay', 'hit-test'],
+        optionalFeatures: ['dom-overlay'],
         domOverlay: { root: document.body }
       });
 
-      arBtn.classList.add('hud-btn', 'primary');
-      arBtn.innerHTML = '<i class="fa-solid fa-vr-cardboard"></i> <span>โหมด AR</span>';
-      arWrapper.appendChild(arBtn);
+      arSlot.appendChild(arBtn);
 
       renderer.xr.addEventListener('sessionstart', () => {
         state.isARMode = true;
-        document.body.classList.add('ar-active');
         backgroundStars.visible = false;
+        controls.enabled = false;
 
         // Position atom at eye level in front of user in AR
         atomRootGroup.position.set(0, 0, -0.45);
         atomRootGroup.scale.setScalar(state.arScale);
         
         haptic();
-        showToast('เข้าสู่โหมด AR แล้ว — ส่องกล้องเพื่อมองหาพื้นผิวโต๊ะ/ห้อง');
+        showToast('เข้าสู่โหมด AR แล้ว — แตะเม็ดอนุภาคเพื่อดูคำอธิบาย');
       });
 
       renderer.xr.addEventListener('sessionend', () => {
         state.isARMode = false;
-        document.body.classList.remove('ar-active');
         backgroundStars.visible = true;
+        controls.enabled = true;
         
         atomRootGroup.position.set(0, 0, 0);
         atomRootGroup.scale.setScalar(1.0);
@@ -1860,16 +1268,29 @@
         showToast('ออกจากโหมด AR กลับสู่โหมด 3D');
       });
 
-      // Controller interaction in AR
+      // Controller interaction: Raycast for particle inspection ONLY!
+      // NEVER reposition model on tap!
       const controller = renderer.xr.getController(0);
-      controller.addEventListener('select', () => {
+      controller.addEventListener('select', (event) => {
         if (!state.isARMode) return;
-        repositionAtomInFront();
+        
+        const tempMatrix = new THREE.Matrix4();
+        tempMatrix.identity().extractRotation(event.target.matrixWorld);
+        raycaster.ray.origin.setFromMatrixPosition(event.target.matrixWorld);
+        raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix);
+
+        const intersects = raycaster.intersectObjects(interactiveMeshes, false);
+        if (intersects.length > 0) {
+          const item = intersects[0].object;
+          openSubatomicPopover(item.userData.category || item.userData.type);
+        } else {
+          // Tapped empty space: DO NOTHING! DO NOT MOVE MODEL!
+        }
       });
       scene.add(controller);
     }
 
-    /* Reposition atom in front of current AR camera view */
+    /* Spawn / Reposition Atom In Front (ONLY called when clicking the button!) */
     function repositionAtomInFront() {
       if (!camera) return;
       const dir = new THREE.Vector3(0, 0, -0.45).applyQuaternion(camera.quaternion);
@@ -1877,10 +1298,10 @@
       atomRootGroup.quaternion.copy(camera.quaternion);
       sound.playWarp();
       haptic();
-      showToast('วางโมเดลอะตอมในพิกัดตรงหน้าแล้ว 🎯');
+      showToast('วางโมเดลอะตอมตรงหน้าเรียบร้อย 🎯');
     }
 
-    /* Background Deep Space Particles */
+    /* Background Stars */
     function createBackgroundStars() {
       const starGeo = new THREE.BufferGeometry();
       const count = 1000;
@@ -1912,7 +1333,7 @@
     }
 
     /* ========================================================
-       5. 3D ATOM MODEL REBUILD
+       4. MODEL REBUILD (Protons, Neutrons, Electrons, Quarks)
        ======================================================== */
     let electronAnimData = [];
     let nucleusParticles = [];
@@ -1955,7 +1376,7 @@
       }
     }
 
-    /* Nucleus Cluster with Protons & Neutrons */
+    /* Nucleus Cluster with Enlarged Touch Hitbox */
     function buildNucleusCluster(protons, neutrons) {
       const totalNucleons = protons + neutrons;
       const isExplodedQuarkMode = (state.visualMode === 'nucleus_zoom');
@@ -2007,13 +1428,19 @@
         mesh.position.set(x, y, z);
         mesh.userData = {
           type: type,
-          category: type,
-          titleTh: type === 'proton' ? 'โปรตอน (Proton, p⁺)' : 'นิวตรอน (Neutron, n⁰)',
-          titleEn: type === 'proton' ? 'Proton (p⁺)' : 'Neutron (n⁰)'
+          category: type
         };
 
+        // Invisible enlarged Hitbox for accurate mobile tapping
+        const hitSphere = new THREE.Mesh(
+          new THREE.SphereGeometry(0.045, 12, 12),
+          new THREE.MeshBasicMaterial({ visible: false })
+        );
+        hitSphere.userData = mesh.userData;
+        mesh.add(hitSphere);
+        interactiveMeshes.push(hitSphere);
+
         nucleusGroup.add(mesh);
-        interactiveMeshes.push(mesh);
         nucleusParticles.push({ mesh, basePos: new THREE.Vector3(x, y, z), seed: Math.random() * 10 });
 
         if (isExplodedQuarkMode) {
@@ -2058,12 +1485,18 @@
         qMesh.position.copy(offsets[i]);
         qMesh.userData = {
           type: 'quark',
-          category: 'quark',
-          titleTh: qType === 'up' ? 'อัพควาร์ก (Up Quark, u: +2/3)' : 'ดาวน์ควาร์ก (Down Quark, d: -1/3)',
-          titleEn: qType === 'up' ? 'Up Quark (u: +2/3)' : 'Down Quark (d: -1/3)'
+          category: 'quark'
         };
+
+        const qHitbox = new THREE.Mesh(
+          new THREE.SphereGeometry(0.025, 10, 10),
+          new THREE.MeshBasicMaterial({ visible: false })
+        );
+        qHitbox.userData = qMesh.userData;
+        qMesh.add(qHitbox);
+        interactiveMeshes.push(qHitbox);
+
         nucleonMesh.add(qMesh);
-        interactiveMeshes.push(qMesh);
         quarkAnimData.push({ mesh: qMesh, basePos: offsets[i].clone(), speed: 2 + i });
       });
     }
@@ -2115,13 +1548,12 @@
           eMesh.position.x = radius;
           eMesh.userData = {
             type: 'electron',
-            category: 'electron',
-            titleTh: `อิเล็กตรอน (e⁻) ชั้น ${shell} (n=${n})`,
-            titleEn: `Electron (e⁻) Shell ${shell} (n=${n})`
+            category: 'electron'
           };
 
+          // Generous Hitbox for touch (0.055)
           const hitSphere = new THREE.Mesh(
-            new THREE.SphereGeometry(0.045, 12, 12),
+            new THREE.SphereGeometry(0.055, 12, 12),
             new THREE.MeshBasicMaterial({ visible: false })
           );
           hitSphere.userData = eMesh.userData;
@@ -2212,20 +1644,20 @@
     }
 
     function build3DLabels() {
-      const nucLabel = createTextSprite(state.lang === 'th' ? '⚛️ นิวเคลียส' : '⚛️ Nucleus', '#ff3366');
+      const nucLabel = createTextSprite('⚛️ นิวเคลียส', '#ff3366');
       nucLabel.position.set(0, 0.12, 0);
       labelsGroup.add(nucLabel);
 
       if (state.visualMode === 'bohr' && state.electrons > 0) {
-        const eLabel = createTextSprite(state.lang === 'th' ? '⚡ อิเล็กตรอน' : '⚡ Electron', '#00f0ff');
+        const eLabel = createTextSprite('⚡ อิเล็กตรอน', '#00f0ff');
         eLabel.position.set(0.24, 0.18, 0);
         labelsGroup.add(eLabel);
       } else if (state.visualMode === 'cloud') {
-        const cloudLabel = createTextSprite(state.lang === 'th' ? '☁️ กลุ่มหมอก' : '☁️ Cloud', '#00f0ff');
+        const cloudLabel = createTextSprite('☁️ กลุ่มหมอก', '#00f0ff');
         cloudLabel.position.set(0.26, 0.18, 0);
         labelsGroup.add(cloudLabel);
       } else if (state.visualMode === 'nucleus_zoom') {
-        const qLabel = createTextSprite(state.lang === 'th' ? '🔬 ควาร์ก' : '🔬 Quarks', '#ff007f');
+        const qLabel = createTextSprite('🔬 ควาร์ก', '#ff007f');
         qLabel.position.set(0, 0.20, 0);
         labelsGroup.add(qLabel);
       }
@@ -2252,7 +1684,7 @@
       }
     }
 
-    /* Quantum Leap Simulation */
+    /* Quantum Leap */
     function triggerPhotonInteraction(isAbsorb) {
       if (electronAnimData.length === 0) {
         showToast('ไม่มีอิเล็กตรอนสำหรับการเปลี่ยนระดับพลังงาน');
@@ -2274,11 +1706,11 @@
       photonMesh.position.copy(startPos);
 
       if (isAbsorb) {
-        sound.playQuantumLeap();
-        haptic();
-        showToast('⚡ ดูดกลืนโฟตอน: อิเล็กตรอนกระโดดสู่ Excited State!');
-      } else {
         sound.playWarp();
+        haptic();
+        showToast('⚡ ดูดกลืนโฟตอน: อิเล็กตรอนกระโดดสู่สถานะกระตุ้น (Excited)!');
+      } else {
+        sound.playChime();
         haptic();
         showToast('✨ คายโฟตอน: อิเล็กตรอนกลับสู่ Ground State ปล่อยคลื่นแสง!');
       }
@@ -2303,70 +1735,18 @@
     }
 
     /* ========================================================
-       6. TOUCH & GESTURE SYSTEM FOR AR & MOBILE
+       5. TOUCH & SCREEN TAP RAYCASTING
+       (CRITICAL: Tap particle -> Explain particle! Tap empty -> DO NOTHING!)
        ======================================================== */
-    let touchStartDist = 0;
-    let touchStartAngle = 0;
-    let initialAtomScale = 1.0;
-    let initialAtomRotY = 0;
-
-    function setupTouchGestures() {
-      container.addEventListener('touchstart', (e) => {
-        if (e.touches.length === 2) {
-          const dx = e.touches[0].clientX - e.touches[1].clientX;
-          const dy = e.touches[0].clientY - e.touches[1].clientY;
-          touchStartDist = Math.hypot(dx, dy);
-          touchStartAngle = Math.atan2(dy, dx);
-          initialAtomScale = atomRootGroup.scale.x;
-          initialAtomRotY = atomRootGroup.rotation.y;
-        }
-      }, { passive: false });
-
-      container.addEventListener('touchmove', (e) => {
-        if (e.touches.length === 2) {
-          e.preventDefault();
-          const dx = e.touches[0].clientX - e.touches[1].clientX;
-          const dy = e.touches[0].clientY - e.touches[1].clientY;
-          const dist = Math.hypot(dx, dy);
-          const angle = Math.atan2(dy, dx);
-
-          // Pinch to scale
-          const factor = dist / touchStartDist;
-          const newScale = Math.min(Math.max(initialAtomScale * factor, 0.15), 3.0);
-          atomRootGroup.scale.setScalar(newScale);
-          state.arScale = newScale;
-
-          // Two-finger rotate
-          const dAngle = angle - touchStartAngle;
-          atomRootGroup.rotation.y = initialAtomRotY - dAngle;
-        }
-      }, { passive: false });
-    }
-
-    function onPointerMove(e) {
-      if (state.isARMode) return;
-      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-
-      raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(interactiveMeshes, false);
-
-      if (intersects.length > 0) {
-        const item = intersects[0].object;
-        const title = (state.lang === 'th') ? (item.userData.titleTh || 'อนุภาค') : (item.userData.titleEn || 'Particle');
-        tooltip.style.display = 'block';
-        tooltip.style.left = `${e.clientX}px`;
-        tooltip.style.top = `${e.clientY}px`;
-        tooltip.innerText = title;
-        document.body.style.cursor = 'pointer';
-      } else {
-        tooltip.style.display = 'none';
-        document.body.style.cursor = 'default';
-      }
-    }
-
     function onPointerDown(e) {
-      if (e.target.closest('.interactive')) return;
+      // Don't intercept clicks on UI buttons/cards
+      if (e.target.closest('#top-nav') || 
+          e.target.closest('#bottom-floating-controls') || 
+          e.target.closest('#science-drawer') || 
+          e.target.closest('#quiz-modal') ||
+          e.target.closest('#subatomic-popover')) {
+        return;
+      }
 
       mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
       mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
@@ -2376,38 +1756,37 @@
 
       if (intersects.length > 0) {
         const item = intersects[0].object;
-        openParticleInspector(item.userData.category || item.userData.type);
-        sound.playSelect();
-        haptic();
+        openSubatomicPopover(item.userData.category || item.userData.type);
+      } else {
+        // Tapped empty background -> DO NOTHING!
+        // NEVER MOVE MODEL ON SCREEN TAP!
       }
     }
 
-    function openParticleInspector(category) {
+    function openSubatomicPopover(category) {
       const data = SUBATOMIC_DETAILS[category];
       if (!data) return;
 
-      const inspCard = document.getElementById('particle-inspector');
-      const inspTitle = document.getElementById('insp-title');
-      const inspDesc = document.getElementById('insp-desc');
-      const inspTable = document.getElementById('insp-table');
-      const inspFunFact = document.getElementById('insp-fun-fact');
+      document.getElementById('popover-title').innerText = data.title;
+      document.getElementById('popover-desc').innerText = data.desc;
 
-      inspTitle.innerHTML = `<i class="fa-solid fa-circle-info"></i> ${(state.lang === 'th') ? data.titleTh : data.titleEn}`;
-      inspDesc.innerText = (state.lang === 'th') ? data.descTh : data.descEn;
-
-      inspTable.innerHTML = '';
+      const tbl = document.getElementById('popover-specs-table');
+      tbl.innerHTML = '';
       data.specs.forEach(spec => {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td class="spec-name">${spec.name}</td><td class="spec-val">${spec.val}</td>`;
-        inspTable.appendChild(tr);
+        tr.innerHTML = `<td class="lbl">${spec.name}</td><td class="val">${spec.val}</td>`;
+        tbl.appendChild(tr);
       });
 
-      inspFunFact.innerHTML = `💡 <strong>${state.lang === 'th' ? 'เกร็ดน่ารู้:' : 'Key Fact:'}</strong> ${state.lang === 'th' ? data.factTh : data.specs[0].val}`;
-      inspCard.style.display = 'block';
+      document.getElementById('popover-fact').innerHTML = `💡 <strong>เกร็ดน่ารู้:</strong> ${data.fact}`;
+
+      popover.classList.add('active');
+      sound.playChime();
+      haptic();
     }
 
     /* ========================================================
-       7. HUD & ELEMENT DATA SYNC
+       6. UI POPULATION & EVENT LISTENERS
        ======================================================== */
     function updateHUDInfo() {
       const p = state.protons;
@@ -2421,47 +1800,34 @@
       const nameTh = match ? match.nameTh : `ธาตุสังเคราะห์ (Z=${z})`;
       const nameEn = match ? match.nameEn : `Element (Z=${z})`;
 
-      // Standard Deck
-      document.getElementById('deck-z-num').innerText = z;
-      document.getElementById('deck-a-num').innerText = a;
-      document.getElementById('deck-symbol').innerText = symbol;
-      document.getElementById('deck-th-name').innerText = nameTh;
-      document.getElementById('deck-en-name').innerText = `${nameEn} (${symbol})`;
+      // Top Nav
+      document.getElementById('top-pill-symbol').innerText = symbol;
+      document.getElementById('top-pill-name').innerText = `${nameTh} (Z=${z})`;
 
-      // AR Island
-      document.getElementById('ar-island-symbol').innerText = symbol;
-      document.getElementById('ar-island-name').innerText = `${nameTh} (Z=${z})`;
+      // Drawer
+      document.getElementById('drw-z').innerText = z;
+      document.getElementById('drw-a').innerText = a;
+      document.getElementById('drw-sym').innerText = symbol;
+      document.getElementById('drw-name-th').innerText = nameTh;
+      document.getElementById('drw-name-en').innerText = `${nameEn} (${symbol})`;
 
-      // Counts
-      document.getElementById('stat-protons-val').innerText = p;
-      document.getElementById('stat-neutrons-val').innerText = n;
-      document.getElementById('stat-electrons-val').innerText = e;
-      document.getElementById('lbl-protons-count').innerText = p;
-      document.getElementById('lbl-neutrons-count').innerText = n;
-      document.getElementById('lbl-electrons-count').innerText = e;
+      document.getElementById('drw-protons-val').innerText = p;
+      document.getElementById('drw-neutrons-val').innerText = n;
+      document.getElementById('drw-electrons-val').innerText = e;
+      document.getElementById('drw-lbl-p').innerText = p;
+      document.getElementById('drw-lbl-n').innerText = n;
+      document.getElementById('drw-lbl-e').innerText = e;
 
-      document.getElementById('range-protons').value = p;
-      document.getElementById('range-neutrons').value = n;
-      document.getElementById('range-electrons').value = e;
+      document.getElementById('drw-range-p').value = p;
+      document.getElementById('drw-range-n').value = n;
+      document.getElementById('drw-range-e').value = e;
 
-      // Net Charge
+      // Net charge
       const netCharge = p - e;
-      const chargeText = (netCharge === 0) 
-        ? (state.lang === 'th' ? '0 (เป็นกลาง)' : '0 (Neutral)')
-        : (netCharge > 0 ? `+${netCharge} (${state.lang === 'th' ? 'ไอออนบวก' : 'Cation'})` : `${netCharge} (${state.lang === 'th' ? 'ไอออนลบ' : 'Anion'})`);
-      
-      document.getElementById('deck-net-charge').innerText = chargeText;
-
-      const statusBadge = document.getElementById('deck-status');
-      if (netCharge === 0) {
-        statusBadge.innerText = (state.lang === 'th') ? 'อะตอมเป็นกลาง (Neutral)' : 'Neutral Atom';
-        statusBadge.style.borderColor = 'var(--green)';
-        statusBadge.style.color = 'var(--green)';
-      } else {
-        statusBadge.innerText = (state.lang === 'th') ? `ไอออน (${netCharge > 0 ? '+' : ''}${netCharge})` : `Ion (${netCharge > 0 ? '+' : ''}${netCharge})`;
-        statusBadge.style.borderColor = 'var(--gold)';
-        statusBadge.style.color = 'var(--gold)';
-      }
+      const chargeTxt = (netCharge === 0) 
+        ? 'อะตอมเป็นกลาง (ประจุสุทธิ 0)' 
+        : (netCharge > 0 ? `ไอออนบวก (Cation +${netCharge})` : `ไอออนลบ (Anion ${netCharge})`);
+      document.getElementById('drw-charge-status').innerText = chargeTxt;
 
       // Configuration
       let remE = e;
@@ -2474,70 +1840,43 @@
       if (l > 0) configArr.push(l);
       if (m > 0) configArr.push(m);
       
-      document.getElementById('deck-electron-config').innerText = configArr.length ? configArr.join(', ') : '0';
+      document.getElementById('drw-config-txt').innerText = configArr.length ? configArr.join(', ') : '0';
       const valenceCount = configArr.length ? configArr[configArr.length - 1] : 0;
-      document.getElementById('deck-valence').innerText = `${valenceCount} e⁻`;
+      document.getElementById('drw-valence-txt').innerText = `${valenceCount} e⁻`;
 
-      const shellContainer = document.getElementById('deck-shell-pills');
-      shellContainer.innerHTML = '';
-      if (k > 0) shellContainer.innerHTML += `<span class="shell-dot">K: ${k}/2</span>`;
-      if (l > 0) shellContainer.innerHTML += `<span class="shell-dot">L: ${l}/8</span>`;
-      if (m > 0) shellContainer.innerHTML += `<span class="shell-dot">M: ${m}/18</span>`;
-
-      // Highlight active chips in both Standard and AR strips
-      document.querySelectorAll('.elem-pill, .ar-strip-chip').forEach(pill => {
-        const pz = parseInt(pill.dataset.z);
-        if (pz === z) pill.classList.add('active');
-        else pill.classList.remove('active');
+      // Highlight active element pill
+      document.querySelectorAll('.elem-strip-btn').forEach(btn => {
+        const bz = parseInt(btn.dataset.z);
+        if (bz === z) btn.classList.add('active');
+        else btn.classList.remove('active');
       });
     }
 
-    function populateElementPresets() {
-      // 1. Standard Sidebar Grid
-      const standardContainer = document.getElementById('element-presets-container');
-      standardContainer.innerHTML = '';
-
-      // 2. AR Element Strip
-      const arStrip = document.getElementById('ar-element-strip');
-      arStrip.innerHTML = '';
+    function populateElementStrip() {
+      const strip = document.getElementById('element-strip-scroll');
+      strip.innerHTML = '';
 
       ELEMENTS_DATA.forEach(elem => {
-        // Standard Pill
-        const div = document.createElement('div');
-        div.className = `elem-pill ${elem.z === state.protons ? 'active' : ''}`;
-        div.dataset.z = elem.z;
-        div.innerHTML = `
-          <span class="num">${elem.z}</span>
-          <span class="symbol">${elem.symbol}</span>
-          <span class="name">${state.lang === 'th' ? elem.nameTh : elem.nameEn}</span>
-        `;
-        div.addEventListener('click', () => selectElement(elem));
-        standardContainer.appendChild(div);
+        const btn = document.createElement('button');
+        btn.className = `elem-strip-btn ${elem.z === state.protons ? 'active' : ''}`;
+        btn.dataset.z = elem.z;
+        btn.innerHTML = `${elem.symbol} <span class="num">${elem.z}</span>`;
+        
+        btn.addEventListener('click', () => {
+          state.protons = elem.protons;
+          state.neutrons = elem.neutrons;
+          state.electrons = elem.electrons;
+          state.currentElement = elem;
+          sound.playWarp();
+          haptic();
+          rebuildAtomModel();
+          showToast(`เปลี่ยนเป็นธาตุ ${elem.symbol} - ${elem.nameTh}`);
+        });
 
-        // AR Strip Chip
-        const chip = document.createElement('button');
-        chip.className = `ar-strip-chip ${elem.z === state.protons ? 'active' : ''}`;
-        chip.dataset.z = elem.z;
-        chip.innerText = `${elem.symbol} ${elem.z}`;
-        chip.addEventListener('click', () => selectElement(elem));
-        arStrip.appendChild(chip);
+        strip.appendChild(btn);
       });
     }
 
-    function selectElement(elem) {
-      state.protons = elem.protons;
-      state.neutrons = elem.neutrons;
-      state.electrons = elem.electrons;
-      state.currentElement = elem;
-      sound.playWarp();
-      haptic();
-      rebuildAtomModel();
-      showToast(`เปลี่ยนเป็นธาตุ ${elem.symbol} - ${state.lang === 'th' ? elem.nameTh : elem.nameEn}`);
-    }
-
-    /* ========================================================
-       8. INTERACTIVE QUIZ
-       ======================================================== */
     function initQuiz() {
       state.quizIndex = 0;
       state.quizScore = 0;
@@ -2548,14 +1887,11 @@
 
     function showQuizQuestion() {
       const q = QUIZ_QUESTIONS[state.quizIndex];
-      const qText = (state.lang === 'th') ? q.questionTh : q.questionEn;
-      const options = (state.lang === 'th') ? q.optionsTh : q.optionsEn;
+      document.getElementById('quiz-progress-txt').innerText = `ข้อ ${state.quizIndex + 1} / ${QUIZ_QUESTIONS.length}`;
+      document.getElementById('quiz-question-txt').innerText = q.question;
+      document.getElementById('quiz-score-txt').innerText = `คะแนน: ${state.quizScore}`;
 
-      document.getElementById('quiz-progress').innerText = `${state.lang === 'th' ? 'ข้อ' : 'Q'} ${state.quizIndex + 1} / ${QUIZ_QUESTIONS.length}`;
-      document.getElementById('quiz-question-text').innerText = qText;
-      document.getElementById('quiz-score-badge').innerText = `${state.lang === 'th' ? 'คะแนน' : 'Score'}: ${state.quizScore}`;
-
-      const optionsBox = document.getElementById('quiz-options-container');
+      const optionsBox = document.getElementById('quiz-options-box');
       const feedbackBox = document.getElementById('quiz-feedback-box');
       const nextBtn = document.getElementById('btn-next-quiz');
       
@@ -2563,41 +1899,40 @@
       feedbackBox.style.display = 'none';
       nextBtn.style.display = 'none';
 
-      options.forEach((opt, idx) => {
+      q.options.forEach((opt, idx) => {
         const btn = document.createElement('button');
-        btn.className = 'quiz-option-btn';
+        btn.className = 'quiz-opt-btn';
         btn.innerHTML = `<span style="font-family: var(--font-sci); color: var(--cyan);">${String.fromCharCode(65 + idx)}.</span> ${opt}`;
         
         btn.addEventListener('click', () => {
-          const allBtns = optionsBox.querySelectorAll('.quiz-option-btn');
-          allBtns.forEach(b => b.disabled = true);
+          optionsBox.querySelectorAll('.quiz-opt-btn').forEach(b => b.disabled = true);
 
           if (idx === q.correctIndex) {
             btn.classList.add('correct');
-            feedbackBox.style.background = 'rgba(6, 214, 160, 0.15)';
+            feedbackBox.style.background = 'rgba(6, 214, 160, 0.2)';
             feedbackBox.style.border = '1px solid var(--green)';
             feedbackBox.style.color = '#fff';
-            feedbackBox.innerHTML = `✅ <strong>${state.lang === 'th' ? 'ถูกต้อง!' : 'Correct!'}</strong> ${q.explanationTh}`;
+            feedbackBox.innerHTML = `✅ <strong>ถูกต้อง!</strong> ${q.explanation}`;
             state.quizScore += 20;
             sound.playSuccess();
           } else {
             btn.classList.add('wrong');
-            allBtns[q.correctIndex].classList.add('correct');
-            feedbackBox.style.background = 'rgba(255, 51, 102, 0.15)';
+            optionsBox.querySelectorAll('.quiz-opt-btn')[q.correctIndex].classList.add('correct');
+            feedbackBox.style.background = 'rgba(255, 51, 102, 0.2)';
             feedbackBox.style.border = '1px solid var(--proton-red)';
             feedbackBox.style.color = '#fff';
-            feedbackBox.innerHTML = `❌ <strong>${state.lang === 'th' ? 'คำตอบยังไม่ถูก' : 'Incorrect'}</strong> — ${q.explanationTh}`;
+            feedbackBox.innerHTML = `❌ <strong>ยังไม่ถูกต้อง</strong> — ${q.explanation}`;
             sound.playWrong();
           }
 
           feedbackBox.style.display = 'block';
-          document.getElementById('quiz-score-badge').innerText = `${state.lang === 'th' ? 'คะแนน' : 'Score'}: ${state.quizScore}`;
+          document.getElementById('quiz-score-txt').innerText = `คะแนน: ${state.quizScore}`;
 
           if (state.quizIndex < QUIZ_QUESTIONS.length - 1) {
-            nextBtn.innerText = (state.lang === 'th') ? 'ข้อถัดไป ➔' : 'Next ➔';
+            nextBtn.innerText = 'ข้อถัดไป ➔';
             nextBtn.style.display = 'inline-flex';
           } else {
-            nextBtn.innerText = (state.lang === 'th') ? 'สรุปคะแนน 🎉' : 'Finish 🎉';
+            nextBtn.innerText = 'สรุปคะแนน 🎉';
             nextBtn.style.display = 'inline-flex';
           }
         });
@@ -2606,144 +1941,143 @@
       });
     }
 
-    /* ========================================================
-       9. UI EVENT HANDLERS & BINDINGS
-       ======================================================== */
     function bindUIEvents() {
-      const sidebar = document.getElementById('sidebar');
-      const sidebarOverlay = document.getElementById('sidebar-overlay');
-      const closeSidebarBtn = document.getElementById('btn-close-sidebar');
+      // 1. Spawn Anchor Button (ONLY this button repositions the model!)
+      document.getElementById('btn-spawn-anchor').addEventListener('click', repositionAtomInFront);
 
-      // Toggle Sidebar
-      function toggleSidebar(open) {
-        if (open) {
-          sidebar.classList.add('open');
-          sidebarOverlay.classList.add('active');
-          closeSidebarBtn.style.display = 'block';
-        } else {
-          sidebar.classList.remove('open');
-          sidebarOverlay.classList.remove('active');
-          closeSidebarBtn.style.display = 'none';
-        }
-        sound.playSelect();
-        haptic();
-      }
-
-      document.getElementById('btn-toggle-sidebar').addEventListener('click', () => {
-        toggleSidebar(!sidebar.classList.contains('open'));
-      });
-      sidebarOverlay.addEventListener('click', () => toggleSidebar(false));
-      closeSidebarBtn.addEventListener('click', () => toggleSidebar(false));
-
-      // Collapsible Bottom Sheet
-      const bottomDeck = document.getElementById('bottom-deck');
-      const chevron = document.getElementById('sheet-chevron-icon');
-      const toggleSheetBtn = document.getElementById('btn-toggle-sheet');
-      const sheetHandle = document.getElementById('sheet-handle');
-
-      function toggleSheet() {
-        state.sheetExpanded = !state.sheetExpanded;
-        if (state.sheetExpanded) {
-          bottomDeck.classList.add('expanded');
-          chevron.className = 'fa-solid fa-chevron-down';
-        } else {
-          bottomDeck.classList.remove('expanded');
-          chevron.className = 'fa-solid fa-chevron-up';
-        }
-        sound.playSelect();
-        haptic();
-      }
-
-      toggleSheetBtn.addEventListener('click', toggleSheet);
-      sheetHandle.addEventListener('click', toggleSheet);
-
-      // Sound Toggle (Both Standard & AR)
-      const soundBtn = document.getElementById('btn-toggle-sound');
-      const arSoundBtn = document.getElementById('btn-ar-sound');
-      function toggleSound() {
-        sound.muted = !sound.muted;
-        const icon = sound.muted ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>';
-        soundBtn.innerHTML = icon;
-        arSoundBtn.innerHTML = icon;
-        haptic();
-        showToast(sound.muted ? 'ปิดเสียงแล้ว' : 'เปิดเสียงแล้ว');
-      }
-      soundBtn.addEventListener('click', toggleSound);
-      arSoundBtn.addEventListener('click', toggleSound);
-
-      // Language Switcher
-      document.getElementById('btn-lang').addEventListener('click', () => {
-        state.lang = (state.lang === 'th') ? 'en' : 'th';
-        document.getElementById('btn-lang').querySelector('span').innerText = state.lang.toUpperCase();
-        sound.playSelect();
-        haptic();
-        applyLocalization();
+      // 2. Mode Segmented Switcher
+      document.querySelectorAll('.mode-seg-item').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.mode-seg-item').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          state.visualMode = btn.dataset.mode;
+          sound.playSelect();
+          haptic();
+          rebuildAtomModel();
+          showToast(`โหมดแบบจำลอง: ${btn.querySelector('span:last-child').innerText}`);
+        });
       });
 
-      // Reset Camera
-      document.getElementById('btn-reset-cam').addEventListener('click', () => {
-        camera.position.set(0, 0.3, 1.3);
-        controls.target.set(0, 0, 0);
-        controls.update();
+      // 3. Scale Buttons
+      const scaleTxt = document.getElementById('scale-indicator-txt');
+      document.getElementById('btn-scale-up').addEventListener('click', () => {
+        state.arScale = Math.min(2.5, state.arScale + 0.15);
+        atomRootGroup.scale.setScalar(state.arScale);
+        scaleTxt.innerText = `${state.arScale.toFixed(1)}x`;
         sound.playSelect();
         haptic();
-        showToast('รีเซ็ตมุมมองกล้องแล้ว');
       });
 
-      // Auto-Rotation Toggle
-      document.getElementById('btn-toggle-rotation').addEventListener('click', () => {
-        state.autoRotate = !state.autoRotate;
+      document.getElementById('btn-scale-down').addEventListener('click', () => {
+        state.arScale = Math.max(0.15, state.arScale - 0.15);
+        atomRootGroup.scale.setScalar(state.arScale);
+        scaleTxt.innerText = `${state.arScale.toFixed(1)}x`;
         sound.playSelect();
         haptic();
-        showToast(state.autoRotate ? 'เริ่มหมุนอัตโนมัติ' : 'หยุดหมุนอัตโนมัติ');
       });
 
-      // 3D Labels Toggle
+      // 4. Quantum Leap
+      document.getElementById('btn-quantum-leap').addEventListener('click', () => triggerPhotonInteraction(true));
+      document.getElementById('btn-drw-absorb').addEventListener('click', () => triggerPhotonInteraction(true));
+      document.getElementById('btn-drw-emit').addEventListener('click', () => triggerPhotonInteraction(false));
+
+      // 5. 3D Labels Toggle
       document.getElementById('btn-toggle-labels').addEventListener('click', () => {
         state.showLabels = !state.showLabels;
         labelsGroup.visible = state.showLabels;
         sound.playSelect();
         haptic();
-        showToast(state.showLabels ? 'แสดงป้าย 3D' : 'ซ่อนป้าย 3D');
+        showToast(state.showLabels ? 'แสดงป้ายชื่อ 3D' : 'ซ่อนป้ายชื่อ 3D');
       });
 
-      // Clean View (Focus Mode)
-      const cleanBtn = document.getElementById('btn-clean-view');
-      const arCleanBtn = document.getElementById('btn-ar-clean');
-      const exitCleanBtn = document.getElementById('btn-exit-clean');
+      // 6. Science Drawer Open/Close
+      const drawer = document.getElementById('science-drawer');
+      const drawerBackdrop = document.getElementById('drawer-backdrop');
 
-      function toggleCleanView(enable) {
-        if (enable) {
-          document.body.classList.add('clean-view');
-          showToast('เข้าสู่โหมดโฟกัส — แตะไอคอนตาเพื่อแสดงแถบเครื่องมือ');
+      function toggleDrawer(open) {
+        if (open) {
+          drawer.classList.add('open');
+          drawerBackdrop.classList.add('active');
         } else {
-          document.body.classList.remove('clean-view');
+          drawer.classList.remove('open');
+          drawerBackdrop.classList.remove('active');
         }
         sound.playSelect();
         haptic();
       }
 
-      cleanBtn.addEventListener('click', () => toggleCleanView(true));
-      arCleanBtn.addEventListener('click', () => toggleCleanView(true));
-      exitCleanBtn.addEventListener('click', () => toggleCleanView(false));
+      document.getElementById('btn-open-drawer').addEventListener('click', () => toggleDrawer(true));
+      document.getElementById('btn-close-drawer').addEventListener('click', () => toggleDrawer(false));
+      drawerBackdrop.addEventListener('click', () => toggleDrawer(false));
 
-      // Screenshot Capture (Standard & AR)
-      function takeScreenshot() {
+      // 7. Drawer Particles Click to Inspect
+      document.getElementById('drw-card-proton').addEventListener('click', () => {
+        toggleDrawer(false);
+        openSubatomicPopover('proton');
+      });
+      document.getElementById('drw-card-neutron').addEventListener('click', () => {
+        toggleDrawer(false);
+        openSubatomicPopover('neutron');
+      });
+      document.getElementById('drw-card-electron').addEventListener('click', () => {
+        toggleDrawer(false);
+        openSubatomicPopover('electron');
+      });
+
+      // 8. Drawer Sandbox Sliders
+      const rangeP = document.getElementById('drw-range-p');
+      const rangeN = document.getElementById('drw-range-n');
+      const rangeE = document.getElementById('drw-range-e');
+
+      const onSliderChange = () => {
+        state.protons = parseInt(rangeP.value);
+        state.neutrons = parseInt(rangeN.value);
+        state.electrons = parseInt(rangeE.value);
+        rebuildAtomModel();
+      };
+      rangeP.addEventListener('input', onSliderChange);
+      rangeN.addEventListener('input', onSliderChange);
+      rangeE.addEventListener('input', onSliderChange);
+
+      // 9. Close Subatomic Popover
+      document.getElementById('btn-close-popover').addEventListener('click', () => {
+        popover.classList.remove('active');
+        sound.playSelect();
+      });
+
+      // 10. Sound Toggle
+      const soundBtn = document.getElementById('btn-toggle-sound');
+      soundBtn.addEventListener('click', () => {
+        sound.muted = !sound.muted;
+        soundBtn.innerHTML = sound.muted ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>';
+        haptic();
+        showToast(sound.muted ? 'ปิดเสียงแล้ว' : 'เปิดเสียงแล้ว');
+      });
+
+      // 11. Clean Mode
+      document.getElementById('btn-clean-mode').addEventListener('click', () => {
+        document.body.classList.add('clean-view');
+        showToast('เข้าสู่โหมดโฟกัส — แตะไอคอนตาเพื่อแสดงแถบเครื่องมือ');
+      });
+      document.getElementById('btn-exit-clean').addEventListener('click', () => {
+        document.body.classList.remove('clean-view');
+      });
+
+      // 12. Screenshot
+      document.getElementById('btn-take-photo').addEventListener('click', () => {
         renderer.render(scene, camera);
         const dataURL = renderer.domElement.toDataURL('image/png');
         const link = document.createElement('a');
-        link.download = `atomic_lab_${state.currentElement.symbol}_${Date.now()}.png`;
+        link.download = `atomic_${state.currentElement.symbol}_${Date.now()}.png`;
         link.href = dataURL;
         link.click();
         sound.playSelect();
         haptic();
-        showToast('บันทึกรูปภาพอะตอมเรียบร้อยแล้ว 📸');
-      }
-      document.getElementById('btn-screenshot').addEventListener('click', takeScreenshot);
-      document.getElementById('btn-ar-photo').addEventListener('click', takeScreenshot);
+        showToast('บันทึกรูปภาพเรียบร้อย 📸');
+      });
 
-      // Quiz Modal Open/Close
-      document.getElementById('btn-quiz').addEventListener('click', initQuiz);
+      // 13. Quiz Modal
+      document.getElementById('btn-open-quiz').addEventListener('click', initQuiz);
       document.getElementById('btn-close-quiz').addEventListener('click', () => {
         document.getElementById('quiz-modal').style.display = 'none';
         sound.playSelect();
@@ -2755,112 +2089,18 @@
           state.quizIndex++;
           showQuizQuestion();
         } else {
-          document.getElementById('quiz-question-text').innerHTML = `
-            <div style="text-align: center; padding: 16px 0;">
-              <i class="fa-solid fa-trophy" style="font-size: 44px; color: var(--gold); margin-bottom: 12px;"></i>
-              <h2>${state.lang === 'th' ? 'ทำแบบทดสอบเสร็จสิ้น!' : 'Quiz Completed!'}</h2>
-              <p style="font-size: 17px; margin-top: 8px; color: var(--cyan);">${state.lang === 'th' ? 'คะแนนของคุณ' : 'Your Score'}: ${state.quizScore} / 100</p>
+          document.getElementById('quiz-question-txt').innerHTML = `
+            <div style="text-align: center; padding: 12px 0;">
+              <i class="fa-solid fa-trophy" style="font-size: 40px; color: var(--gold); margin-bottom: 10px;"></i>
+              <h2>ทำแบบทดสอบเสร็จสิ้น!</h2>
+              <p style="font-size: 16px; margin-top: 6px; color: var(--cyan);">คะแนนของคุณ: ${state.quizScore} / 100</p>
             </div>
           `;
-          document.getElementById('quiz-options-container').innerHTML = '';
+          document.getElementById('quiz-options-box').innerHTML = '';
           document.getElementById('quiz-feedback-box').style.display = 'none';
           document.getElementById('btn-next-quiz').style.display = 'none';
         }
       });
-
-      // Mode Switcher Handlers (Standard Sidebar & AR Segmented)
-      function switchVisualMode(mode) {
-        state.visualMode = mode;
-        // Sync Standard Buttons
-        document.querySelectorAll('.mode-btn').forEach(btn => {
-          if (btn.dataset.mode === mode) btn.classList.add('active');
-          else btn.classList.remove('active');
-        });
-        // Sync AR Segmented Buttons
-        document.querySelectorAll('.ar-mode-seg-btn').forEach(btn => {
-          if (btn.dataset.mode === mode) btn.classList.add('active');
-          else btn.classList.remove('active');
-        });
-
-        sound.playSelect();
-        haptic();
-        rebuildAtomModel();
-        showToast(`โหมดแบบจำลอง: ${mode === 'bohr' ? 'แบบจำลองโบร์' : (mode === 'cloud' ? 'กลุ่มหมอกควอนตัม' : 'เจาะลึกนิวเคลียสและควาร์ก')}`);
-      }
-
-      document.querySelectorAll('.mode-btn, .ar-mode-seg-btn').forEach(btn => {
-        btn.addEventListener('click', () => switchVisualMode(btn.dataset.mode));
-      });
-
-      // Sliders Sync
-      const pRange = document.getElementById('range-protons');
-      const nRange = document.getElementById('range-neutrons');
-      const eRange = document.getElementById('range-electrons');
-
-      const onSliderChange = () => {
-        state.protons = parseInt(pRange.value);
-        state.neutrons = parseInt(nRange.value);
-        state.electrons = parseInt(eRange.value);
-        rebuildAtomModel();
-      };
-      pRange.addEventListener('input', onSliderChange);
-      nRange.addEventListener('input', onSliderChange);
-      eRange.addEventListener('input', onSliderChange);
-
-      // Quantum actions
-      document.getElementById('btn-absorb-photon').addEventListener('click', () => triggerPhotonInteraction(true));
-      document.getElementById('btn-emit-photon').addEventListener('click', () => triggerPhotonInteraction(false));
-      document.getElementById('btn-ar-quantum-leap').addEventListener('click', () => triggerPhotonInteraction(true));
-
-      // AR Spawn Button
-      document.getElementById('btn-ar-spawn-anchor').addEventListener('click', repositionAtomInFront);
-
-      // AR Scale Buttons
-      document.getElementById('btn-ar-scale-up').addEventListener('click', () => {
-        state.arScale = Math.min(2.5, state.arScale + 0.12);
-        atomRootGroup.scale.setScalar(state.arScale);
-        sound.playSelect();
-        haptic();
-      });
-
-      document.getElementById('btn-ar-scale-down').addEventListener('click', () => {
-        state.arScale = Math.max(0.15, state.arScale - 0.12);
-        atomRootGroup.scale.setScalar(state.arScale);
-        sound.playSelect();
-        haptic();
-      });
-
-      // Particle Inspector Close
-      document.getElementById('btn-close-inspector').addEventListener('click', () => {
-        document.getElementById('particle-inspector').style.display = 'none';
-        sound.playSelect();
-      });
-
-      // Bottom cards click to inspect
-      document.getElementById('card-click-proton').addEventListener('click', () => openParticleInspector('proton'));
-      document.getElementById('card-click-neutron').addEventListener('click', () => openParticleInspector('neutron'));
-      document.getElementById('card-click-electron').addEventListener('click', () => openParticleInspector('electron'));
-    }
-
-    function applyLocalization() {
-      const isTh = (state.lang === 'th');
-      document.getElementById('txt-subtitle').innerText = isTh ? 'สื่อการเรียนรู้โครงสร้างอะตอม 3 มิติและเทคโนโลยี AR' : '3D Interactive & AR Atomic Model';
-      document.getElementById('txt-btn-control').innerText = isTh ? 'ปรับแต่ง' : 'Controls';
-      document.getElementById('txt-btn-quiz').innerText = isTh ? 'ควิซ' : 'Quiz';
-      document.getElementById('txt-sheet-toggle').innerText = isTh ? 'ข้อมูลวิทยาศาสตร์' : 'Science Info';
-      document.getElementById('txt-elements-title').innerText = isTh ? '⚛️ เลือกธาตุเคมี (Element)' : '⚛️ Select Element';
-      document.getElementById('txt-modes-title').innerText = isTh ? '🔭 โหมดแบบจำลอง (Visual Mode)' : '🔭 Visual Mode';
-      document.getElementById('txt-sandbox-title').innerText = isTh ? '🛠️ ปรับแต่งอะตอม (Atom Sandbox)' : '🛠️ Atom Sandbox';
-      document.getElementById('txt-photon-title').innerText = isTh ? '⚡ ปรากฏการณ์ควอนตัม' : '⚡ Quantum Phenomenon';
-      document.getElementById('txt-absorb-btn').innerText = isTh ? 'ดูดกลืนโฟตอน' : 'Absorb';
-      document.getElementById('txt-emit-btn').innerText = isTh ? 'คายโฟตอน' : 'Emit';
-      document.getElementById('txt-label-proton').innerText = isTh ? 'โปรตอน (p⁺)' : 'Protons (p⁺)';
-      document.getElementById('txt-label-neutron').innerText = isTh ? 'นิวตรอน (n⁰)' : 'Neutrons (n⁰)';
-      document.getElementById('txt-label-electron').innerText = isTh ? 'อิเล็กตรอน (e⁻)' : 'Electrons (e⁻)';
-      
-      populateElementPresets();
-      updateHUDInfo();
-      build3DLabels();
     }
 
     function showToast(text) {
@@ -2876,7 +2116,7 @@
     }
 
     /* ========================================================
-       10. ANIMATION & RENDER LOOP (60 FPS)
+       7. RENDER & ANIMATION LOOP
        ======================================================== */
     const clock = new THREE.Clock();
 
@@ -2925,7 +2165,7 @@
     /* Entry Point */
     window.addEventListener('DOMContentLoaded', () => {
       init3D();
-      populateElementPresets();
+      populateElementStrip();
       bindUIEvents();
     });
 
