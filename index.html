@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>ATOMIC AR LAB — สื่อการเรียนรู้โครงสร้างอะตอม 3 มิติและ AR เสมือนจริง</title>
+  <title>ATOMIC AR LAB — วิวัฒนาการแบบจำลองอะตอม 5 ยุคในประวัติศาสตร์และ AR</title>
   
   <!-- Google Fonts: Prompt & Orbitron -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,7 +16,7 @@
   <style>
     :root {
       --bg-dark: #040814;
-      --panel-bg: rgba(8, 14, 30, 0.86);
+      --panel-bg: rgba(8, 14, 30, 0.88);
       --panel-border: rgba(0, 240, 255, 0.32);
       --panel-glow: rgba(0, 240, 255, 0.15);
       
@@ -117,7 +117,7 @@
     }
 
     /* ========================================================
-       TOP HEADER BAR (Works seamlessly in both Standard & AR)
+       TOP NAVIGATION BAR
        ======================================================== */
     #top-nav {
       position: absolute;
@@ -223,12 +223,12 @@
       bottom: var(--safe-bottom);
       left: var(--safe-left);
       right: var(--safe-right);
-      max-width: 500px;
+      max-width: 520px;
       margin: 0 auto;
       z-index: 100;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 7px;
       pointer-events: none;
     }
 
@@ -280,46 +280,49 @@
       font-weight: 800;
     }
 
-    /* 2. Visual Mode Segmented Switcher (Never wraps!) */
-    .mode-segmented-bar {
+    /* 2. Historical 5 Models Horizontal Scroll Strip (Never wraps!) */
+    .models-strip-scroll {
       display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 4px 6px;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
       background: var(--panel-bg);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border: 1px solid var(--panel-border);
       border-radius: 18px;
-      padding: 4px;
-      gap: 4px;
       pointer-events: auto;
     }
+    .models-strip-scroll::-webkit-scrollbar { display: none; }
 
-    .mode-seg-item {
-      flex: 1;
-      padding: 7px 4px;
-      border-radius: 14px;
-      border: none;
-      background: transparent;
+    .model-chip-btn {
+      padding: 6px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.05);
       color: var(--text-muted);
       font-family: var(--font-body);
-      font-size: 12px;
-      font-weight: 500;
+      font-size: 11px;
+      font-weight: 600;
       cursor: pointer;
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 4px;
+      gap: 5px;
       white-space: nowrap !important;
+      flex-shrink: 0;
       transition: all 0.2s;
     }
 
-    .mode-seg-item.active {
-      background: rgba(0, 240, 255, 0.22);
+    .model-chip-btn.active {
+      background: rgba(0, 240, 255, 0.25);
+      border-color: var(--cyan);
       color: var(--cyan);
-      font-weight: 700;
       box-shadow: 0 0 10px rgba(0, 240, 255, 0.35);
     }
 
-    /* 3. Action Toolbar (Spawn, Scale, Quantum, Info) */
+    /* 3. Action Toolbar (Spawn, Scale, Quantum, Labels, Info) */
     .mobile-action-bar {
       display: flex;
       align-items: center;
@@ -395,7 +398,7 @@
        ======================================================== */
     #subatomic-popover {
       position: absolute;
-      bottom: calc(var(--safe-bottom) + 140px);
+      bottom: calc(var(--safe-bottom) + 145px);
       left: 50%;
       transform: translateX(-50%) translateY(20px);
       width: calc(100vw - 32px);
@@ -605,6 +608,29 @@
       box-shadow: 0 0 10px rgba(0, 240, 255, 0.8);
     }
 
+    /* Model History Card in Drawer */
+    .history-model-card {
+      background: rgba(0, 240, 255, 0.05);
+      border: 1px solid rgba(0, 240, 255, 0.2);
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .history-model-card h4 {
+      font-size: 13px;
+      color: var(--cyan);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .history-model-card p {
+      font-size: 11px;
+      line-height: 1.5;
+      color: #e2e8f0;
+      margin-bottom: 4px;
+    }
+
     /* Drawer backdrop */
     #drawer-backdrop {
       position: fixed;
@@ -675,7 +701,7 @@
       line-height: 1.4;
     }
 
-    /* Clean View Mode (Hide all UI for pure AR camera photo) */
+    /* Clean View Mode */
     body.clean-view #top-nav,
     body.clean-view #bottom-floating-controls,
     body.clean-view #subatomic-popover {
@@ -736,7 +762,7 @@
       <div class="brand-title">
         <span id="top-pill-symbol">C</span>
         <span id="top-pill-name">คาร์บอน (Z=6)</span>
-        <span class="badge">PRO 3.0</span>
+        <span class="badge" id="top-pill-model-badge">โบร์ (1913)</span>
       </div>
     </div>
 
@@ -745,12 +771,12 @@
       <span id="ar-button-slot"></span>
 
       <!-- Open Science & Sandbox Drawer -->
-      <button class="circle-btn primary" id="btn-open-drawer" title="แผงข้อมูลวิทยาศาสตร์และปรับแต่ง">
+      <button class="circle-btn primary" id="btn-open-drawer" title="ข้อมูลวิทยาศาสตร์ & ประวัติแบบจำลอง">
         <i class="fa-solid fa-bars"></i>
       </button>
 
       <!-- Quiz -->
-      <button class="circle-btn" id="btn-open-quiz" title="ทำแบบทดสอบ">
+      <button class="circle-btn" id="btn-open-quiz" title="แบบทดสอบ 5 แบบจำลอง">
         <i class="fa-solid fa-graduation-cap" style="color: var(--gold);"></i>
       </button>
 
@@ -773,7 +799,7 @@
 
   <!-- ========================================================
        FLOATING CONTROLS BOTTOM (For Mobile & AR)
-       ======================================================== */ -->
+       ======================================================== -->
   <div id="bottom-floating-controls">
     
     <!-- 1. Horizontal Scrollable Element Strip -->
@@ -781,22 +807,31 @@
       <!-- Generated via JS -->
     </div>
 
-    <!-- 2. Segmented Model Switcher (Never wraps!) -->
-    <div class="mode-segmented-bar">
-      <button class="mode-seg-item active" data-mode="bohr" title="แบบจำลองโบร์">
-        <span>🪐</span> <span>โบร์</span>
+    <!-- 2. THE 5 HISTORICAL ATOMIC MODELS STRIP -->
+    <div class="models-strip-scroll" id="models-strip-scroll">
+      <button class="model-chip-btn" data-mode="dalton" title="1. แบบจำลองของดอลตัน (1803)">
+        <span>⚪</span> <span>1. ดอลตัน (1803)</span>
       </button>
-      <button class="mode-seg-item" data-mode="cloud" title="กลุ่มหมอกควอนตัม">
-        <span>☁️</span> <span>หมอก</span>
+      <button class="model-chip-btn" data-mode="thomson" title="2. แบบจำลองของทอมสัน (1904)">
+        <span>🥧</span> <span>2. ทอมสัน (1904)</span>
       </button>
-      <button class="mode-seg-item" data-mode="nucleus_zoom" title="ผ่าดูควาร์ก">
-        <span>🔬</span> <span>ควาร์ก</span>
+      <button class="model-chip-btn" data-mode="rutherford" title="3. แบบจำลองของรัทเทอร์ฟอร์ด (1911)">
+        <span>🎯</span> <span>3. รัทเทอร์ฟอร์ด (1911)</span>
+      </button>
+      <button class="model-chip-btn active" data-mode="bohr" title="4. แบบจำลองของโบร์ (1913)">
+        <span>🪐</span> <span>4. โบร์ (1913)</span>
+      </button>
+      <button class="model-chip-btn" data-mode="cloud" title="5. แบบจำลองกลุ่มหมอก (1926-ปัจจุบัน)">
+        <span>☁️</span> <span>5. กลุ่มหมอก (ควอนตัม)</span>
+      </button>
+      <button class="model-chip-btn" data-mode="nucleus_zoom" title="เจาะลึกนิวเคลียสและควาร์ก">
+        <span>🔬</span> <span>ผ่าดูควาร์ก (u/d)</span>
       </button>
     </div>
 
-    <!-- 3. Mobile Action Bar (Spawn Anchor, Scale, Quantum, Info) -->
+    <!-- 3. Mobile Action Bar (Spawn Anchor, Scale, Quantum, Labels) -->
     <div class="mobile-action-bar glass-panel">
-      <!-- Dedicated Spawn Anchor Button -->
+      <!-- Dedicated Spawn Anchor Button (ONLY this button repositions the atom!) -->
       <button class="spawn-anchor-btn" id="btn-spawn-anchor">
         <i class="fa-solid fa-location-crosshairs"></i>
         <span id="txt-spawn-btn">วางตรงหน้า</span>
@@ -845,8 +880,17 @@
     <div class="drawer-handle-bar" id="drawer-handle"></div>
     
     <div class="drawer-header">
-      <h2><i class="fa-solid fa-atom" style="color: var(--cyan);"></i> ข้อมูลวิทยาศาสตร์และห้องทดลอง</h2>
+      <h2><i class="fa-solid fa-atom" style="color: var(--cyan);"></i> ข้อมูลวิทยาศาสตร์และประวัติแบบจำลอง</h2>
       <button class="circle-btn" id="btn-close-drawer" style="width: 32px; height: 32px;">&times;</button>
+    </div>
+
+    <!-- Active Historical Model Guide Card -->
+    <div class="history-model-card" id="drw-history-card">
+      <h4 id="drw-history-title"><i class="fa-solid fa-book-bookmark"></i> แบบจำลองของโบร์ (ค.ศ. 1913)</h4>
+      <p id="drw-history-concept">อิเล็กตรอนวิ่งรอบนิวเคลียสเป็นวงโคจรเฉพาะที่มีระดับพลังงานคงที่ (n=1, 2, 3...) ไม่สูญเสียพลังงาน</p>
+      <div style="font-size: 10px; color: var(--gold);" id="drw-history-limitation">
+        ⚠️ <strong>ข้อจำกัด/การพัฒนาต่อ:</strong> อธิบายอะตอมที่มีหลายอิเล็กตรอนได้ไม่สมบูรณ์ นำไปสู่แบบจำลองกลุ่มหมอก
+      </div>
     </div>
 
     <!-- Summary Box -->
@@ -868,17 +912,17 @@
       <div class="particle-p-card p" id="drw-card-proton">
         <div class="sub-lbl" style="color: var(--proton-red);">โปรตอน (p⁺)</div>
         <div class="cnt" id="drw-protons-val">6</div>
-        <div class="sub-lbl">ประจุบวก</div>
+        <div class="sub-lbl">ประจุบวก (+1)</div>
       </div>
       <div class="particle-p-card n" id="drw-card-neutron">
         <div class="sub-lbl" style="color: var(--neutron-blue);">นิวตรอน (n⁰)</div>
         <div class="cnt" id="drw-neutrons-val">6</div>
-        <div class="sub-lbl">เป็นกลาง</div>
+        <div class="sub-lbl">เป็นกลาง (0)</div>
       </div>
       <div class="particle-p-card e" id="drw-card-electron">
         <div class="sub-lbl" style="color: var(--cyan);">อิเล็กตรอน (e⁻)</div>
         <div class="cnt" id="drw-electrons-val">6</div>
-        <div class="sub-lbl">ประจุลบ</div>
+        <div class="sub-lbl">ประจุลบ (-1)</div>
       </div>
     </div>
 
@@ -897,7 +941,7 @@
     <!-- Atom Sandbox Sliders -->
     <div class="sandbox-box">
       <div style="font-family: var(--font-sci); font-size: 11px; color: var(--cyan); margin-bottom: 8px;">
-        🛠️ ปรับแต่งอะตอมอิสระ (Sandbox)
+        🛠️ ปรับแต่งอะตอมอิสระ (Atom Sandbox)
       </div>
       <div class="slider-row p">
         <div class="slider-row-lbl">
@@ -922,7 +966,7 @@
       </div>
     </div>
 
-    <!-- Additional Quick Actions -->
+    <!-- Quantum experiment buttons -->
     <div style="display: flex; gap: 8px; margin-top: 10px;">
       <button class="spawn-anchor-btn" id="btn-drw-absorb" style="background: rgba(255,209,102,0.25); color: #ffd166; border: 1px solid var(--gold);">
         ⚡ ดูดกลืนโฟตอน
@@ -937,7 +981,7 @@
   <div id="quiz-modal">
     <div class="quiz-container">
       <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; margin-bottom: 12px;">
-        <h2 style="font-family: var(--font-sci); font-size: 15px; color: var(--cyan);"><i class="fa-solid fa-graduation-cap"></i> แบบทดสอบอะตอม</h2>
+        <h2 style="font-family: var(--font-sci); font-size: 15px; color: var(--cyan);"><i class="fa-solid fa-graduation-cap"></i> แบบทดสอบ 5 แบบจำลองอะตอม</h2>
         <span style="font-size: 10px; padding: 2px 8px; border-radius: 10px; background: rgba(255,209,102,0.2); color: var(--gold);" id="quiz-progress-txt">ข้อ 1 / 5</span>
       </div>
 
@@ -956,7 +1000,7 @@
   </div>
 
   <!-- ==========================================
-       MAIN THREE.JS & INTERACTIVE SCRIPT
+       MAIN THREE.JS & INTERACTIVE LOGIC
        ========================================== -->
   <script type="module">
     import * as THREE from 'three';
@@ -964,7 +1008,7 @@
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
     /* ========================================================
-       1. DATA DEFINITIONS
+       1. DATA DEFINITIONS (Elements & The 5 Historical Models)
        ======================================================== */
     const ELEMENTS_DATA = [
       { z: 1,  symbol: 'H',  nameTh: 'ไฮโดรเจน',   nameEn: 'Hydrogen',   protons: 1,  neutrons: 0,  electrons: 1 },
@@ -985,41 +1029,123 @@
       { z: 18, symbol: 'Ar', nameTh: 'อาร์กอน',     nameEn: 'Argon',      protons: 18, neutrons: 22, electrons: 18 }
     ];
 
+    /* THE 5 HISTORICAL ATOMIC MODELS SPECIFICATIONS */
+    const HISTORICAL_MODELS = {
+      dalton: {
+        id: 'dalton',
+        nameTh: 'ดอลตัน (1803)',
+        title: '⚪ 1. แบบจำลองของดอลตัน (ค.ศ. 1803)',
+        scientist: 'จอห์น ดอลตัน (John Dalton)',
+        concept: 'อะตอมเป็นทรงกลมตันขนาดเล็กมาก ไม่สามารถแบ่งแยกได้ และไม่สามารถสร้างขึ้นใหม่หรือทำลายได้ (Solid Sphere Model)',
+        limitation: 'ต่อมาทอมสันค้นพบอิเล็กตรอน จึงพิสูจน์ว่าอะตอมสามารถแบ่งแยกได้และมีอนุภาคย่อยภายใน'
+      },
+      thomson: {
+        id: 'thomson',
+        nameTh: 'ทอมสัน (1904)',
+        title: '🥧 2. แบบจำลองของทอมสัน (ค.ศ. 1904)',
+        scientist: 'เจ.เจ. ทอมสัน (J.J. Thomson)',
+        concept: 'แบบจำลองขนมปังลูกเกด (Plum Pudding Model): อะตอมเป็นทรงกลมเนื้อประจุบวกกระจายสม่ำเสมอ และมีอิเล็กตรอนประจุลบฝังตัวอยู่ทั่วไป',
+        limitation: 'ไม่สามารถอธิบายการสะท้อนกลับของอนุภาคแอลฟาในการทดลองแผ่นทองคำเปลวของรัทเทอร์ฟอร์ด'
+      },
+      rutherford: {
+        id: 'rutherford',
+        nameTh: 'รัทเทอร์ฟอร์ด (1911)',
+        title: '🎯 3. แบบจำลองของรัทเทอร์ฟอร์ด (ค.ศ. 1911)',
+        scientist: 'เออร์เนสต์ รัทเทอร์ฟอร์ด (Ernest Rutherford)',
+        concept: 'อะตอมมีนิวเคลียสขนาดเล็กมากตรงกลาง รวมมวลและประจุบวกไว้ทั้งหมด ส่วนอิเล็กตรอนวิ่งวนในที่ว่างอันกว้างใหญ่รอบนอก',
+        limitation: 'ตามทฤษฎีคลื่นแม่เหล็กไฟฟ้าคลาสสิก อิเล็กตรอนที่วิ่งวนควรแผ่รังสีและตกลงสู่นิวเคลียส แต่อะตอมจริงมีความเสถียร'
+      },
+      bohr: {
+        id: 'bohr',
+        nameTh: 'โบร์ (1913)',
+        title: '🪐 4. แบบจำลองของโบร์ (ค.ศ. 1913)',
+        scientist: 'นีลส์ โบร์ (Niels Bohr)',
+        concept: 'อิเล็กตรอนโคจรรอบนิวเคลียสเป็นชั้นระดับพลังงานเฉพาะ (n=1, 2, 3...) โดยไม่สูญเสียพลังงาน และจะรับหรือคายโฟตอนเมื่อย้ายชั้น',
+        limitation: 'อธิบายได้แม่นยำเฉพาะอะตอมที่มีอิเล็กตรอนตัวเดียว (เช่น ไฮโดรเจน) แต่อธิบายอะตอมที่มีหลายอิเล็กตรอนไม่ได้'
+      },
+      cloud: {
+        id: 'cloud',
+        nameTh: 'กลุ่มหมอก (1926)',
+        title: '☁️ 5. แบบจำลองกลุ่มหมอกควอนตัม (ค.ศ. 1926-ปัจจุบัน)',
+        scientist: 'แอร์วิน ชเรอดิงเงอร์ & แวร์เนอร์ ไฮเซนเบิร์ก',
+        concept: 'อิเล็กตรอนมีสมบัติเป็นทั้งคลื่นและอนุภาค ไม่สามารถระบุตำแหน่งและโมเมนตัมที่แน่นอนพร้อมกันได้ จึงอธิบายในรูปกลุ่มหมอกความน่าจะเป็น (Orbitals)',
+        limitation: 'เป็นแบบจำลองตามกลศาสตร์ควอนตัมที่ถูกต้องและใช้อธิบายเคมีและฟิสิกส์ในยุคปัจจุบัน'
+      },
+      nucleus_zoom: {
+        id: 'nucleus_zoom',
+        nameTh: 'ผ่าดูควาร์ก (u/d)',
+        title: '🔬 เจาะลึกนิวเคลียส & อนุภาคควาร์ก (Standard Model)',
+        scientist: 'เมอร์เรย์ เกลล์-มานน์ (Murray Gell-Mann, 1964)',
+        concept: 'โปรตอน (2 Up + 1 Down) และนิวตรอน (1 Up + 2 Down) ประกอบด้วยอนุภาคมูลฐานควาร์กยึดกันด้วยแรงนิวเคลียร์อย่างเข้มผ่านกลูออน',
+        limitation: 'เป็นทฤษฎีแบบจำลองมาตรฐานของฟิสิกส์อนุภาค (Standard Model of Particle Physics)'
+      }
+    };
+
+    /* Particle Explanations for Tapping Inspection */
     const SUBATOMIC_DETAILS = {
       proton: {
-        title: 'โปรตอน (Proton, p⁺)',
-        desc: 'อนุภาคมูลฐานภายในนิวเคลียส ค้นพบโดย เออร์เนสต์ รัทเทอร์ฟอร์ด (1917) มีประจุไฟฟ้าบวก และประกอบขึ้นจากควาร์ก 3 ตัว',
+        title: '🔴 โปรตอน (Proton, p⁺)',
+        desc: 'อนุภาคมูลฐานประจุบวกภายในนิวเคลียส ค้นพบโดย เออร์เนสต์ รัทเทอร์ฟอร์ด (1917) เกิดจากควาร์ก 3 ตัว (uud)',
         specs: [
           { name: 'ประจุไฟฟ้า', val: '+1 (+1.602 × 10⁻¹⁹ C)' },
           { name: 'มวลสัมบูรณ์', val: '1.6726 × 10⁻²⁷ kg (1.007 u)' },
           { name: 'องค์ประกอบควาร์ก', val: '2 Up + 1 Down (uud)' }
         ],
-        fact: 'จำนวนโปรตอน (Z) เป็นตัวกำหนดชนิดและสมบัติทางเคมีของธาตุ'
+        fact: 'จำนวนโปรตอนเป็นตัวกำหนดชนิดและเลขอะตอม (Z) ของธาตุ'
       },
       neutron: {
-        title: 'นิวตรอน (Neutron, n⁰)',
-        desc: 'อนุภาคที่เป็นกลางทางไฟฟ้า ค้นพบโดย เจมส์ แชดวิก (1932) ช่วยยึดเกาะโปรตอนเข้าด้วยกันและลดแรงผลักคูลอมบ์',
+        title: '🔵 นิวตรอน (Neutron, n⁰)',
+        desc: 'อนุภาคไร้ประจุไฟฟ้าในนิวเคลียส ค้นพบโดย เจมส์ แชดวิก (1932) ช่วยยึดเกาะโปรตอนและลดแรงผลักคูลอมบ์',
         specs: [
           { name: 'ประจุไฟฟ้า', val: '0 C (เป็นกลาง)' },
           { name: 'มวลสัมบูรณ์', val: '1.6749 × 10⁻²⁷ kg (1.008 u)' },
           { name: 'องค์ประกอบควาร์ก', val: '1 Up + 2 Down (udd)' }
         ],
-        fact: 'นิวตรอนมีมวลมากกว่าโปรตอนเล็กน้อย และผลรวมโปรตอน+นิวตรอนคือเลขมวล (A)'
+        fact: 'นิวตรอนหนักกว่าโปรตอนเล็กน้อย และผลรวมโปรตอน+นิวตรอนคือเลขมวล (A)'
       },
       electron: {
-        title: 'อิเล็กตรอน (Electron, e⁻)',
-        desc: 'อนุภาคมูลฐานชนิดเลปตอน ค้นพบโดย เจ.เจ. ทอมสัน (1897) โคจรรอบนอกนิวเคลียสด้วยพฤติกรรมทวิภาคคลื่น-อนุภาค',
+        title: '⚡ อิเล็กตรอน (Electron, e⁻)',
+        desc: 'อนุภาคมูลฐานประจุลบชนิดเลปตอน ค้นพบโดย เจ.เจ. ทอมสัน (1897) โคจรรอบนิวเคลียสด้วยความเร็วสูง',
         specs: [
           { name: 'ประจุไฟฟ้า', val: '-1 (-1.602 × 10⁻¹⁹ C)' },
           { name: 'มวลสัมบูรณ์', val: '9.109 × 10⁻³¹ kg (≈ 1/1836 u)' },
-          { name: 'การจัดระดับพลังงาน', val: 'เชลล์ K, L, M ตามสูตร 2n²' }
+          { name: 'บทบาทสำคัญ', val: 'กำหนดปฏิกิริยาเคมีและพันธะ' }
         ],
-        fact: 'อิเล็กตรอนชั้นนอกสุด (Valence) กำหนดการสร้างพันธะเคมีของสารประกอบ'
+        fact: 'เวเลนซ์อิเล็กตรอนชั้นนอกสุดกำหนดสมบัติการเกิดพันธะเคมี'
+      },
+      dalton_sphere: {
+        title: '⚪ ทรงกลมตันของดอลตัน (Dalton Sphere)',
+        desc: 'ตามทฤษฎีของ จอห์น ดอลตัน (1803) อะตอมมีลักษณะเป็นทรงกลมตันขนาดเล็กมากที่สุด แบ่งแยกไม่ได้ และไม่มีอนุภาคภายใน',
+        specs: [
+          { name: 'ยุคสมัย', val: 'ค.ศ. 1803' },
+          { name: 'ผู้คิดค้น', val: 'จอห์น ดอลตัน' },
+          { name: 'ลักษณะเด่น', val: 'ทรงกลมตัน แบ่งแยกไม่ได้' }
+        ],
+        fact: 'ดอลตันเป็นคนแรกที่นำทฤษฎีอะตอมมาอธิบายกฎทางเคมีอย่างเป็นรูปธรรม'
+      },
+      thomson_positive: {
+        title: '🥧 เนื้อประจุบวกของทอมสัน (Positive Matter)',
+        desc: 'ตามแบบจำลองขนมปังลูกเกด (1904) เนื้อของทรงกลมทั้งหมดมีประจุไฟฟ้าบวกกระจายตัวอย่างสม่ำเสมอ',
+        specs: [
+          { name: 'ยุคสมัย', val: 'ค.ศ. 1904' },
+          { name: 'ผู้คิดค้น', val: 'เจ.เจ. ทอมสัน' },
+          { name: 'ลักษณะเด่น', val: 'เนื้อประจุบวก มี e⁻ ฝังอยู่' }
+        ],
+        fact: 'ทอมสันตั้งสมมติฐานนี้เพื่อให้ประจุบวกและลบหักล้างกันเป็นกลางทางไฟฟ้า'
+      },
+      rutherford_nucleus: {
+        title: '🎯 นิวเคลียสของรัทเทอร์ฟอร์ด (Tiny Nucleus)',
+        desc: 'ค้นพบจากการทดลองยิงอนุภาคแอลฟาผ่านแผ่นทองคำเปลว นิวเคลียสมีขนาดเล็กจิ๋วมากตรงกลางแต่รวมมวลและประจุบวกไว้เกือบทั้งหมด',
+        specs: [
+          { name: 'ยุคสมัย', val: 'ค.ศ. 1911' },
+          { name: 'การทดลอง', val: 'Gold Foil Experiment' },
+          { name: 'ลักษณะเด่น', val: 'ที่ว่างมหาศาล นิวเคลียสจิ๋ว' }
+        ],
+        fact: 'อนุภาคแอลฟาส่วนใหญ่ทะลุผ่านที่ว่าง มีเพียง 1 ใน 8000 ที่สะท้อนกลับ'
       },
       quark: {
-        title: 'ควาร์ก (Quarks - Up & Down)',
-        titleEn: 'Quarks (Up & Down)',
-        desc: 'อนุภาคมูลฐานที่แท้จริงซึ่งรวมกันเป็นนิวคลีออน ยึดกันไว้ด้วยแรงนิวเคลียร์อย่างเข้มผ่านอนุภาคสื่อนำแรงกลูออน (Gluon)',
+        title: '🔬 ควาร์ก (Up & Down Quarks)',
+        desc: 'อนุภาคมูลฐานที่แท้จริงภายในโปรตอนและนิวตรอน ยึดกันด้วยแรงนิวเคลียร์อย่างเข้มผ่านกลูออน',
         specs: [
           { name: 'Up Quark (u)', val: 'ประจุ +2/3 e' },
           { name: 'Down Quark (d)', val: 'ประจุ -1/3 e' },
@@ -1029,40 +1155,41 @@
       }
     };
 
+    /* Comprehensive Quiz about the 5 Models */
     const QUIZ_QUESTIONS = [
       {
-        question: 'ใจกลางของอะตอม (นิวเคลียส) ประกอบด้วยอนุภาคมูลฐานชนิดใดบ้าง?',
-        options: ['โปรตอน และ อิเล็กตรอน', 'โปรตอน และ นิวตรอน', 'นิวตรอน และ อิเล็กตรอน', 'ควาร์ก และ โฟตอน'],
-        correctIndex: 1,
-        explanation: 'ถูกต้อง! นิวเคลียสประกอบด้วยโปรตอน (ประจุบวก) และนิวตรอน (เป็นกลาง) ส่วนอิเล็กตรอนโคจรรอบนอก'
-      },
-      {
-        question: 'อนุภาคใดมีมวลน้อยที่สุด และค้นพบโดยการทดลองหลอดรังสีแคโทดของ ทอมสัน?',
-        options: ['โปรตอน (Proton)', 'นิวตรอน (Neutron)', 'อิเล็กตรอน (Electron)', 'แอลฟา'],
-        correctIndex: 2,
-        explanation: 'ถูกต้อง! อิเล็กตรอนมีมวลเบามากเพียงประมาณ 1/1836 เท่าของโปรตอนเท่านั้น'
-      },
-      {
-        question: 'โปรตอน 1 ตัว ประกอบด้วยอนุภาคควาร์ก (Quarks) ชนิดใดบ้าง?',
-        options: ['2 Up Quarks + 1 Down Quark (uud)', '1 Up + 2 Down (udd)', '3 Up Quarks (uuu)', '2 Down + 1 Strange'],
+        question: 'ใครคือผู้เสนอแบบจำลองอะตอมที่เป็น "ทรงกลมตันขนาดเล็กมาก แบ่งแยกไม่ได้"?',
+        options: ['จอห์น ดอลตัน (John Dalton)', 'เจ.เจ. ทอมสัน', 'นีลส์ โบร์', 'รัทเทอร์ฟอร์ด'],
         correctIndex: 0,
-        explanation: 'ถูกต้อง! Up Quark มีประจุ +2/3 และ Down Quark มีประจุ -1/3 รวม uud ได้ประจุ +1 พอดี'
+        explanation: 'ถูกต้อง! จอห์น ดอลตัน เสนอแบบจำลองทรงกลมตัน (ค.ศ. 1803) เป็นแบบจำลองแรกในประวัติศาสตร์ยุคใหม่'
       },
       {
-        question: 'เมื่ออิเล็กตรอนดูดกลืนพลังงานแสง (โฟตอน) และกระโดดขึ้นไปสู่วงโคจรสูงขึ้น เรียกว่าสถานะใด?',
-        options: ['สถานะพื้น (Ground State)', 'สถานะกระตุ้น (Excited State)', 'สถานะพลาสมา', 'สถานะไอออน'],
+        question: 'แบบจำลอง "ขนมปังลูกเกด (Plum Pudding Model)" เป็นของนักวิทยาศาสตร์ท่านใด?',
+        options: ['นีลส์ โบร์', 'เจ.เจ. ทอมสัน (J.J. Thomson)', 'แอร์วิน ชเรอดิงเงอร์', 'ดอลตัน'],
         correctIndex: 1,
-        explanation: 'ถูกต้อง! การได้รับพลังงานจะทำให้ขึ้นสู่สถานะกระตุ้น (Excited State) และเมื่อตกลงมาชั้นเดิมจะคายโฟตอนแสงออกมา'
+        explanation: 'ถูกต้อง! เจ.เจ. ทอมสัน เสนอว่ามีอิเล็กตรอน (ประจุลบ) ฝังตัวในเนื้อทรงกลมประจุบวกเหมือนลูกเกดในขนมพุดดิ้ง'
       },
       {
-        question: 'ระดับพลังงานหลักชั้นที่ 2 (เชลล์ L) สามารถบรรจุอิเล็กตรอนได้สูงสุดกี่ตัวตามสูตร 2n²?',
-        options: ['2 ตัว', '6 ตัว', '8 ตัว', '18 ตัว'],
-        correctIndex: 2,
-        explanation: 'ถูกต้อง! คำนวณจาก 2n² เมื่อ n=2 จะได้ 2 × (2)² = 8 ตัว'
+        question: 'รัทเทอร์ฟอร์ดค้นพบว่าอะตอมมี "นิวเคลียสขนาดเล็กมากตรงกลางและมีที่ว่างมหาศาล" จากการทดลองใด?',
+        options: ['การทดลองหลอดรังสีแคโทด', 'การยิงอนุภาคแอลฟาผ่านแผ่นทองคำเปลว', 'การทดลองหยดน้ำมันของมิลลิแกน', 'การส่องกล้องโทรทรรศน์'],
+        correctIndex: 1,
+        explanation: 'ถูกต้อง! การทดลอง Gold Foil Experiment พบว่าอนุภาคแอลฟาส่วนใหญ่ทะลุผ่านที่ว่าง และสะท้อนกลับเมื่อชนนิวเคลียส'
+      },
+      {
+        question: 'แบบจำลองของ นีลส์ โบร์ (Niels Bohr) มีจุดเด่นสำคัญที่สุดคืออะไร?',
+        options: ['อิเล็กตรอนโคจรเป็นชั้นระดับพลังงานเฉพาะ (n=1, 2, 3...)', 'อะตอมเป็นทรงกลมตัน', 'อิเล็กตรอนฝังอยู่ในเนื้อทรงกลม', 'นิวเคลียสไม่มีประจุ'],
+        correctIndex: 0,
+        explanation: 'ถูกต้อง! โบร์เสนอว่าอิเล็กตรอนวิ่งในระดับพลังงานคงที่และจะรับ/คายพลังงานโฟตอนเมื่อกระโดดข้ามระดับชั้น'
+      },
+      {
+        question: 'แบบจำลองอะตอมกลุ่มหมอก (ปัจจุบัน) พัฒนาขึ้นจากหลักการทางฟิสิกส์ใด?',
+        options: ['ทฤษฎีแรงโน้มถ่วง', 'หลักความไม่แน่นอนของไฮเซนเบิร์กและกลศาสตร์ควอนตัม', 'ทฤษฎีสัมพัทธภาพของไอน์สไตน์', 'กฎการเคลื่อนที่ของนิวตัน'],
+        correctIndex: 1,
+        explanation: 'ถูกต้อง! กลศาสตร์ควอนตัมระบุว่าไม่สามารถบอกตำแหน่งและโมเมนตัมของอิเล็กตรอนที่แน่นอนพร้อมกันได้ จึงบอกในรูปความน่าจะเป็น (Orbitals)'
       }
     ];
 
-    /* Sound Engine */
+    /* Sound Synthesizer */
     class SoundEngine {
       constructor() { this.ctx = null; this.muted = false; }
       init() {
@@ -1102,8 +1229,8 @@
           const osc = this.ctx.createOscillator();
           const gain = this.ctx.createGain();
           osc.type = 'triangle';
-          osc.frequency.setValueAtTime(300, this.ctx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(900, this.ctx.currentTime + 0.22);
+          osc.frequency.setValueAtTime(280, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(950, this.ctx.currentTime + 0.22);
           gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
           gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.22);
           osc.connect(gain);
@@ -1136,7 +1263,7 @@
       protons: 6,
       neutrons: 6,
       electrons: 6,
-      visualMode: 'bohr', // 'bohr', 'cloud', 'nucleus_zoom'
+      visualMode: 'bohr', // 'dalton', 'thomson', 'rutherford', 'bohr', 'cloud', 'nucleus_zoom'
       showOrbitals: true,
       autoRotate: true,
       showLabels: true,
@@ -1151,7 +1278,7 @@
        ======================================================== */
     let scene, camera, renderer, controls;
     let atomRootGroup;
-    let nucleusGroup, electronsGroup, orbitsGroup, cloudGroup, labelsGroup;
+    let daltonGroup, thomsonGroup, rutherfordGroup, nucleusGroup, electronsGroup, orbitsGroup, cloudGroup, labelsGroup;
     let backgroundStars;
     const interactiveMeshes = [];
     const raycaster = new THREE.Raycaster();
@@ -1164,11 +1291,9 @@
     function init3D() {
       scene = new THREE.Scene();
 
-      // Camera
       camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.02, 50);
       camera.position.set(0, 0.25, 1.25);
 
-      // WebGL Renderer with High-DPI and WebXR support
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.setSize(window.innerWidth, window.innerHeight);
@@ -1177,7 +1302,6 @@
       renderer.xr.enabled = true;
       container.appendChild(renderer.domElement);
 
-      // OrbitControls for standard 3D screen
       controls = new OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
       controls.dampingFactor = 0.06;
@@ -1197,42 +1321,38 @@
       dirLight2.position.set(-3, -2, -3);
       scene.add(dirLight2);
 
-      // Background dust
       createBackgroundStars();
-
-      // WebXR AR Button setup
       setupWebXR();
 
-      // Main Model Hierarchy
+      // Main Model Groups
       atomRootGroup = new THREE.Group();
       scene.add(atomRootGroup);
 
+      daltonGroup = new THREE.Group();
+      thomsonGroup = new THREE.Group();
+      rutherfordGroup = new THREE.Group();
       nucleusGroup = new THREE.Group();
       electronsGroup = new THREE.Group();
       orbitsGroup = new THREE.Group();
       cloudGroup = new THREE.Group();
       labelsGroup = new THREE.Group();
 
+      atomRootGroup.add(daltonGroup);
+      atomRootGroup.add(thomsonGroup);
+      atomRootGroup.add(rutherfordGroup);
       atomRootGroup.add(nucleusGroup);
       atomRootGroup.add(electronsGroup);
       atomRootGroup.add(orbitsGroup);
       atomRootGroup.add(cloudGroup);
       atomRootGroup.add(labelsGroup);
 
-      // Event Listeners for Raycasting & Resize
       window.addEventListener('resize', onWindowResize);
-      
-      // Tap on screen -> inspect particle ONLY! DO NOT move model!
       window.addEventListener('pointerdown', onPointerDown);
 
-      // Build model
       rebuildAtomModel();
-
-      // Animation loop
       renderer.setAnimationLoop(animate);
     }
 
-    /* WebXR AR Setup */
     function setupWebXR() {
       const arSlot = document.getElementById('ar-button-slot');
       
@@ -1248,7 +1368,6 @@
         backgroundStars.visible = false;
         controls.enabled = false;
 
-        // Position atom at eye level in front of user in AR
         atomRootGroup.position.set(0, 0, -0.45);
         atomRootGroup.scale.setScalar(state.arScale);
         
@@ -1283,14 +1402,11 @@
         if (intersects.length > 0) {
           const item = intersects[0].object;
           openSubatomicPopover(item.userData.category || item.userData.type);
-        } else {
-          // Tapped empty space: DO NOTHING! DO NOT MOVE MODEL!
         }
       });
       scene.add(controller);
     }
 
-    /* Spawn / Reposition Atom In Front (ONLY called when clicking the button!) */
     function repositionAtomInFront() {
       if (!camera) return;
       const dir = new THREE.Vector3(0, 0, -0.45).applyQuaternion(camera.quaternion);
@@ -1301,7 +1417,6 @@
       showToast('วางโมเดลอะตอมตรงหน้าเรียบร้อย 🎯');
     }
 
-    /* Background Stars */
     function createBackgroundStars() {
       const starGeo = new THREE.BufferGeometry();
       const count = 1000;
@@ -1333,18 +1448,23 @@
     }
 
     /* ========================================================
-       4. MODEL REBUILD (Protons, Neutrons, Electrons, Quarks)
+       4. MODEL REBUILDING (All 5 Historical Models + Quarks)
        ======================================================== */
     let electronAnimData = [];
     let nucleusParticles = [];
     let quarkAnimData = [];
+    let rutherfordElectrons = [];
 
     function rebuildAtomModel() {
       interactiveMeshes.length = 0;
       electronAnimData.length = 0;
       nucleusParticles.length = 0;
       quarkAnimData.length = 0;
+      rutherfordElectrons.length = 0;
 
+      clearGroup(daltonGroup);
+      clearGroup(thomsonGroup);
+      clearGroup(rutherfordGroup);
       clearGroup(nucleusGroup);
       clearGroup(electronsGroup);
       clearGroup(orbitsGroup);
@@ -1355,9 +1475,23 @@
       const nCount = state.neutrons;
       const eCount = state.electrons;
 
+      // 1. BUILD DALTON MODEL (Solid indivisible sphere)
+      buildDaltonModel();
+
+      // 2. BUILD THOMSON MODEL (Plum Pudding)
+      buildThomsonModel(eCount);
+
+      // 3. BUILD RUTHERFORD MODEL (Nuclear + Vast empty space)
+      buildRutherfordModel(eCount);
+
+      // 4. BUILD BOHR MODEL & STANDARD NUCLEUS
       buildNucleusCluster(pCount, nCount);
       buildElectronShells(eCount);
+
+      // 5. BUILD QUANTUM CLOUD MODEL
       buildQuantumCloud(eCount);
+
+      // 6. BUILD 3D LABELS
       build3DLabels();
 
       updateVisualModeVisibility();
@@ -1376,7 +1510,149 @@
       }
     }
 
-    /* Nucleus Cluster with Enlarged Touch Hitbox */
+    /* 1. Dalton Model: Smooth, Indivisible Solid Sphere (1803) */
+    function buildDaltonModel() {
+      const geo = new THREE.SphereGeometry(0.16, 32, 32);
+      const mat = new THREE.MeshStandardMaterial({
+        color: 0x48bfe3,
+        roughness: 0.15,
+        metalness: 0.65,
+        emissive: 0x0077b6,
+        emissiveIntensity: 0.25
+      });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.userData = {
+        type: 'dalton_sphere',
+        category: 'dalton_sphere'
+      };
+      daltonGroup.add(mesh);
+      interactiveMeshes.push(mesh);
+    }
+
+    /* 2. Thomson Model: Positive sphere with embedded electron raisins (1904) */
+    function buildThomsonModel(electronCount) {
+      // Positive matter sphere (semi-transparent glowing red/amber)
+      const sphereGeo = new THREE.SphereGeometry(0.18, 32, 32);
+      const sphereMat = new THREE.MeshStandardMaterial({
+        color: 0xff4d6d,
+        roughness: 0.3,
+        transparent: true,
+        opacity: 0.42,
+        emissive: 0xff0054,
+        emissiveIntensity: 0.35,
+        depthWrite: false
+      });
+      const posSphere = new THREE.Mesh(sphereGeo, sphereMat);
+      posSphere.userData = {
+        type: 'thomson_positive',
+        category: 'thomson_positive'
+      };
+      thomsonGroup.add(posSphere);
+      interactiveMeshes.push(posSphere);
+
+      // Embedded Electron Raisins
+      const eGeo = new THREE.SphereGeometry(0.018, 16, 16);
+      const eMat = new THREE.MeshStandardMaterial({
+        color: 0x00f0ff,
+        emissive: 0x00f0ff,
+        emissiveIntensity: 0.9
+      });
+
+      const count = Math.max(4, electronCount);
+      for (let i = 0; i < count; i++) {
+        const phi = Math.acos(-1 + (2 * i) / count);
+        const theta = Math.sqrt(count * Math.PI) * phi;
+        const r = 0.12 * Math.cbrt((i + 1) / count);
+
+        const x = r * Math.sin(phi) * Math.cos(theta);
+        const y = r * Math.sin(phi) * Math.sin(theta);
+        const z = r * Math.cos(phi);
+
+        const eMesh = new THREE.Mesh(eGeo, eMat);
+        eMesh.position.set(x, y, z);
+        eMesh.userData = {
+          type: 'electron',
+          category: 'electron'
+        };
+
+        const hitSphere = new THREE.Mesh(
+          new THREE.SphereGeometry(0.04, 10, 10),
+          new THREE.MeshBasicMaterial({ visible: false })
+        );
+        hitSphere.userData = eMesh.userData;
+        eMesh.add(hitSphere);
+        interactiveMeshes.push(hitSphere);
+
+        thomsonGroup.add(eMesh);
+      }
+    }
+
+    /* 3. Rutherford Model: Tiny Dense Nucleus + Large Empty Space & Free Orbiting Electrons (1911) */
+    function buildRutherfordModel(electronCount) {
+      // Tiny dense central nucleus (radius only 0.02)
+      const nucGeo = new THREE.SphereGeometry(0.024, 24, 24);
+      const nucMat = new THREE.MeshStandardMaterial({
+        color: 0xff1744,
+        roughness: 0.2,
+        emissive: 0xff1744,
+        emissiveIntensity: 1.0
+      });
+      const nucMesh = new THREE.Mesh(nucGeo, nucMat);
+      nucMesh.userData = {
+        type: 'rutherford_nucleus',
+        category: 'rutherford_nucleus'
+      };
+
+      const hitSphere = new THREE.Mesh(
+        new THREE.SphereGeometry(0.05, 12, 12),
+        new THREE.MeshBasicMaterial({ visible: false })
+      );
+      hitSphere.userData = nucMesh.userData;
+      nucMesh.add(hitSphere);
+      interactiveMeshes.push(hitSphere);
+      rutherfordGroup.add(nucMesh);
+
+      // Light glow from tiny nucleus
+      const coreLight = new THREE.PointLight(0xff1744, 2, 0.4);
+      rutherfordGroup.add(coreLight);
+
+      // Outer boundary boundary representation (vast space)
+      const boundaryGeo = new THREE.TorusGeometry(0.32, 0.001, 16, 60);
+      const boundaryMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.15 });
+      const bRing = new THREE.Mesh(boundaryGeo, boundaryMat);
+      bRing.rotation.x = Math.PI / 2;
+      rutherfordGroup.add(bRing);
+
+      // Free elliptical orbits
+      const eGeo = new THREE.SphereGeometry(0.016, 16, 16);
+      const eMat = new THREE.MeshStandardMaterial({ color: 0x00f0ff, emissive: 0x00f0ff, emissiveIntensity: 0.9 });
+      
+      const count = Math.max(2, Math.min(electronCount, 8));
+      for (let i = 0; i < count; i++) {
+        const pivot = new THREE.Group();
+        pivot.rotation.set(
+          (i * Math.PI) / count,
+          (i * Math.PI) / (count * 1.5),
+          0
+        );
+
+        const eMesh = new THREE.Mesh(eGeo, eMat);
+        eMesh.position.x = 0.28;
+        eMesh.userData = { type: 'electron', category: 'electron' };
+
+        const eHit = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 10), new THREE.MeshBasicMaterial({ visible: false }));
+        eHit.userData = eMesh.userData;
+        eMesh.add(eHit);
+        interactiveMeshes.push(eHit);
+
+        pivot.add(eMesh);
+        rutherfordGroup.add(pivot);
+
+        rutherfordElectrons.push({ pivot, speed: 1.5 + i * 0.4 });
+      }
+    }
+
+    /* 4. Nucleus Cluster with Protons & Neutrons (Used in Bohr, Cloud & Quark Zoom) */
     function buildNucleusCluster(protons, neutrons) {
       const totalNucleons = protons + neutrons;
       const isExplodedQuarkMode = (state.visualMode === 'nucleus_zoom');
@@ -1426,12 +1702,8 @@
 
         const mesh = new THREE.Mesh(sphereGeo, type === 'proton' ? protonMat : neutronMat);
         mesh.position.set(x, y, z);
-        mesh.userData = {
-          type: type,
-          category: type
-        };
+        mesh.userData = { type: type, category: type };
 
-        // Invisible enlarged Hitbox for accurate mobile tapping
         const hitSphere = new THREE.Mesh(
           new THREE.SphereGeometry(0.045, 12, 12),
           new THREE.MeshBasicMaterial({ visible: false })
@@ -1453,17 +1725,8 @@
       const quarks = (nucleonType === 'proton') ? ['up', 'up', 'down'] : ['up', 'down', 'down'];
       const quarkGeo = new THREE.SphereGeometry(0.012, 16, 16);
       
-      const upMat = new THREE.MeshStandardMaterial({
-        color: 0xff007f,
-        emissive: 0xff007f,
-        emissiveIntensity: 0.8
-      });
-
-      const downMat = new THREE.MeshStandardMaterial({
-        color: 0x00f5d4,
-        emissive: 0x00f5d4,
-        emissiveIntensity: 0.8
-      });
+      const upMat = new THREE.MeshStandardMaterial({ color: 0xff007f, emissive: 0xff007f, emissiveIntensity: 0.8 });
+      const downMat = new THREE.MeshStandardMaterial({ color: 0x00f5d4, emissive: 0x00f5d4, emissiveIntensity: 0.8 });
 
       const dist = 0.022;
       const offsets = [
@@ -1472,10 +1735,7 @@
         new THREE.Vector3(-dist * 0.5, -dist * 0.866, 0)
       ];
 
-      // Gluon flux lines
-      const gluonLineGeo = new THREE.BufferGeometry().setFromPoints([
-        offsets[0], offsets[1], offsets[2], offsets[0]
-      ]);
+      const gluonLineGeo = new THREE.BufferGeometry().setFromPoints([offsets[0], offsets[1], offsets[2], offsets[0]]);
       const gluonLineMat = new THREE.LineBasicMaterial({ color: 0xffd166, transparent: true, opacity: 0.8 });
       const gluonLine = new THREE.Line(gluonLineGeo, gluonLineMat);
       nucleonMesh.add(gluonLine);
@@ -1483,15 +1743,9 @@
       quarks.forEach((qType, i) => {
         const qMesh = new THREE.Mesh(quarkGeo, qType === 'up' ? upMat : downMat);
         qMesh.position.copy(offsets[i]);
-        qMesh.userData = {
-          type: 'quark',
-          category: 'quark'
-        };
+        qMesh.userData = { type: 'quark', category: 'quark' };
 
-        const qHitbox = new THREE.Mesh(
-          new THREE.SphereGeometry(0.025, 10, 10),
-          new THREE.MeshBasicMaterial({ visible: false })
-        );
+        const qHitbox = new THREE.Mesh(new THREE.SphereGeometry(0.025, 10, 10), new THREE.MeshBasicMaterial({ visible: false }));
         qHitbox.userData = qMesh.userData;
         qMesh.add(qHitbox);
         interactiveMeshes.push(qHitbox);
@@ -1546,16 +1800,9 @@
 
           const eMesh = new THREE.Mesh(electronGeo, electronMat);
           eMesh.position.x = radius;
-          eMesh.userData = {
-            type: 'electron',
-            category: 'electron'
-          };
+          eMesh.userData = { type: 'electron', category: 'electron' };
 
-          // Generous Hitbox for touch (0.055)
-          const hitSphere = new THREE.Mesh(
-            new THREE.SphereGeometry(0.055, 12, 12),
-            new THREE.MeshBasicMaterial({ visible: false })
-          );
+          const hitSphere = new THREE.Mesh(new THREE.SphereGeometry(0.055, 12, 12), new THREE.MeshBasicMaterial({ visible: false }));
           hitSphere.userData = eMesh.userData;
           eMesh.add(hitSphere);
           interactiveMeshes.push(hitSphere);
@@ -1644,48 +1891,75 @@
     }
 
     function build3DLabels() {
-      const nucLabel = createTextSprite('⚛️ นิวเคลียส', '#ff3366');
-      nucLabel.position.set(0, 0.12, 0);
-      labelsGroup.add(nucLabel);
+      if (state.visualMode === 'dalton') {
+        const label = createTextSprite('⚪ ทรงกลมตันดอลตัน', '#48bfe3');
+        label.position.set(0, 0.20, 0);
+        labelsGroup.add(label);
+      } else if (state.visualMode === 'thomson') {
+        const label = createTextSprite('🥧 ขนมปังลูกเกดทอมสัน', '#ff4d6d');
+        label.position.set(0, 0.22, 0);
+        labelsGroup.add(label);
+      } else if (state.visualMode === 'rutherford') {
+        const label = createTextSprite('🎯 นิวเคลียสจิ๋วรัทเทอร์ฟอร์ด', '#ff1744');
+        label.position.set(0, 0.12, 0);
+        labelsGroup.add(label);
+      } else if (state.visualMode === 'bohr') {
+        const nucLabel = createTextSprite('⚛️ นิวเคลียส', '#ff3366');
+        nucLabel.position.set(0, 0.12, 0);
+        labelsGroup.add(nucLabel);
 
-      if (state.visualMode === 'bohr' && state.electrons > 0) {
-        const eLabel = createTextSprite('⚡ อิเล็กตรอน', '#00f0ff');
-        eLabel.position.set(0.24, 0.18, 0);
-        labelsGroup.add(eLabel);
+        if (state.electrons > 0) {
+          const eLabel = createTextSprite('⚡ วงโคจร e⁻', '#00f0ff');
+          eLabel.position.set(0.24, 0.18, 0);
+          labelsGroup.add(eLabel);
+        }
       } else if (state.visualMode === 'cloud') {
-        const cloudLabel = createTextSprite('☁️ กลุ่มหมอก', '#00f0ff');
-        cloudLabel.position.set(0.26, 0.18, 0);
-        labelsGroup.add(cloudLabel);
+        const label = createTextSprite('☁️ กลุ่มหมอกควอนตัม', '#00f0ff');
+        label.position.set(0, 0.24, 0);
+        labelsGroup.add(label);
       } else if (state.visualMode === 'nucleus_zoom') {
-        const qLabel = createTextSprite('🔬 ควาร์ก', '#ff007f');
-        qLabel.position.set(0, 0.20, 0);
-        labelsGroup.add(qLabel);
+        const label = createTextSprite('🔬 ควาร์ก (u/d)', '#ff007f');
+        label.position.set(0, 0.20, 0);
+        labelsGroup.add(label);
       }
 
       labelsGroup.visible = state.showLabels;
     }
 
+    /* Switch Visibility of the 5 Models */
     function updateVisualModeVisibility() {
-      if (state.visualMode === 'bohr') {
-        electronsGroup.visible = true;
-        orbitsGroup.visible = state.showOrbitals;
-        cloudGroup.visible = false;
-        nucleusGroup.visible = true;
-      } else if (state.visualMode === 'cloud') {
-        electronsGroup.visible = false;
-        orbitsGroup.visible = false;
-        cloudGroup.visible = true;
-        nucleusGroup.visible = true;
-      } else if (state.visualMode === 'nucleus_zoom') {
-        electronsGroup.visible = false;
-        orbitsGroup.visible = false;
-        cloudGroup.visible = false;
-        nucleusGroup.visible = true;
-      }
+      const mode = state.visualMode;
+
+      daltonGroup.visible = (mode === 'dalton');
+      thomsonGroup.visible = (mode === 'thomson');
+      rutherfordGroup.visible = (mode === 'rutherford');
+
+      // Nucleus group used in bohr, cloud, nucleus_zoom
+      nucleusGroup.visible = (mode === 'bohr' || mode === 'cloud' || mode === 'nucleus_zoom');
+      electronsGroup.visible = (mode === 'bohr');
+      orbitsGroup.visible = (mode === 'bohr' && state.showOrbitals);
+      cloudGroup.visible = (mode === 'cloud');
+
+      // Sync active state in Historical Models Strip
+      document.querySelectorAll('.model-chip-btn').forEach(btn => {
+        if (btn.dataset.mode === mode) btn.classList.add('active');
+        else btn.classList.remove('active');
+      });
+
+      // Update Top Nav Badge & Drawer Guide Card
+      const modelData = HISTORICAL_MODELS[mode] || HISTORICAL_MODELS.bohr;
+      document.getElementById('top-pill-model-badge').innerText = modelData.nameTh;
+      document.getElementById('drw-history-title').innerHTML = `<i class="fa-solid fa-book-bookmark"></i> ${modelData.title}`;
+      document.getElementById('drw-history-concept').innerText = modelData.concept;
+      document.getElementById('drw-history-limitation').innerHTML = `⚠️ <strong>ข้อจำกัด/ประเด็นสำคัญ:</strong> ${modelData.limitation}`;
     }
 
-    /* Quantum Leap */
+    /* Quantum Leap Simulation */
     function triggerPhotonInteraction(isAbsorb) {
+      if (state.visualMode !== 'bohr' && state.visualMode !== 'cloud') {
+        showToast('การดูดกลืน/คายโฟตอน แสดงผลในแบบจำลองของโบร์');
+        return;
+      }
       if (electronAnimData.length === 0) {
         showToast('ไม่มีอิเล็กตรอนสำหรับการเปลี่ยนระดับพลังงาน');
         return;
@@ -1735,11 +2009,9 @@
     }
 
     /* ========================================================
-       5. TOUCH & SCREEN TAP RAYCASTING
-       (CRITICAL: Tap particle -> Explain particle! Tap empty -> DO NOTHING!)
+       5. TAP RAYCASTING: Tap particle -> Explain! Empty -> DO NOTHING!
        ======================================================== */
     function onPointerDown(e) {
-      // Don't intercept clicks on UI buttons/cards
       if (e.target.closest('#top-nav') || 
           e.target.closest('#bottom-floating-controls') || 
           e.target.closest('#science-drawer') || 
@@ -1757,9 +2029,6 @@
       if (intersects.length > 0) {
         const item = intersects[0].object;
         openSubatomicPopover(item.userData.category || item.userData.type);
-      } else {
-        // Tapped empty background -> DO NOTHING!
-        // NEVER MOVE MODEL ON SCREEN TAP!
       }
     }
 
@@ -1786,7 +2055,7 @@
     }
 
     /* ========================================================
-       6. UI POPULATION & EVENT LISTENERS
+       6. UI BINDINGS & ELEMENT DATA SYNC
        ======================================================== */
     function updateHUDInfo() {
       const p = state.protons;
@@ -1844,7 +2113,6 @@
       const valenceCount = configArr.length ? configArr[configArr.length - 1] : 0;
       document.getElementById('drw-valence-txt').innerText = `${valenceCount} e⁻`;
 
-      // Highlight active element pill
       document.querySelectorAll('.elem-strip-btn').forEach(btn => {
         const bz = parseInt(btn.dataset.z);
         if (bz === z) btn.classList.add('active');
@@ -1942,19 +2210,19 @@
     }
 
     function bindUIEvents() {
-      // 1. Spawn Anchor Button (ONLY this button repositions the model!)
+      // 1. Spawn Button (Reposition Atom in front)
       document.getElementById('btn-spawn-anchor').addEventListener('click', repositionAtomInFront);
 
-      // 2. Mode Segmented Switcher
-      document.querySelectorAll('.mode-seg-item').forEach(btn => {
+      // 2. The 5 Models Strip Click Listener
+      document.querySelectorAll('.model-chip-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-          document.querySelectorAll('.mode-seg-item').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          state.visualMode = btn.dataset.mode;
-          sound.playSelect();
+          const mode = btn.dataset.mode;
+          state.visualMode = mode;
+          sound.playWarp();
           haptic();
           rebuildAtomModel();
-          showToast(`โหมดแบบจำลอง: ${btn.querySelector('span:last-child').innerText}`);
+          const info = HISTORICAL_MODELS[mode];
+          showToast(`เปลี่ยนแบบจำลอง: ${info ? info.title : mode}`);
         });
       });
 
@@ -2068,7 +2336,7 @@
         renderer.render(scene, camera);
         const dataURL = renderer.domElement.toDataURL('image/png');
         const link = document.createElement('a');
-        link.download = `atomic_${state.currentElement.symbol}_${Date.now()}.png`;
+        link.download = `atom_${state.visualMode}_${state.currentElement.symbol}_${Date.now()}.png`;
         link.href = dataURL;
         link.click();
         sound.playSelect();
@@ -2132,28 +2400,41 @@
         atomRootGroup.rotation.y += delta * 0.25;
       }
 
-      // Electrons Orbit Animation
-      electronAnimData.forEach((item, idx) => {
-        item.angle += delta * item.baseSpeed;
-        item.mesh.position.x = item.radius * Math.cos(item.angle);
-        item.mesh.position.z = item.radius * Math.sin(item.angle);
-        item.mesh.position.y = Math.sin(time * 3 + idx) * 0.008;
-      });
+      // Bohr Electrons Orbit Animation
+      if (state.visualMode === 'bohr') {
+        electronAnimData.forEach((item, idx) => {
+          item.angle += delta * item.baseSpeed;
+          item.mesh.position.x = item.radius * Math.cos(item.angle);
+          item.mesh.position.z = item.radius * Math.sin(item.angle);
+          item.mesh.position.y = Math.sin(time * 3 + idx) * 0.008;
+        });
+      }
 
-      // Nucleus Strong Force Vibration
-      nucleusParticles.forEach(item => {
-        const vib = Math.sin(time * 8 + item.seed) * 0.002;
-        item.mesh.position.x = item.basePos.x + vib;
-        item.mesh.position.y = item.basePos.y + vib;
-        item.mesh.position.z = item.basePos.z + vib;
-      });
+      // Rutherford Electrons Elliptical Orbits
+      if (state.visualMode === 'rutherford') {
+        rutherfordElectrons.forEach((item) => {
+          item.pivot.rotation.z += delta * item.speed;
+        });
+      }
+
+      // Nucleus Strong Force Vibration (Bohr, Cloud, Quarks)
+      if (nucleusGroup.visible) {
+        nucleusParticles.forEach(item => {
+          const vib = Math.sin(time * 8 + item.seed) * 0.002;
+          item.mesh.position.x = item.basePos.x + vib;
+          item.mesh.position.y = item.basePos.y + vib;
+          item.mesh.position.z = item.basePos.z + vib;
+        });
+      }
 
       // Quark Oscillation
-      quarkAnimData.forEach((q, idx) => {
-        const qVib = Math.sin(time * 12 + idx) * 0.003;
-        q.mesh.position.x = q.basePos.x + qVib;
-        q.mesh.position.y = q.basePos.y + Math.cos(time * 12 + idx) * 0.003;
-      });
+      if (state.visualMode === 'nucleus_zoom') {
+        quarkAnimData.forEach((q, idx) => {
+          const qVib = Math.sin(time * 12 + idx) * 0.003;
+          q.mesh.position.x = q.basePos.x + qVib;
+          q.mesh.position.y = q.basePos.y + Math.cos(time * 12 + idx) * 0.003;
+        });
+      }
 
       if (!state.isARMode && controls) {
         controls.update();
