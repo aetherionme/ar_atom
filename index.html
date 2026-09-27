@@ -3,72 +3,968 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>AR Atom Model</title>
+  <title>ATOMIC 3D & AR LAB — สื่อการเรียนรู้โครงสร้างอะตอมเสมือนจริงระดับพรีเมียม</title>
+  
+  <!-- Google Fonts: Prompt & Orbitron -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons for High-Tech HUD -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
   <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-      font-family: sans-serif;
+    :root {
+      --bg-dark: #040814;
+      --panel-bg: rgba(8, 14, 30, 0.82);
+      --panel-border: rgba(0, 240, 255, 0.3);
+      --panel-glow: rgba(0, 240, 255, 0.15);
+      
+      --cyan: #00f0ff;
+      --cyan-glow: 0 0 15px rgba(0, 240, 255, 0.6);
+      --proton-red: #ff3366;
+      --proton-glow: 0 0 15px rgba(255, 51, 102, 0.7);
+      --neutron-blue: #3b82f6;
+      --neutron-glow: 0 0 15px rgba(59, 130, 246, 0.7);
+      --electron-cyan: #00f0ff;
+      --quark-up: #ff007f;
+      --quark-down: #00f5d4;
+      --gold: #ffd166;
+      --green: #06d6a0;
+      
+      --text-main: #f0f6fc;
+      --text-muted: #8b9bb4;
+      --font-body: 'Prompt', sans-serif;
+      --font-sci: 'Orbitron', monospace, sans-serif;
     }
-    #overlay {
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+
+    #webgl-canvas-container {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      pointer-events: none;
-      z-index: 1000;
+      z-index: 1;
     }
-    #spawn-btn {
+
+    /* ===== UI OVERLAY LAYER ===== */
+    #ui-container {
       position: absolute;
-      top: 24px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #00e5ff;
-      color: #050b14;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 30px;
-      font-size: 15px;
-      font-weight: bold;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 16px;
+      transition: opacity 0.3s ease;
+    }
+
+    .interactive {
       pointer-events: auto;
-      box-shadow: 0 4px 15px rgba(0, 229, 255, 0.4);
+    }
+
+    /* Glassmorphism Panel Base */
+    .glass-panel {
+      background: var(--panel-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 0 12px var(--panel-glow);
+      color: var(--text-main);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .glass-panel:hover {
+      border-color: rgba(0, 240, 255, 0.5);
+    }
+
+    /* ===== TOP BAR HUD ===== */
+    header#top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 18px;
+      max-width: 100%;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      font-size: 26px;
+      color: var(--cyan);
+      filter: drop-shadow(0 0 8px var(--cyan));
+      animation: spinSlow 20s linear infinite;
+    }
+
+    @keyframes spinSlow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .brand-text h1 {
+      font-family: var(--font-sci);
+      font-size: 16px;
+      letter-spacing: 1.5px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-text h1 span.badge {
+      background: linear-gradient(135deg, #00f0ff, #7928ca);
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .brand-text p {
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 0.2px;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hud-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-main);
+      padding: 8px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .hud-btn:hover {
+      background: rgba(0, 240, 255, 0.15);
+      border-color: var(--cyan);
+      color: #fff;
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .hud-btn:active {
+      transform: scale(0.96);
+    }
+
+    .hud-btn.primary {
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.25), rgba(121, 40, 202, 0.35));
+      border-color: var(--cyan);
+      color: var(--cyan);
+      font-weight: 600;
+    }
+
+    .hud-btn.primary:hover {
+      background: linear-gradient(135deg, #00f0ff, #7928ca);
+      color: #040814;
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.6);
+    }
+
+    /* ===== MAIN WORKSPACE (SIDEBAR & BOTTOM CARD) ===== */
+    .workspace-middle {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex: 1;
+      margin: 12px 0;
+      pointer-events: none;
+      position: relative;
+    }
+
+    /* SIDEBAR CONTROLS */
+    #sidebar {
+      width: 320px;
+      max-height: calc(100vh - 240px);
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--cyan) transparent;
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    #sidebar::-webkit-scrollbar {
+      width: 5px;
+    }
+    #sidebar::-webkit-scrollbar-thumb {
+      background: var(--cyan);
+      border-radius: 4px;
+    }
+
+    .sidebar-section-title {
+      font-family: var(--font-sci);
+      font-size: 11px;
+      letter-spacing: 1.2px;
+      color: var(--cyan);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Element Preset Pills */
+    .element-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .elem-pill {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      padding: 6px 2px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .elem-pill .symbol {
+      font-family: var(--font-sci);
+      font-weight: 700;
+      font-size: 15px;
+      display: block;
+      color: #fff;
+    }
+
+    .elem-pill .name {
+      font-size: 9px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: block;
+    }
+
+    .elem-pill .num {
+      font-size: 9px;
+      font-family: var(--font-sci);
+      color: var(--cyan);
+    }
+
+    .elem-pill:hover {
+      border-color: var(--cyan);
+      background: rgba(0, 240, 255, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .elem-pill.active {
+      border-color: var(--cyan);
+      background: rgba(0, 240, 255, 0.25);
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
+    }
+
+    .elem-pill.active .symbol {
+      color: var(--cyan);
+      text-shadow: 0 0 8px var(--cyan);
+    }
+
+    /* Mode Switchers */
+    .mode-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .mode-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s;
+      text-align: left;
+    }
+
+    .mode-btn i {
+      font-size: 14px;
+      width: 20px;
+      text-align: center;
+      color: var(--cyan);
+    }
+
+    .mode-btn:hover {
+      border-color: var(--cyan);
+      background: rgba(0, 240, 255, 0.08);
+    }
+
+    .mode-btn.active {
+      border-color: var(--cyan);
+      background: rgba(0, 240, 255, 0.2);
+      box-shadow: inset 0 0 10px rgba(0, 240, 255, 0.2);
+    }
+
+    .mode-btn.active i {
+      text-shadow: 0 0 8px var(--cyan);
+    }
+
+    /* Sliders Sandbox */
+    .slider-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: rgba(0, 0, 0, 0.25);
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .slider-row {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .slider-label span.val {
+      font-family: var(--font-sci);
+      font-weight: 700;
+    }
+
+    .slider-row.protons .val { color: var(--proton-red); }
+    .slider-row.neutrons .val { color: var(--neutron-blue); }
+    .slider-row.electrons .val { color: var(--electron-cyan); }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 3px;
+      outline: none;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: #fff;
+      cursor: pointer;
+      box-shadow: 0 0 8px rgba(0, 240, 255, 0.8);
+      transition: transform 0.1s;
+    }
+
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    /* Action Buttons (Photon simulation / Quiz) */
+    .quantum-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .action-btn {
+      padding: 8px 10px;
+      font-size: 11px;
+      font-weight: 500;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+
+    .action-btn:hover {
+      background: rgba(0, 240, 255, 0.15);
+      border-color: var(--cyan);
+    }
+
+    .action-btn:active {
+      transform: scale(0.96);
+    }
+
+    /* RIGHT SIDE FLOATING BUTTONS */
+    .floating-tools {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: auto;
+    }
+
+    .tool-circle-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      color: #fff;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tool-circle-btn:hover {
+      color: var(--cyan);
+      border-color: var(--cyan);
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+      transform: scale(1.1);
+    }
+
+    .tool-circle-btn.active {
+      color: var(--cyan);
+      border-color: var(--cyan);
+      background: rgba(0, 240, 255, 0.2);
+    }
+
+    /* ===== BOTTOM INFO DECK ===== */
+    #bottom-deck {
+      display: grid;
+      grid-template-columns: 300px 1fr 280px;
+      gap: 16px;
+      padding: 16px 20px;
+      max-height: 200px;
+      align-items: stretch;
+    }
+
+    /* Elemental Overview */
+    .atom-identity {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+      padding-right: 16px;
+    }
+
+    .element-symbol-box {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.15), rgba(121, 40, 202, 0.2));
+      border: 1px solid var(--cyan);
+      border-radius: 12px;
+      box-shadow: inset 0 0 15px rgba(0, 240, 255, 0.3), 0 0 15px rgba(0, 240, 255, 0.2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .symbol-atomic-num {
+      position: absolute;
+      top: 4px;
+      left: 6px;
+      font-family: var(--font-sci);
+      font-size: 11px;
+      color: var(--cyan);
+    }
+
+    .symbol-mass-num {
+      position: absolute;
+      bottom: 4px;
+      right: 6px;
+      font-family: var(--font-sci);
+      font-size: 10px;
+      color: var(--gold);
+    }
+
+    .symbol-main {
+      font-family: var(--font-sci);
+      font-size: 32px;
+      font-weight: 900;
+      color: #fff;
+      text-shadow: 0 0 10px var(--cyan);
+      line-height: 1;
+    }
+
+    .atom-names {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .atom-names h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .atom-names p.en-name {
+      font-size: 13px;
+      color: var(--cyan);
+      font-family: var(--font-sci);
+      letter-spacing: 0.5px;
+    }
+
+    .atom-status-badge {
+      display: inline-block;
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: rgba(6, 214, 160, 0.15);
+      border: 1px solid var(--green);
+      color: var(--green);
+      margin-top: 4px;
+      width: fit-content;
+    }
+
+    /* Subatomic Breakdown */
+    .particle-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      align-content: center;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .stat-card:hover {
+      background: rgba(255, 255, 255, 0.07);
+      transform: translateY(-2px);
+    }
+
+    .stat-card.protons:hover { border-color: var(--proton-red); box-shadow: var(--proton-glow); }
+    .stat-card.neutrons:hover { border-color: var(--neutron-blue); box-shadow: var(--neutron-glow); }
+    .stat-card.electrons:hover { border-color: var(--cyan); box-shadow: var(--cyan-glow); }
+
+    .stat-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .stat-card-header i { font-size: 13px; }
+    .stat-card.protons i { color: var(--proton-red); }
+    .stat-card.neutrons i { color: var(--neutron-blue); }
+    .stat-card.electrons i { color: var(--cyan); }
+
+    .stat-card-val {
+      font-family: var(--font-sci);
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .stat-card-detail {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    /* Quantum Shells & Details */
+    .quantum-info {
+      border-left: 1px solid rgba(255, 255, 255, 0.1);
+      padding-left: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .quantum-info-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+    }
+
+    .quantum-info-row span.label {
+      color: var(--text-muted);
+    }
+
+    .quantum-info-row span.value {
+      font-family: var(--font-sci);
+      color: var(--cyan);
+      font-weight: 600;
+    }
+
+    .shell-diagram {
+      display: flex;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .shell-dot {
+      background: rgba(0, 240, 255, 0.1);
+      border: 1px solid var(--cyan);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-family: var(--font-sci);
+    }
+
+    /* ===== 3D CLICK INSPECTOR MODAL / TOOLTIP ===== */
+    #particle-inspector {
+      position: absolute;
+      top: 80px;
+      right: 70px;
+      width: 320px;
+      padding: 16px;
+      display: none;
+      z-index: 50;
+      animation: fadeInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes fadeInRight {
+      from { opacity: 0; transform: translateX(20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .inspector-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+    }
+
+    .inspector-header h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--cyan);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .close-inspector-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 16px;
       cursor: pointer;
     }
-    #spawn-btn:active {
-      transform: translateX(-50%) scale(0.95);
+    .close-inspector-btn:hover { color: #fff; }
+
+    .inspector-body {
+      font-size: 12px;
+      line-height: 1.6;
+      color: #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
-    #info-card {
+
+    .spec-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 6px 0;
+      font-size: 11px;
+    }
+
+    .spec-table td {
+      padding: 4px 6px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .spec-table td.spec-name {
+      color: var(--text-muted);
+      width: 40%;
+    }
+
+    .spec-table td.spec-val {
+      font-family: var(--font-sci);
+      color: #fff;
+    }
+
+    /* ===== QUIZ MODAL ===== */
+    #quiz-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(10px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .quiz-container {
+      width: 100%;
+      max-width: 580px;
+      background: var(--panel-bg);
+      border: 1px solid var(--cyan);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 0 40px rgba(0, 240, 255, 0.3);
+      position: relative;
+    }
+
+    .quiz-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 12px;
+    }
+
+    .quiz-header h2 {
+      font-family: var(--font-sci);
+      font-size: 18px;
+      color: var(--cyan);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .quiz-badge {
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 12px;
+      background: rgba(255, 209, 102, 0.15);
+      border: 1px solid var(--gold);
+      color: var(--gold);
+    }
+
+    .question-box {
+      margin-bottom: 20px;
+    }
+
+    .question-text {
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .quiz-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .quiz-option-btn {
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      color: #fff;
+      font-family: var(--font-body);
+      font-size: 14px;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.2s;
+    }
+
+    .quiz-option-btn:hover {
+      background: rgba(0, 240, 255, 0.15);
+      border-color: var(--cyan);
+      transform: translateX(4px);
+    }
+
+    .quiz-option-btn.correct {
+      background: rgba(6, 214, 160, 0.25);
+      border-color: var(--green);
+      color: #fff;
+    }
+
+    .quiz-option-btn.wrong {
+      background: rgba(255, 51, 102, 0.25);
+      border-color: var(--proton-red);
+      color: #fff;
+    }
+
+    .quiz-feedback {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      line-height: 1.5;
+      display: none;
+    }
+
+    .quiz-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+    }
+
+    /* ===== AR BOTTOM CONTROLLER HUD ===== */
+    #ar-controls-bar {
       position: absolute;
-      bottom: 24px;
+      bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      width: 85%;
-      max-width: 360px;
-      background: rgba(15, 15, 20, 0.95);
-      backdrop-filter: blur(10px);
-      color: #ffffff;
-      padding: 16px;
-      border-radius: 14px;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
       display: none;
+      gap: 12px;
+      z-index: 60;
       pointer-events: auto;
-      box-sizing: border-box;
-      border: 1px solid rgba(0, 229, 255, 0.4);
     }
-    #info-card h3 {
-      margin: 0 0 6px 0;
-      color: #00e5ff;
-      font-size: 18px;
-    }
-    #info-card p {
-      margin: 0;
+
+    .ar-btn {
+      background: rgba(8, 14, 30, 0.9);
+      border: 2px solid var(--cyan);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-family: var(--font-body);
       font-size: 14px;
-      line-height: 1.5;
-      color: #e0e0e0;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ar-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* 3D Floating Tooltip */
+    #canvas-tooltip {
+      position: absolute;
+      pointer-events: none;
+      background: rgba(5, 10, 25, 0.88);
+      border: 1px solid var(--cyan);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
+      transform: translate(-50%, -120%);
+      display: none;
+      z-index: 40;
+      white-space: nowrap;
+    }
+
+    /* Toast Notification */
+    #toast-msg {
+      position: fixed;
+      top: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 240, 255, 0.2);
+      border: 1px solid var(--cyan);
+      backdrop-filter: blur(10px);
+      color: #fff;
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+      z-index: 120;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    #toast-msg.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(5px);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 900px) {
+      #bottom-deck {
+        grid-template-columns: 1fr;
+        max-height: 280px;
+        overflow-y: auto;
+      }
+      .atom-identity {
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 12px;
+      }
+      .quantum-info {
+        border-left: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding-top: 12px;
+      }
+      #sidebar {
+        width: 270px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 45;
+        transform: translateX(-110%);
+      }
+      #sidebar.open {
+        transform: translateX(0);
+      }
     }
   </style>
 
+  <!-- Import maps polyfill & Three.js Modules -->
   <script type="importmap">
     {
       "imports": {
@@ -78,208 +974,1670 @@
     }
   </script>
 </head>
-<body>
-  <div id="overlay">
-    <button id="spawn-btn">⚛️ วางอะตอมตรงนี้</button>
 
-    <div id="info-card">
-      <h3 id="card-title">หัวข้อ</h3>
-      <p id="card-desc">รายละเอียดข้อมูลส่วนประกอบ</p>
+<body>
+  <!-- Canvas 3D Render Target -->
+  <div id="webgl-canvas-container"></div>
+
+  <!-- Floating 3D Pointer Tooltip -->
+  <div id="canvas-tooltip">อนุภาค</div>
+
+  <!-- Toast Notification -->
+  <div id="toast-msg">แจ้งเตือน</div>
+
+  <!-- Main UI HUD Layer -->
+  <div id="ui-container">
+    
+    <!-- TOP BAR -->
+    <header id="top-bar" class="glass-panel interactive">
+      <div class="brand-group">
+        <i class="fa-solid fa-atom brand-icon"></i>
+        <div class="brand-text">
+          <h1>ATOMIC AR LAB <span class="badge">PRO 3.0</span></h1>
+          <p id="txt-subtitle">สื่อการเรียนรู้โครงสร้างอะตอม 3 มิติและเทคโนโลยี AR</p>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <button id="btn-toggle-sidebar" class="hud-btn" title="เปิด/ปิด แผงควบคุม">
+          <i class="fa-solid fa-sliders"></i>
+          <span id="txt-btn-control">แผงควบคุม</span>
+        </button>
+
+        <button id="btn-toggle-sound" class="hud-btn" title="เปิด/ปิดเสียง">
+          <i class="fa-solid fa-volume-high"></i>
+        </button>
+
+        <button id="btn-lang" class="hud-btn" title="เปลี่ยนภาษา">
+          <i class="fa-solid fa-globe"></i>
+          <span>TH / EN</span>
+        </button>
+
+        <button id="btn-reset-cam" class="hud-btn" title="รีเซ็ตมุมกล้อง">
+          <i class="fa-solid fa-crosshairs"></i>
+        </button>
+
+        <button id="btn-screenshot" class="hud-btn" title="บันทึกภาพโมเดล">
+          <i class="fa-solid fa-camera"></i>
+        </button>
+
+        <button id="btn-quiz" class="hud-btn primary" title="ทำแบบทดสอบความรู้">
+          <i class="fa-solid fa-graduation-cap"></i>
+          <span id="txt-btn-quiz">แบบทดสอบ</span>
+        </button>
+
+        <!-- WebXR AR Mode Trigger container -->
+        <span id="ar-btn-wrapper"></span>
+      </div>
+    </header>
+
+    <!-- MIDDLE WORKSPACE (Sidebar & Floating Utilities) -->
+    <div class="workspace-middle">
+      
+      <!-- SIDEBAR CONTROLS -->
+      <aside id="sidebar" class="glass-panel interactive">
+        
+        <!-- Element Presets -->
+        <div>
+          <div class="sidebar-section-title">
+            <span id="txt-elements-title">⚛️ เลือกธาตุเคมี (Element)</span>
+            <span class="num">Quick Pick</span>
+          </div>
+          <div class="element-grid" id="element-presets-container">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+        <!-- Visual Modes -->
+        <div>
+          <div class="sidebar-section-title">
+            <span id="txt-modes-title">🔭 โหมดแบบจำลอง (Visual Mode)</span>
+          </div>
+          <div class="mode-list">
+            <button class="mode-btn active" data-mode="bohr">
+              <i class="fa-solid fa-circle-nodes"></i>
+              <div>
+                <strong id="mode-bohr-title">แบบจำลองโบร์ (Bohr Model)</strong>
+                <div style="font-size: 10px; color: var(--text-muted);" id="mode-bohr-desc">วงโคจรระดับพลังงานอิเล็กตรอนชัดเจน</div>
+              </div>
+            </button>
+            <button class="mode-btn" data-mode="cloud">
+              <i class="fa-solid fa-cloud"></i>
+              <div>
+                <strong id="mode-cloud-title">กลุ่มหมอกควอนตัม (Quantum Cloud)</strong>
+                <div style="font-size: 10px; color: var(--text-muted);" id="mode-cloud-desc">ความน่าจะเป็นในการพบอิเล็กตรอน (Orbitals)</div>
+              </div>
+            </button>
+            <button class="mode-btn" data-mode="nucleus_zoom">
+              <i class="fa-solid fa-magnifying-glass-plus"></i>
+              <div>
+                <strong id="mode-quark-title">เจาะลึกนิวเคลียส & ควาร์ก (Quarks)</strong>
+                <div style="font-size: 10px; color: var(--text-muted);" id="mode-quark-desc">ผ่าดูโปรตอน นิวตรอน และ Up/Down Quarks</div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Custom Sandbox Adjusters -->
+        <div>
+          <div class="sidebar-section-title">
+            <span id="txt-sandbox-title">🛠️ ปรับแต่งอะตอม (Atom Sandbox)</span>
+          </div>
+          <div class="slider-group">
+            <div class="slider-row protons">
+              <div class="slider-label">
+                <span id="txt-label-proton">โปรตอน (Protons - p⁺)</span>
+                <span class="val" id="lbl-protons-count">6</span>
+              </div>
+              <input type="range" id="range-protons" min="1" max="18" value="6">
+            </div>
+
+            <div class="slider-row neutrons">
+              <div class="slider-label">
+                <span id="txt-label-neutron">นิวตรอน (Neutrons - n⁰)</span>
+                <span class="val" id="lbl-neutrons-count">6</span>
+              </div>
+              <input type="range" id="range-neutrons" min="0" max="22" value="6">
+            </div>
+
+            <div class="slider-row electrons">
+              <div class="slider-label">
+                <span id="txt-label-electron">อิเล็กตรอน (Electrons - e⁻)</span>
+                <span class="val" id="lbl-electrons-count">6</span>
+              </div>
+              <input type="range" id="range-electrons" min="0" max="18" value="6">
+            </div>
+          </div>
+        </div>
+
+        <!-- Quantum Leap & Photon Actions -->
+        <div>
+          <div class="sidebar-section-title">
+            <span id="txt-photon-title">⚡ ปรากฏการณ์ควอนตัม (Quantum Leap)</span>
+          </div>
+          <div class="quantum-actions">
+            <button class="action-btn" id="btn-absorb-photon">
+              <i class="fa-solid fa-bolt" style="color: var(--gold);"></i>
+              <span id="txt-absorb-btn">ดูดกลืนโฟตอน</span>
+            </button>
+            <button class="action-btn" id="btn-emit-photon">
+              <i class="fa-solid fa-sun" style="color: var(--cyan);"></i>
+              <span id="txt-emit-btn">คายโฟตอน (เรืองแสง)</span>
+            </button>
+          </div>
+        </div>
+
+      </aside>
+
+      <!-- FLOATING UTILITY TOOLS ON THE RIGHT -->
+      <div class="floating-tools">
+        <button class="tool-circle-btn" id="btn-toggle-orbitals" title="เปิด/ปิด เส้นวงโคจร">
+          <i class="fa-solid fa-circle-notch"></i>
+        </button>
+        <button class="tool-circle-btn" id="btn-toggle-rotation" title="หยุด/เริ่ม หมุนอัตโนมัติ">
+          <i class="fa-solid fa-rotate"></i>
+        </button>
+        <button class="tool-circle-btn" id="btn-toggle-labels" title="เปิด/ปิด ป้ายชื่อใน 3D">
+          <i class="fa-solid fa-tag"></i>
+        </button>
+        <button class="tool-circle-btn" id="btn-fullscreen" title="ขยายเต็มหน้าจอ">
+          <i class="fa-solid fa-expand"></i>
+        </button>
+      </div>
+
+      <!-- PARTICLE INSPECTOR FLOATING CARD (When clicking 3D subatomic particle) -->
+      <div id="particle-inspector" class="glass-panel interactive">
+        <div class="inspector-header">
+          <h3 id="insp-title"><i class="fa-solid fa-circle-info"></i> ข้อมูลอนุภาค</h3>
+          <button class="close-inspector-btn" id="btn-close-inspector">&times;</button>
+        </div>
+        <div class="inspector-body">
+          <p id="insp-desc">รายละเอียดอนุภาคย่อยของอะตอม</p>
+          <table class="spec-table" id="insp-table">
+            <!-- Dynamic specs -->
+          </table>
+          <div style="font-size: 11px; color: var(--gold);" id="insp-fun-fact">
+            💡 <strong>เกร็ดน่ารู้:</strong> มวลส่วนใหญ่ของอะตอมกว่า 99.9% กระจุกตัวอยู่ที่นิวเคลียส
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- BOTTOM INFO DECK (Comprehensive Science Information) -->
+    <footer id="bottom-deck" class="glass-panel interactive">
+      
+      <!-- Elemental Identity -->
+      <div class="atom-identity">
+        <div class="element-symbol-box">
+          <span class="symbol-atomic-num" id="deck-z-num">6</span>
+          <span class="symbol-main" id="deck-symbol">C</span>
+          <span class="symbol-mass-num" id="deck-a-num">12</span>
+        </div>
+        <div class="atom-names">
+          <h2 id="deck-th-name">คาร์บอน</h2>
+          <p class="en-name" id="deck-en-name">Carbon (C)</p>
+          <span class="atom-status-badge" id="deck-status">อะตอมเป็นกลาง (Neutral)</span>
+        </div>
+      </div>
+
+      <!-- Subatomic Breakdown Cards -->
+      <div class="particle-stats">
+        
+        <div class="stat-card protons" id="card-click-proton" title="คลิกเพื่อดูข้อมูลโปรตอน">
+          <div class="stat-card-header">
+            <span id="txt-card-proton">โปรตอน (p⁺)</span>
+            <i class="fa-solid fa-circle-plus"></i>
+          </div>
+          <div class="stat-card-val" id="stat-protons-val">6</div>
+          <div class="stat-card-detail" id="txt-stat-proton-desc">ประจุบวก (+1) ในนิวเคลียส</div>
+        </div>
+
+        <div class="stat-card neutrons" id="card-click-neutron" title="คลิกเพื่อดูข้อมูลนิวตรอน">
+          <div class="stat-card-header">
+            <span id="txt-card-neutron">นิวตรอน (n⁰)</span>
+            <i class="fa-solid fa-circle"></i>
+          </div>
+          <div class="stat-card-val" id="stat-neutrons-val">6</div>
+          <div class="stat-card-detail" id="txt-stat-neutron-desc">เป็นกลางทางไฟฟ้า (0)</div>
+        </div>
+
+        <div class="stat-card electrons" id="card-click-electron" title="คลิกเพื่อดูข้อมูลอิเล็กตรอน">
+          <div class="stat-card-header">
+            <span id="txt-card-electron">อิเล็กตรอน (e⁻)</span>
+            <i class="fa-solid fa-circle-minus"></i>
+          </div>
+          <div class="stat-card-val" id="stat-electrons-val">6</div>
+          <div class="stat-card-detail" id="txt-stat-electron-desc">ประจุลบ (-1) โคจรรอบนอก</div>
+        </div>
+
+      </div>
+
+      <!-- Quantum Configuration & Shells -->
+      <div class="quantum-info">
+        <div class="quantum-info-row">
+          <span class="label" id="txt-lbl-electron-config">การจัดเรียงอิเล็กตรอน:</span>
+          <span class="value" id="deck-electron-config">2, 4</span>
+        </div>
+        <div class="quantum-info-row">
+          <span class="label" id="txt-lbl-valence">เวเลนซ์อิเล็กตรอน:</span>
+          <span class="value" id="deck-valence">4 e⁻</span>
+        </div>
+        <div class="quantum-info-row">
+          <span class="label" id="txt-lbl-net-charge">ประจุสุทธิ (Net Charge):</span>
+          <span class="value" id="deck-net-charge">0 (เป็นกลาง)</span>
+        </div>
+        <div class="shell-diagram" id="deck-shell-pills">
+          <span class="shell-dot">K: 2</span>
+          <span class="shell-dot">L: 4</span>
+        </div>
+      </div>
+
+    </footer>
+
+  </div>
+
+  <!-- AR CONTROLS HUD (Only visible in AR Mode) -->
+  <div id="ar-controls-bar">
+    <button class="ar-btn" id="btn-ar-spawn">
+      <i class="fa-solid fa-location-crosshairs"></i>
+      <span id="txt-ar-spawn-btn">วางอะตอมตรงนี้</span>
+    </button>
+    <button class="ar-btn" id="btn-ar-scale-up" title="ขยายขนาด">
+      <i class="fa-solid fa-magnifying-glass-plus"></i>
+    </button>
+    <button class="ar-btn" id="btn-ar-scale-down" title="ย่อขนาด">
+      <i class="fa-solid fa-magnifying-glass-minus"></i>
+    </button>
+  </div>
+
+  <!-- INTERACTIVE QUIZ MODAL -->
+  <div id="quiz-modal">
+    <div class="quiz-container">
+      <div class="quiz-header">
+        <h2><i class="fa-solid fa-atom"></i> <span id="txt-quiz-modal-title">แบบทดสอบโครงสร้างอะตอม</span></h2>
+        <span class="quiz-badge" id="quiz-progress">ข้อ 1 / 5</span>
+      </div>
+
+      <div class="question-box">
+        <div class="question-text" id="quiz-question-text">
+          คำถามกำลังโหลด...
+        </div>
+        <div class="quiz-options" id="quiz-options-container">
+          <!-- Dynamic options -->
+        </div>
+        <div class="quiz-feedback" id="quiz-feedback-box">
+          <!-- Dynamic explanation -->
+        </div>
+      </div>
+
+      <div class="quiz-footer">
+        <div style="font-size: 13px; font-weight: 600;" id="quiz-score-badge">
+          คะแนนสะสม: 0
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="hud-btn" id="btn-close-quiz">ปิด</button>
+          <button class="hud-btn primary" id="btn-next-quiz" style="display: none;">ข้อถัดไป <i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+      </div>
     </div>
   </div>
 
+  <!-- ==========================================
+       MAIN JAVASCRIPT LOGIC (Three.js & WebXR)
+       ========================================== -->
   <script type="module">
     import * as THREE from 'three';
     import { ARButton } from 'three/addons/webxr/ARButton.js';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-    let camera, scene, renderer;
-    let atomGroup = null;
-    let electronOrbits = [];
-    const interactiveObjects = [];
+    /* ========================================================
+       1. DATA DEFINITIONS: Elements & Subatomic Science
+       ======================================================== */
+    const ELEMENTS_DATA = [
+      { z: 1,  symbol: 'H',  nameTh: 'ไฮโดรเจน',   nameEn: 'Hydrogen',   protons: 1,  neutrons: 0,  electrons: 1,  mass: 1.008,  desc: 'ธาตุที่เบาที่สุดและมีปริมาณมากที่สุดในจักรวาล นิวเคลียสมีเพียง 1 โปรตอน' },
+      { z: 2,  symbol: 'He', nameTh: 'ฮีเลียม',     nameEn: 'Helium',     protons: 2,  neutrons: 2,  electrons: 2,  mass: 4.0026, desc: 'ก๊าซมีตระกูลที่เสถียรยิ่ง มี 2 อิเล็กตรอนเต็มเชลล์ K (ฮีเลียมดิวเอต)' },
+      { z: 3,  symbol: 'Li', nameTh: 'ลิเทียม',     nameEn: 'Lithium',    protons: 3,  neutrons: 4,  electrons: 3,  mass: 6.94,   desc: 'โลหะแอลคาไลที่เบาที่สุด ไวต่อปฏิกิริยามาก มี 1 เวเลนซ์อิเล็กตรอนในเชลล์ L' },
+      { z: 4,  symbol: 'Be', nameTh: 'เบริลเลียม',   nameEn: 'Beryllium',  protons: 4,  neutrons: 5,  electrons: 4,  mass: 9.0122, desc: 'โลหะแอลคาไลน์เอิร์ท มี 2 เวเลนซ์อิเล็กตรอน มีความแข็งและจุดหลอมเหลวสูง' },
+      { z: 5,  symbol: 'B',  nameTh: 'โบรอน',       nameEn: 'Boron',      protons: 5,  neutrons: 6,  electrons: 5,  mass: 10.81,  desc: 'กึ่งโลหะ มี 3 เวเลนซ์อิเล็กตรอน มักเกิดพันธะโคเวเลนต์ที่น่าทึ่ง' },
+      { z: 6,  symbol: 'C',  nameTh: 'คาร์บอน',     nameEn: 'Carbon',     protons: 6,  neutrons: 6,  electrons: 6,  mass: 12.011, desc: 'กระดูกสันหลังของสิ่งมีชีวิตและเคมีอินทรีย์ สามารถสร้างพันธะได้ถึง 4 พันธะ' },
+      { z: 7,  symbol: 'N',  nameTh: 'ไนโตรเจน',   nameEn: 'Nitrogen',   protons: 7,  neutrons: 7,  electrons: 7,  mass: 14.007, desc: 'ก๊าซที่มีสัดส่วนมากที่สุดในบรรยากาศโลก (78%) เป็นส่วนประกอบของกรดอะมิโน' },
+      { z: 8,  symbol: 'O',  nameTh: 'ออกซิเจน',   nameEn: 'Oxygen',     protons: 8,  neutrons: 8,  electrons: 8,  mass: 15.999, desc: 'ธาตุสำคัญในการดำรงชีวิตและการเผาผลาญพลังงาน เป็นตัวออกซิไดซ์ที่ทรงพลัง' },
+      { z: 9,  symbol: 'F',  nameTh: 'ฟลูออรีน',   nameEn: 'Fluorine',   protons: 9,  neutrons: 10, electrons: 9,  mass: 18.998, desc: 'ฮาโลเจนที่มีค่าอิเล็กโตรเนกาติวิตีสูงที่สุดในตารางธาตุ แย่งชิงอิเล็กตรอนได้แรงมาก' },
+      { z: 10, symbol: 'Ne', nameTh: 'นีออน',       nameEn: 'Neon',       protons: 10, neutrons: 10, electrons: 10, mass: 20.180, desc: 'ก๊าซเฉื่อยที่เรืองแสงสีส้มแดงเมื่อถูกกระตุ้นด้วยไฟฟ้า มีเวเลนซ์อิเล็กตรอนครบ 8' },
+      { z: 11, symbol: 'Na', nameTh: 'โซเดียม',     nameEn: 'Sodium',     protons: 11, neutrons: 12, electrons: 11, mass: 22.990, desc: 'โลหะอัลคาไล ไวต่อการให้อิเล็กตรอนตัวนอกสุดเพื่อกลายเป็น Na⁺ ที่เสถียร' },
+      { z: 12, symbol: 'Mg', nameTh: 'แมกนีเซียม', nameEn: 'Magnesium',  protons: 12, neutrons: 12, electrons: 12, mass: 24.305, desc: 'โลหะน้ำหนักเบา ใจกลางโมเลกุลคลอโรฟิลล์ของพืช เผาไหม้ให้แสงสีขาวสว่างจ้า' },
+      { z: 13, symbol: 'Al', nameTh: 'อะลูมิเนียม', nameEn: 'Aluminium',  protons: 13, neutrons: 14, electrons: 13, mass: 26.982, desc: 'โลหะที่มีมากที่สุดในเปลือกโลก มีความต้านทานการกัดกร่อนและนำไฟฟ้าได้ดี' },
+      { z: 14, symbol: 'Si', nameTh: 'ซิลิคอน',     nameEn: 'Silicon',    protons: 14, neutrons: 14, electrons: 14, mass: 28.085, desc: 'สารกึ่งตัวนำหัวใจหลักของคอมพิวเตอร์และชิปประมวลผลยุคดิจิทัล' },
+      { z: 17, symbol: 'Cl', nameTh: 'คลอรีน',     nameEn: 'Chlorine',   protons: 17, neutrons: 18, electrons: 17, mass: 35.45,  desc: 'ฮาโลเจนที่ชอบรับ 1 อิเล็กตรอนกลายเป็นคลอไรด์ไอออน (Cl⁻) ในเกลือแกง (NaCl)' },
+      { z: 18, symbol: 'Ar', nameTh: 'อาร์กอน',     nameEn: 'Argon',      protons: 18, neutrons: 22, electrons: 18, mass: 39.948, desc: 'ก๊าซมีตระกูลลำดับที่ 3 นิยมใช้บรรจุในหลอดไฟและงานเชื่อมเพื่อป้องกันออกซิเดชัน' }
+    ];
 
+    const SUBATOMIC_DETAILS = {
+      proton: {
+        titleTh: 'โปรตอน (Proton - p⁺)',
+        titleEn: 'Proton (p⁺)',
+        descTh: 'อนุภาคมูลฐานภายในนิวเคลียส ค้นพบโดย เออร์เนสต์ รัทเทอร์ฟอร์ด (1917) เกิดจากควาร์ก 3 ตัวยึดเหนี่ยวกันด้วยแรงนิวเคลียร์อย่างเข้ม',
+        descEn: 'Subatomic nucleon found in the atomic nucleus, discovered by Ernest Rutherford (1917). Made of 3 quarks bound by the strong force.',
+        specs: [
+          { name: 'ประจุไฟฟ้า (Charge)', val: '+1 (+1.602 × 10⁻¹⁹ C)' },
+          { name: 'มวลสัมบูรณ์ (Mass)', val: '1.6726 × 10⁻²⁷ kg (1.007 u)' },
+          { name: 'องค์ประกอบควาร์ก', val: '2 Up + 1 Down (uud)' },
+          { name: 'อันตรกิริยา', val: 'แรงแม่เหล็กไฟฟ้า & แรงเข้ม' }
+        ],
+        factTh: 'จำนวนโปรตอนเป็นตัวกำหนดชนิดของธาตุทางเคมี (เลขอะตอม Z)'
+      },
+      neutron: {
+        titleTh: 'นิวตรอน (Neutron - n⁰)',
+        titleEn: 'Neutron (n⁰)',
+        descTh: 'อนุภาคไร้ประจุไฟฟ้าในนิวเคลียส ค้นพบโดย เจมส์ แชดวิก (1932) ช่วยลดแรงผลักคูลอมบ์ระหว่างโปรตอน ทำให้นิวเคลียสเสถียร',
+        descEn: 'Neutral nucleon discovered by James Chadwick (1932). Stabilizes the nucleus by countering proton-proton electrostatic repulsion.',
+        specs: [
+          { name: 'ประจุไฟฟ้า (Charge)', val: '0 C (เป็นกลางทางไฟฟ้า)' },
+          { name: 'มวลสัมบูรณ์ (Mass)', val: '1.6749 × 10⁻²⁷ kg (1.008 u)' },
+          { name: 'องค์ประกอบควาร์ก', val: '1 Up + 2 Down (udd)' },
+          { name: 'ความเสถียรภาพ', val: 'เสถียรในนิวเคลียส สลายตัวนอกนิวเคลียส (T½ ~ 14 นาที)' }
+        ],
+        factTh: 'นิวตรอนหนักกว่าโปรตอนเล็กน้อย และผลรวมโปรตอน+นิวตรอนคือเลขมวล (A)'
+      },
+      electron: {
+        titleTh: 'อิเล็กตรอน (Electron - e⁻)',
+        titleEn: 'Electron (e⁻)',
+        descTh: 'อนุภาคมูลฐานชนิดเลปตอน (Lepton) ค้นพบโดย เจ.เจ. ทอมสัน (1897) โคจรรอบนิวเคลียสด้วยพฤติกรรมทวิภาคคลื่น-อนุภาค',
+        descEn: 'Fundamental elementary lepton discovered by J.J. Thomson (1897). Exhibits wave-particle duality orbiting the nucleus.',
+        specs: [
+          { name: 'ประจุไฟฟ้า (Charge)', val: '-1 (-1.602 × 10⁻¹⁹ C)' },
+          { name: 'มวลสัมบูรณ์ (Mass)', val: '9.109 × 10⁻³¹ kg (≈ 1/1836 ของโปรตอน)' },
+          { name: 'โครงสร้างภายใน', val: 'อนุภาคมูลฐาน (ไม่มีโครงสร้างย่อย)' },
+          { name: 'การจัดระดับพลังงาน', val: 'เชลล์ K, L, M, N (2n²)' }
+        ],
+        factTh: 'อิเล็กตรอนชั้นนอกสุด (Valence Electron) มีผลสูงสุดต่อปฏิกิริยาเคมีและพันธะ'
+      },
+      nucleus: {
+        titleTh: 'นิวเคลียส (Atomic Nucleus)',
+        titleEn: 'Atomic Nucleus',
+        descTh: 'ศูนย์กลางมวลของอะตอม รวมโปรตอนและนิวตรอนไว้ด้วยแรงนิวเคลียร์อย่างเข้ม (Strong Nuclear Force) มีขนาดเล็กกว่าอะตอม 100,000 เท่า',
+        descEn: 'Dense core of the atom holding protons and neutrons bound by the strong nuclear force. 100,000 times smaller than the atom.',
+        specs: [
+          { name: 'ขนาดเส้นผ่านศูนย์กลาง', val: '≈ 10⁻¹⁵ เมตร (1-10 เฟมโตเมตร)' },
+          { name: 'ความหนาแน่นมวล', val: '≈ 2.3 × 10¹⁷ kg/m³' },
+          { name: 'แรงยึดเหนี่ยว', val: 'Strong Nuclear Force (แรงเข้ม)' }
+        ],
+        factTh: 'หากนิวเคลียสมีขนาดเท่าลูกแก้ว 1 ซม. อะตอมทั้งหมดจะกว้างเท่ากับสนามกีฬา 1 กิโลเมตร!'
+      },
+      quark: {
+        titleTh: 'ควาร์ก (Quarks - Up & Down)',
+        titleEn: 'Quarks (Up & Down)',
+        descTh: 'อนุภาคมูลฐานที่แท้จริงซึ่งประกอบขึ้นเป็นโปรตอนและนิวตรอน ยึดกันด้วยอนุภาคกลูออน (Gluon) มีประจุเป็นเศษส่วน',
+        descEn: 'Elementary particles that form nucleons, held together by gluons and carrier bosons with fractional electric charges.',
+        specs: [
+          { name: 'Up Quark (u)', val: 'ประจุ +2/3 e, มวล ≈ 2.2 MeV/c²' },
+          { name: 'Down Quark (d)', val: 'ประจุ -1/3 e, มวล ≈ 4.7 MeV/c²' },
+          { name: 'กลูออน (Gluon)', val: 'อนุภาคนำแรงนิวเคลียร์อย่างเข้ม' }
+        ],
+        factTh: 'ควาร์กไม่สามารถอยู่อย่างโดดเดี่ยวในธรรมชาติได้ เรียกว่าปรากฏการณ์ Color Confinement'
+      }
+    };
+
+    /* Interactive Quiz Bank */
+    const QUIZ_QUESTIONS = [
+      {
+        questionTh: 'ใจกลางของอะตอม (นิวเคลียส) ประกอบด้วยอนุภาคมูลฐานชนิดใดบ้าง?',
+        questionEn: 'Which subatomic particles make up the atomic nucleus?',
+        optionsTh: ['โปรตอน และ อิเล็กตรอน', 'โปรตอน และ นิวตรอน', 'นิวตรอน และ อิเล็กตรอน', 'ควาร์ก และ โฟตอน'],
+        optionsEn: ['Protons & Electrons', 'Protons & Neutrons', 'Neutrons & Electrons', 'Quarks & Photons'],
+        correctIndex: 1,
+        explanationTh: 'ถูกต้อง! นิวเคลียสประกอบด้วยโปรตอน (ประจุ +) และนิวตรอน (เป็นกลาง) ส่วนอิเล็กตรอนจะโคจรรอบนอก'
+      },
+      {
+        questionTh: 'อนุภาคใดมีมวลน้อยที่สุด และค้นพบโดยการทดลองหลอดรังสีแคโทดของ เจ.เจ. ทอมสัน?',
+        questionEn: 'Which particle has the smallest mass and was discovered by J.J. Thomson?',
+        optionsTh: ['โปรตอน (Proton)', 'นิวตรอน (Neutron)', 'อิเล็กตรอน (Electron)', 'แอลฟา (Alpha particle)'],
+        optionsEn: ['Proton', 'Neutron', 'Electron', 'Alpha particle'],
+        correctIndex: 2,
+        explanationTh: 'ถูกต้อง! อิเล็กตรอนมีมวลเพียงประมาณ 1/1836 เท่าของโปรตอนเท่านั้น ค้นพบในปี ค.ศ. 1897'
+      },
+      {
+        questionTh: 'โปรตอน 1 ตัว ประกอบด้วยอนุภาคควาร์ก (Quarks) ชนิดใดบ้าง?',
+        questionEn: 'What quark combination makes up a single proton?',
+        optionsTh: ['2 Up Quarks + 1 Down Quark (uud)', '1 Up Quark + 2 Down Quarks (udd)', '3 Up Quarks (uuu)', '2 Charm + 1 Strange'],
+        optionsEn: ['2 Up + 1 Down (uud)', '1 Up + 2 Down (udd)', '3 Up (uuu)', '2 Charm + 1 Strange'],
+        correctIndex: 0,
+        explanationTh: 'ถูกต้อง! Up Quark มีประจุ +2/3 และ Down Quark มีประจุ -1/3 เมื่อรวม uud (+2/3 + 2/3 - 1/3) จะได้ประจุ +1 พอดี'
+      },
+      {
+        questionTh: 'เมื่ออิเล็กตรอนดูดกลืนพลังงานแสง (โฟตอน) และกระโดดขึ้นไปสู่วงโคจรระดับพลังงานที่สูงขึ้น เรียกว่าสถานะใด?',
+        questionEn: 'When an electron absorbs a photon and leaps to a higher shell, what state is it in?',
+        optionsTh: ['สถานะพื้น (Ground State)', 'สถานะกระตุ้น (Excited State)', 'สถานะพลาสมา (Plasma State)', 'สถานะไอออไนซ์'],
+        optionsEn: ['Ground State', 'Excited State', 'Plasma State', 'Ionized State'],
+        correctIndex: 1,
+        explanationTh: 'ถูกต้อง! เมื่ออิเล็กตรอนรับพลังงานจะกลายเป็นสถานะกระตุ้น (Excited State) และเมื่อตกลงมาจะคายโฟตอนแสงออกมา'
+      },
+      {
+        questionTh: 'ระดับพลังงานหลักชั้นที่ 2 (เชลล์ L) สามารถบรรจุอิเล็กตรอนได้สูงสุดกี่ตัวตามสูตร 2n²?',
+        questionEn: 'What is the maximum number of electrons the 2nd shell (L shell) can hold using 2n²?',
+        optionsTh: ['2 ตัว', '6 ตัว', '8 ตัว', '18 ตัว'],
+        optionsEn: ['2 electrons', '6 electrons', '8 electrons', '18 electrons'],
+        correctIndex: 2,
+        explanationTh: 'ถูกต้อง! คำนวณจากสูตร 2n² เมื่อ n=2 จะได้ 2 × (2)² = 2 × 4 = 8 ตัว'
+      }
+    ];
+
+    /* ========================================================
+       2. WEB AUDIO SYNTHESIZER (Sci-Fi Audio Engine)
+       ======================================================== */
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) {
+            this.ctx = new AudioContext();
+          }
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      playTone(freq, type = 'sine', duration = 0.15, gainVal = 0.1) {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+
+        try {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+          
+          gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          osc.start();
+          osc.stop(this.ctx.currentTime + duration);
+        } catch (e) {}
+      }
+
+      playSelect() {
+        this.playTone(800, 'sine', 0.08, 0.08);
+      }
+
+      playElementSwitch() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.25);
+          
+          gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.25);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.25);
+        } catch (e) {}
+      }
+
+      playQuantumLeap() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(520, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(1400, this.ctx.currentTime + 0.35);
+
+          gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.35);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.35);
+        } catch (e) {}
+      }
+
+      playPhotonEmission() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(1200, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(350, this.ctx.currentTime + 0.4);
+
+          gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.4);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.4);
+        } catch (e) {}
+      }
+
+      playSuccess() {
+        this.playTone(523.25, 'triangle', 0.15, 0.1);
+        setTimeout(() => this.playTone(659.25, 'triangle', 0.15, 0.1), 100);
+        setTimeout(() => this.playTone(783.99, 'triangle', 0.25, 0.12), 200);
+      }
+
+      playWrong() {
+        this.playTone(220, 'sawtooth', 0.25, 0.12);
+        setTimeout(() => this.playTone(180, 'sawtooth', 0.3, 0.12), 150);
+      }
+    }
+
+    const sound = new SoundEngine();
+
+    /* ========================================================
+       3. APPLICATION STATE & LOCALIZATION
+       ======================================================== */
+    const state = {
+      lang: 'th',
+      currentElement: ELEMENTS_DATA[5], // Default Carbon (C)
+      protons: 6,
+      neutrons: 6,
+      electrons: 6,
+      visualMode: 'bohr', // 'bohr', 'cloud', 'nucleus_zoom'
+      showOrbitals: true,
+      autoRotate: true,
+      showLabels: true,
+      isARMode: false,
+      arScale: 1.0,
+      isExcited: false,
+      quizIndex: 0,
+      quizScore: 0
+    };
+
+    /* ========================================================
+       4. THREE.JS 3D ENGINE SETUP
+       ======================================================== */
+    let scene, camera, renderer, controls;
+    let atomRootGroup;
+    let nucleusGroup, electronsGroup, orbitsGroup, cloudGroup, labelsGroup;
+    let backgroundStars;
+    const interactiveMeshes = [];
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
-    const spawnBtn = document.getElementById('spawn-btn');
-    const infoCard = document.getElementById('info-card');
-    const cardTitle = document.getElementById('card-title');
-    const cardDesc = document.getElementById('card-desc');
+    const container = document.getElementById('webgl-canvas-container');
+    const tooltip = document.getElementById('canvas-tooltip');
+    const toast = document.getElementById('toast-msg');
 
-    init();
-
-    function init() {
+    function init3D() {
+      // Scene
       scene = new THREE.Scene();
 
-      camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
+      // Camera
+      camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.05, 50);
+      camera.position.set(0, 0.35, 1.4);
 
-      const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 3.0);
-      hemiLight.position.set(0, 2, 0);
-      scene.add(hemiLight);
-
-      const dirLight = new THREE.DirectionalLight(0xffffff, 2.0);
-      dirLight.position.set(1, 2, 1);
-      scene.add(dirLight);
-
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-      renderer.setPixelRatio(window.devicePixelRatio);
+      // WebGL Renderer
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.2;
       renderer.xr.enabled = true;
-      document.body.appendChild(renderer.domElement);
+      container.appendChild(renderer.domElement);
 
-      document.body.appendChild(ARButton.createButton(renderer, {
-        optionalFeatures: ['dom-overlay'],
-        domOverlay: { root: document.getElementById('overlay') }
-      }));
+      // OrbitControls for standard 3D screen
+      controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.06;
+      controls.minDistance = 0.3;
+      controls.maxDistance = 4.0;
+      controls.target.set(0, 0, 0);
 
-      // รองรับการยิงคำสั่งแตะผ่าน XR Controller โดยตรงเพื่อให้แม่นยำในโลก AR
-      const controller = renderer.xr.getController(0);
-      controller.addEventListener('select', onControllerSelect);
-      scene.add(controller);
+      // Lighting Setup
+      const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+      scene.add(ambientLight);
 
-      spawnBtn.addEventListener('click', spawnAtomInFrontOfCamera);
-      window.addEventListener('pointerdown', onScreenTap);
+      const dirLight1 = new THREE.DirectionalLight(0x00f0ff, 2.5);
+      dirLight1.position.set(3, 4, 3);
+      scene.add(dirLight1);
+
+      const dirLight2 = new THREE.DirectionalLight(0xff3366, 2.0);
+      dirLight2.position.set(-3, -2, -3);
+      scene.add(dirLight2);
+
+      // Deep space dust particle background
+      createBackgroundStars();
+
+      // WebXR AR Button integration
+      setupWebXR();
+
+      // Main Atom Hierarchy
+      atomRootGroup = new THREE.Group();
+      scene.add(atomRootGroup);
+
+      nucleusGroup = new THREE.Group();
+      electronsGroup = new THREE.Group();
+      orbitsGroup = new THREE.Group();
+      cloudGroup = new THREE.Group();
+      labelsGroup = new THREE.Group();
+
+      atomRootGroup.add(nucleusGroup);
+      atomRootGroup.add(electronsGroup);
+      atomRootGroup.add(orbitsGroup);
+      atomRootGroup.add(cloudGroup);
+      atomRootGroup.add(labelsGroup);
+
+      // Event Listeners for Raycasting & Resize
       window.addEventListener('resize', onWindowResize);
+      window.addEventListener('pointermove', onPointerMove);
+      window.addEventListener('pointerdown', onPointerDown);
 
-      renderer.setAnimationLoop(render);
+      // Initial Build
+      rebuildAtomModel();
+
+      // Start Render Loop
+      renderer.setAnimationLoop(animate);
     }
 
-    function spawnAtomInFrontOfCamera(e) {
-      if (e) e.stopPropagation();
+    /* WebXR AR Integration */
+    function setupWebXR() {
+      const arWrapper = document.getElementById('ar-btn-wrapper');
+      const arBtn = ARButton.createButton(renderer, {
+        optionalFeatures: ['dom-overlay'],
+        domOverlay: { root: document.getElementById('ui-container') }
+      });
+      arBtn.classList.add('hud-btn', 'primary');
+      arBtn.innerHTML = '<i class="fa-solid fa-vr-cardboard"></i> <span>โหมด AR</span>';
+      arWrapper.appendChild(arBtn);
 
-      if (!atomGroup) {
-        atomGroup = createAtomModel();
-        scene.add(atomGroup);
+      // Session State Listeners
+      renderer.xr.addEventListener('sessionstart', () => {
+        state.isARMode = true;
+        document.body.classList.add('ar-active');
+        document.getElementById('ar-controls-bar').style.display = 'flex';
+        backgroundStars.visible = false;
+        
+        // Reposition in front of camera
+        atomRootGroup.position.set(0, 0, -0.6);
+        atomRootGroup.scale.setScalar(0.7);
+        showToast('เข้าสู่โหมด AR แล้ว — ส่องกล้องเพื่อมองหาพื้นผิว');
+      });
+
+      renderer.xr.addEventListener('sessionend', () => {
+        state.isARMode = false;
+        document.body.classList.remove('ar-active');
+        document.getElementById('ar-controls-bar').style.display = 'none';
+        backgroundStars.visible = true;
+        atomRootGroup.position.set(0, 0, 0);
+        atomRootGroup.scale.setScalar(1.0);
+        showToast('ออกจากโหมด AR กลับสู่โหมด 3D');
+      });
+
+      // Controller interaction
+      const controller = renderer.xr.getController(0);
+      scene.add(controller);
+    }
+
+    /* Background Deep Space Particles */
+    function createBackgroundStars() {
+      const starGeo = new THREE.BufferGeometry();
+      const count = 1200;
+      const positions = new Float32Array(count * 3);
+      const colors = new Float32Array(count * 3);
+
+      for (let i = 0; i < count * 3; i += 3) {
+        positions[i] = (Math.random() - 0.5) * 15;
+        positions[i + 1] = (Math.random() - 0.5) * 15;
+        positions[i + 2] = (Math.random() - 0.5) * 15;
+
+        // Subtle Cyan & Violet Hue
+        const r = 0.2 + Math.random() * 0.3;
+        const g = 0.5 + Math.random() * 0.5;
+        const b = 0.8 + Math.random() * 0.2;
+        colors[i] = r;
+        colors[i + 1] = g;
+        colors[i + 2] = b;
       }
 
-      // วางห่างออกไป 45 ซม. เพื่อให้ขนาดใหญ่พอดีสายตา
-      const dir = new THREE.Vector3(0, 0, -0.45);
-      dir.applyQuaternion(camera.quaternion);
+      starGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      starGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
-      atomGroup.position.copy(camera.position).add(dir);
-      atomGroup.quaternion.copy(camera.quaternion);
+      const starMat = new THREE.PointsMaterial({
+        size: 0.025,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.85
+      });
 
-      spawnBtn.innerText = '🔄 ย้ายอะตอมมาตรงหน้า';
+      backgroundStars = new THREE.Points(starGeo, starMat);
+      scene.add(backgroundStars);
     }
 
-    function createAtomModel() {
-      const group = new THREE.Group();
+    /* ========================================================
+       5. ATOM 3D MODEL GENERATION
+       ======================================================== */
+    let electronAnimData = [];
+    let nucleusParticles = [];
+    let quarkAnimData = [];
 
-      // 1. นิวเคลียส
-      const nucleusGeo = new THREE.SphereGeometry(0.06, 32, 32);
-      const nucleusMat = new THREE.MeshStandardMaterial({
-        color: 0xff3b30,
-        roughness: 0.3,
-        metalness: 0.2
+    function rebuildAtomModel() {
+      // Clear interactive list
+      interactiveMeshes.length = 0;
+      electronAnimData.length = 0;
+      nucleusParticles.length = 0;
+      quarkAnimData.length = 0;
+
+      // Clear Groups
+      clearGroup(nucleusGroup);
+      clearGroup(electronsGroup);
+      clearGroup(orbitsGroup);
+      clearGroup(cloudGroup);
+      clearGroup(labelsGroup);
+
+      const pCount = state.protons;
+      const nCount = state.neutrons;
+      const eCount = state.electrons;
+
+      // 1. BUILD NUCLEUS (Protons & Neutrons Cluster)
+      buildNucleusCluster(pCount, nCount);
+
+      // 2. BUILD ELECTRON SHELLS & ORBITS (BOHR MODEL)
+      buildElectronShells(eCount);
+
+      // 3. BUILD QUANTUM CLOUD (PROBABILITY DENSITY)
+      buildQuantumCloud(eCount);
+
+      // 4. BUILD 3D LABELS
+      build3DLabels();
+
+      // Apply Visual Mode Visibility
+      updateVisualModeVisibility();
+
+      // Update UI cards
+      updateHUDInfo();
+    }
+
+    function clearGroup(group) {
+      while (group.children.length > 0) {
+        const obj = group.children[0];
+        group.remove(obj);
+        if (obj.geometry) obj.geometry.dispose();
+        if (obj.material) {
+          if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
+          else obj.material.dispose();
+        }
+      }
+    }
+
+    /* Build Realistic Nucleus Cluster */
+    function buildNucleusCluster(protons, neutrons) {
+      const totalNucleons = protons + neutrons;
+      const isExplodedQuarkMode = (state.visualMode === 'nucleus_zoom');
+      
+      // Dynamic Center Glowing Core
+      const coreLight = new THREE.PointLight(0xff3366, 1.8, 0.5);
+      nucleusGroup.add(coreLight);
+
+      // Nucleon Geometries & Materials
+      const sphereGeo = new THREE.SphereGeometry(isExplodedQuarkMode ? 0.038 : 0.028, 24, 24);
+      
+      const protonMat = new THREE.MeshStandardMaterial({
+        color: 0xff3366,
+        roughness: 0.25,
+        metalness: 0.35,
+        emissive: 0xff1744,
+        emissiveIntensity: 0.35,
+        transparent: isExplodedQuarkMode,
+        opacity: isExplodedQuarkMode ? 0.42 : 1.0,
+        wireframe: false
       });
-      const nucleus = new THREE.Mesh(nucleusGeo, nucleusMat);
-      group.add(nucleus);
 
-      // Hitbox ขยายขนาดให้นิวเคลียส (กล่องล่องหนขนาดใหญ่ขึ้นเกือบ 2 เท่า)
-      const nucleusHitbox = new THREE.Mesh(
-        new THREE.SphereGeometry(0.09, 16, 16),
-        new THREE.MeshBasicMaterial({ visible: false })
-      );
-      nucleusHitbox.userData = {
-        title: 'นิวเคลียส (Nucleus)',
-        desc: 'ใจกลางของอะตอม ประกอบด้วยโปรตอน (ประจุบวก) และนิวตรอน (ไม่มีประจุ) รวมกันเป็นมวลเกือบทั้งหมด'
-      };
-      nucleus.add(nucleusHitbox);
-      interactiveObjects.push(nucleusHitbox);
+      const neutronMat = new THREE.MeshStandardMaterial({
+        color: 0x3b82f6,
+        roughness: 0.3,
+        metalness: 0.2,
+        emissive: 0x1d4ed8,
+        emissiveIntensity: 0.3,
+        transparent: isExplodedQuarkMode,
+        opacity: isExplodedQuarkMode ? 0.42 : 1.0,
+        wireframe: false
+      });
 
-      // 2. วงโคจรและอิเล็กตรอน
-      const orbitRadii = [0.14, 0.19, 0.24];
-      const orbitAngles = [
-        [0, 0, 0],
-        [Math.PI / 3, Math.PI / 4, 0],
-        [-Math.PI / 3, -Math.PI / 4, 0]
+      // Distribute nucleons in compact sphere (Fibonacci lattice / pack)
+      let items = [];
+      for (let i = 0; i < protons; i++) items.push('proton');
+      for (let i = 0; i < neutrons; i++) items.push('neutron');
+      
+      // Shuffle for realistic mixed cluster
+      items.sort(() => Math.random() - 0.5);
+
+      const clusterRadius = Math.max(0.045, 0.022 * Math.cbrt(Math.max(1, totalNucleons)));
+
+      items.forEach((type, idx) => {
+        const phi = Math.acos(-1 + (2 * idx) / Math.max(1, totalNucleons));
+        const theta = Math.sqrt(totalNucleons * Math.PI) * phi;
+
+        const mult = isExplodedQuarkMode ? 2.6 : 1.0;
+        const r = (totalNucleons === 1) ? 0 : clusterRadius * (0.4 + 0.6 * Math.cbrt((idx + 1) / totalNucleons)) * mult;
+
+        const x = r * Math.sin(phi) * Math.cos(theta);
+        const y = r * Math.sin(phi) * Math.sin(theta);
+        const z = r * Math.cos(phi);
+
+        const mesh = new THREE.Mesh(sphereGeo, type === 'proton' ? protonMat : neutronMat);
+        mesh.position.set(x, y, z);
+        mesh.userData = {
+          type: type,
+          id: `${type}_${idx}`,
+          titleTh: type === 'proton' ? 'โปรตอน (Proton, p⁺)' : 'นิวตรอน (Neutron, n⁰)',
+          titleEn: type === 'proton' ? 'Proton (p⁺)' : 'Neutron (n⁰)',
+          category: type
+        };
+
+        nucleusGroup.add(mesh);
+        interactiveMeshes.push(mesh);
+        nucleusParticles.push({ mesh, basePos: new THREE.Vector3(x, y, z), seed: Math.random() * 10 });
+
+        // IF QUARK MODE: Add 3 sub-quarks inside each nucleon!
+        if (isExplodedQuarkMode) {
+          addQuarksInsideNucleon(mesh, type);
+        }
+      });
+    }
+
+    /* Sub-Quarks Visualization (2 Up + 1 Down for Proton, 1 Up + 2 Down for Neutron) */
+    function addQuarksInsideNucleon(nucleonMesh, nucleonType) {
+      const quarks = (nucleonType === 'proton') ? ['up', 'up', 'down'] : ['up', 'down', 'down'];
+      const quarkGeo = new THREE.SphereGeometry(0.012, 16, 16);
+      
+      const upMat = new THREE.MeshStandardMaterial({
+        color: 0xff007f,
+        emissive: 0xff007f,
+        emissiveIntensity: 0.8,
+        roughness: 0.2
+      });
+
+      const downMat = new THREE.MeshStandardMaterial({
+        color: 0x00f5d4,
+        emissive: 0x00f5d4,
+        emissiveIntensity: 0.8,
+        roughness: 0.2
+      });
+
+      const dist = 0.022;
+      const offsets = [
+        new THREE.Vector3(dist, 0, 0),
+        new THREE.Vector3(-dist * 0.5, dist * 0.866, 0),
+        new THREE.Vector3(-dist * 0.5, -dist * 0.866, 0)
       ];
 
-      orbitRadii.forEach((radius, i) => {
-        const orbitPivot = new THREE.Group();
-        orbitPivot.rotation.set(...orbitAngles[i]);
+      // Gluon flux lines connecting the 3 quarks
+      const gluonLineGeo = new THREE.BufferGeometry().setFromPoints([
+        offsets[0], offsets[1], offsets[2], offsets[0]
+      ]);
+      const gluonLineMat = new THREE.LineBasicMaterial({ color: 0xffd166, transparent: true, opacity: 0.8 });
+      const gluonLine = new THREE.Line(gluonLineGeo, gluonLineMat);
+      nucleonMesh.add(gluonLine);
 
-        // เส้นวงแหวน
-        const ringGeo = new THREE.TorusGeometry(radius, 0.002, 16, 64);
-        const ringMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff, transparent: true, opacity: 0.5 });
-        const ring = new THREE.Mesh(ringGeo, ringMat);
-        ring.rotation.x = Math.PI / 2;
-        orbitPivot.add(ring);
-
-        // เม็ดอิเล็กตรอน (ทำให้เม็ดใหญ่ขึ้นเล็กน้อย)
-        const electronGeo = new THREE.SphereGeometry(0.022, 16, 16);
-        const electronMat = new THREE.MeshStandardMaterial({
-          color: 0x00e5ff,
-          emissive: 0x00e5ff,
-          emissiveIntensity: 0.8
-        });
-        const electron = new THREE.Mesh(electronGeo, electronMat);
-        electron.position.x = radius;
-
-        // Hitbox ล่องหนของอิเล็กตรอน (ขยายใหญ่ถึง 0.06 เมตร เพื่อให้จิ้มโดนได้ง่ายแม้กำลังเคลื่อนที่)
-        const electronHitbox = new THREE.Mesh(
-          new THREE.SphereGeometry(0.06, 16, 16),
-          new THREE.MeshBasicMaterial({ visible: false })
-        );
-        electronHitbox.userData = {
-          title: 'อิเล็กตรอน (Electron)',
-          desc: 'อนุภาคที่มีประจุไฟฟ้าเป็นลบ โคจรรอบนิวเคลียสด้วยระดับพลังงานต่างๆ มีมวลน้อยมาก'
+      quarks.forEach((qType, i) => {
+        const qMesh = new THREE.Mesh(quarkGeo, qType === 'up' ? upMat : downMat);
+        qMesh.position.copy(offsets[i]);
+        qMesh.userData = {
+          type: 'quark',
+          quarkType: qType,
+          category: 'quark',
+          titleTh: qType === 'up' ? 'อัพควาร์ก (Up Quark, u: +2/3)' : 'ดาวน์ควาร์ก (Down Quark, d: -1/3)',
+          titleEn: qType === 'up' ? 'Up Quark (u: +2/3)' : 'Down Quark (d: -1/3)'
         };
-        electron.add(electronHitbox);
-        interactiveObjects.push(electronHitbox);
+        nucleonMesh.add(qMesh);
+        interactiveMeshes.push(qMesh);
+        quarkAnimData.push({ mesh: qMesh, basePos: offsets[i].clone(), speed: 2 + i });
+      });
+    }
 
-        orbitPivot.add(electron);
-        group.add(orbitPivot);
+    /* Build Electron Shells according to Bohr Model (K=2, L=8, M=8/18) */
+    function buildElectronShells(electronCount) {
+      if (electronCount <= 0) return;
 
-        // ลดความเร็วในการหมุนลงเล็กน้อย เพื่อให้เอานิ้วเล็งจิ้มได้ง่ายขึ้น
-        electronOrbits.push({ pivot: orbitPivot, speed: 0.8 + i * 0.4 });
+      // Distribute electrons into energy levels: K (max 2), L (max 8), M (remaining)
+      const shells = [];
+      let rem = electronCount;
+      const kCount = Math.min(rem, 2);
+      if (kCount > 0) { shells.push({ shell: 'K', n: 1, count: kCount, radius: 0.16 }); rem -= kCount; }
+      
+      const lCount = Math.min(rem, 8);
+      if (lCount > 0) { shells.push({ shell: 'L', n: 2, count: lCount, radius: 0.28 }); rem -= lCount; }
+
+      if (rem > 0) {
+        shells.push({ shell: 'M', n: 3, count: rem, radius: 0.40 });
+      }
+
+      // Geometries & Materials
+      const electronGeo = new THREE.SphereGeometry(0.018, 16, 16);
+      const electronMat = new THREE.MeshStandardMaterial({
+        color: 0x00f0ff,
+        emissive: 0x00f0ff,
+        emissiveIntensity: 0.9,
+        roughness: 0.2
       });
 
-      return group;
+      shells.forEach((shellInfo, sIdx) => {
+        const { shell, n, count, radius } = shellInfo;
+
+        // Torus Ring for Orbital Path
+        const ringGeo = new THREE.TorusGeometry(radius, 0.0016, 16, 120);
+        const ringMat = new THREE.MeshBasicMaterial({
+          color: 0x00f0ff,
+          transparent: true,
+          opacity: 0.35
+        });
+
+        // Unique inclination plane angles for shells
+        const orbitPivot = new THREE.Group();
+        if (sIdx === 0) orbitPivot.rotation.set(0, 0, 0);
+        else if (sIdx === 1) orbitPivot.rotation.set(Math.PI / 4, Math.PI / 6, 0);
+        else orbitPivot.rotation.set(-Math.PI / 3, Math.PI / 4, Math.PI / 6);
+
+        const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+        ringMesh.rotation.x = Math.PI / 2;
+        orbitPivot.add(ringMesh);
+        orbitsGroup.add(orbitPivot);
+
+        // Place Electrons on this shell
+        for (let i = 0; i < count; i++) {
+          const angleOffset = (i / count) * Math.PI * 2;
+          const ePivot = new THREE.Group();
+          ePivot.rotation.copy(orbitPivot.rotation);
+
+          const eMesh = new THREE.Mesh(electronGeo, electronMat);
+          eMesh.position.x = radius;
+          eMesh.userData = {
+            type: 'electron',
+            category: 'electron',
+            shell: shell,
+            n: n,
+            titleTh: `อิเล็กตรอน (Electron, e⁻) ชั้น ${shell} (n=${n})`,
+            titleEn: `Electron (e⁻) Shell ${shell} (n=${n})`
+          };
+
+          // Hitbox
+          const hitSphere = new THREE.Mesh(
+            new THREE.SphereGeometry(0.045, 12, 12),
+            new THREE.MeshBasicMaterial({ visible: false })
+          );
+          hitSphere.userData = eMesh.userData;
+          eMesh.add(hitSphere);
+          interactiveMeshes.push(hitSphere);
+
+          ePivot.add(eMesh);
+          electronsGroup.add(ePivot);
+
+          electronAnimData.push({
+            pivot: ePivot,
+            radius: radius,
+            baseSpeed: 1.2 / Math.sqrt(n),
+            angle: angleOffset,
+            mesh: eMesh,
+            shell: shell
+          });
+        }
+      });
     }
 
-    // แตะผ่าน Controller ของ WebXR
-    function onControllerSelect(event) {
-      const tempMatrix = new THREE.Matrix4();
-      tempMatrix.identity().extractRotation(event.target.matrixWorld);
+    /* Build Quantum Cloud (Probability Density Model) */
+    function buildQuantumCloud(electronCount) {
+      if (electronCount <= 0) return;
 
-      raycaster.ray.origin.setFromMatrixPosition(event.target.matrixWorld);
-      raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix);
+      const particleCount = Math.min(2500, electronCount * 300);
+      const cloudGeo = new THREE.BufferGeometry();
+      const pos = new Float32Array(particleCount * 3);
+      const cols = new Float32Array(particleCount * 3);
 
-      checkIntersection();
+      for (let i = 0; i < particleCount * 3; i += 3) {
+        // Exponential radial distribution simulating orbital wavefunctions
+        const u = Math.random();
+        const r = -0.22 * Math.log(1 - u * 0.92) + 0.05;
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(2 * Math.random() - 1);
+
+        pos[i] = r * Math.sin(phi) * Math.cos(theta);
+        pos[i + 1] = r * Math.sin(phi) * Math.sin(theta);
+        pos[i + 2] = r * Math.cos(phi);
+
+        cols[i] = 0.0;
+        cols[i + 1] = 0.85 + Math.random() * 0.15;
+        cols[i + 2] = 1.0;
+      }
+
+      cloudGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      cloudGeo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+
+      const cloudMat = new THREE.PointsMaterial({
+        size: 0.014,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.65,
+        blending: THREE.AdditiveBlending
+      });
+
+      const cloudMesh = new THREE.Points(cloudGeo, cloudMat);
+      cloudGroup.add(cloudMesh);
     }
 
-    // แตะผ่านหน้าจอมือถือ (Pointer event)
-    function onScreenTap(event) {
-      if (event.target.id === 'spawn-btn' || infoCard.contains(event.target)) {
+    /* Build 3D Canvas Text Sprites for Classroom Labels */
+    function createTextSprite(text, borderColor = '#00f0ff') {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+
+      // Rounded background
+      ctx.fillStyle = 'rgba(6, 12, 28, 0.88)';
+      ctx.strokeStyle = borderColor;
+      ctx.lineWidth = 3;
+      if (ctx.roundRect) {
+        ctx.beginPath();
+        ctx.roundRect(4, 4, 248, 56, 12);
+        ctx.fill();
+        ctx.stroke();
+      } else {
+        ctx.fillRect(4, 4, 248, 56);
+        ctx.strokeRect(4, 4, 248, 56);
+      }
+
+      // Text
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 22px Prompt, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, 128, 32);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true });
+      const sprite = new THREE.Sprite(spriteMat);
+      sprite.scale.set(0.18, 0.045, 1.0);
+      return sprite;
+    }
+
+    function build3DLabels() {
+      const nucLabel = createTextSprite(state.lang === 'th' ? '⚛️ นิวเคลียส' : '⚛️ Nucleus', '#ff3366');
+      nucLabel.position.set(0, 0.12, 0);
+      labelsGroup.add(nucLabel);
+
+      if (state.visualMode === 'bohr' && state.electrons > 0) {
+        const eLabel = createTextSprite(state.lang === 'th' ? '⚡ อิเล็กตรอน' : '⚡ Electron', '#00f0ff');
+        eLabel.position.set(0.24, 0.18, 0);
+        labelsGroup.add(eLabel);
+      } else if (state.visualMode === 'cloud') {
+        const cloudLabel = createTextSprite(state.lang === 'th' ? '☁️ กลุ่มหมอกควอนตัม' : '☁️ Quantum Cloud', '#00f0ff');
+        cloudLabel.position.set(0.26, 0.18, 0);
+        labelsGroup.add(cloudLabel);
+      } else if (state.visualMode === 'nucleus_zoom') {
+        const qLabel = createTextSprite(state.lang === 'th' ? '🔬 ควาร์ก (u/d)' : '🔬 Quarks (u/d)', '#ff007f');
+        qLabel.position.set(0, 0.20, 0);
+        labelsGroup.add(qLabel);
+      }
+
+      labelsGroup.visible = state.showLabels;
+    }
+
+    /* Update Visual Mode Visibility */
+    function updateVisualModeVisibility() {
+      if (state.visualMode === 'bohr') {
+        electronsGroup.visible = true;
+        orbitsGroup.visible = state.showOrbitals;
+        cloudGroup.visible = false;
+        nucleusGroup.visible = true;
+      } else if (state.visualMode === 'cloud') {
+        electronsGroup.visible = false;
+        orbitsGroup.visible = false;
+        cloudGroup.visible = true;
+        nucleusGroup.visible = true;
+      } else if (state.visualMode === 'nucleus_zoom') {
+        electronsGroup.visible = false;
+        orbitsGroup.visible = false;
+        cloudGroup.visible = false;
+        nucleusGroup.visible = true;
+      }
+    }
+
+    /* Trigger Quantum Leap / Photon Wave */
+    function triggerPhotonInteraction(isAbsorb) {
+      if (electronAnimData.length === 0) {
+        showToast('ไม่มีอิเล็กตรอนสำหรับการเปลี่ยนระดับพลังงาน');
         return;
       }
 
-      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      const targetElectron = electronAnimData[electronAnimData.length - 1]; // Outer valence
+      
+      // Create Light Photon Wave Packet
+      const photonGeo = new THREE.SphereGeometry(0.02, 16, 16);
+      const photonMat = new THREE.MeshBasicMaterial({
+        color: isAbsorb ? 0xffd166 : 0x00f0ff,
+        wireframe: false
+      });
+      const photonMesh = new THREE.Mesh(photonGeo, photonMat);
 
-      raycaster.setFromCamera(mouse, camera);
-      checkIntersection();
+      // Light trail beam
+      const light = new THREE.PointLight(isAbsorb ? 0xffd166 : 0x00f0ff, 3, 0.5);
+      photonMesh.add(light);
+      scene.add(photonMesh);
+
+      const startPos = isAbsorb ? new THREE.Vector3(1.0, 0.5, 0.5) : targetElectron.mesh.getWorldPosition(new THREE.Vector3());
+      const endPos = isAbsorb ? targetElectron.mesh.getWorldPosition(new THREE.Vector3()) : new THREE.Vector3(-1.0, -0.5, 0.5);
+
+      photonMesh.position.copy(startPos);
+
+      if (isAbsorb) {
+        sound.playQuantumLeap();
+        showToast('⚡ ดูดกลืนพลังงานโฟตอน: อิเล็กตรอนกระโดดสู่สถานะกระตุ้น (Excited State)!');
+      } else {
+        sound.playPhotonEmission();
+        showToast('✨ คายพลังงานโฟตอน: อิเล็กตรอนกลับสู่สถานะพื้น ปล่อยคลื่นแสง (Emission Spectra)!');
+      }
+
+      // Animate Photon
+      let progress = 0;
+      const animInterval = setInterval(() => {
+        progress += 0.04;
+        photonMesh.position.lerpVectors(startPos, endPos, progress);
+
+        if (progress >= 1.0) {
+          clearInterval(animInterval);
+          scene.remove(photonMesh);
+          photonGeo.dispose();
+          photonMat.dispose();
+
+          // Flash target electron
+          if (isAbsorb) {
+            targetElectron.mesh.scale.set(1.8, 1.8, 1.8);
+            setTimeout(() => targetElectron.mesh.scale.set(1, 1, 1), 600);
+          }
+        }
+      }, 16);
     }
 
-    function checkIntersection() {
-      const intersects = raycaster.intersectObjects(interactiveObjects, false);
+    /* ========================================================
+       6. RAYCASTING & INTERACTIVE INSPECTOR
+       ======================================================== */
+    function onPointerMove(e) {
+      if (state.isARMode) return;
+      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(interactiveMeshes, false);
 
       if (intersects.length > 0) {
         const item = intersects[0].object;
-        showInfo(item.userData.title, item.userData.desc);
+        const title = (state.lang === 'th') ? (item.userData.titleTh || 'อนุภาค') : (item.userData.titleEn || 'Particle');
+        tooltip.style.display = 'block';
+        tooltip.style.left = `${e.clientX}px`;
+        tooltip.style.top = `${e.clientY}px`;
+        tooltip.innerText = title;
+        document.body.style.cursor = 'pointer';
       } else {
-        hideInfo();
+        tooltip.style.display = 'none';
+        document.body.style.cursor = 'default';
       }
     }
 
-    function showInfo(title, desc) {
-      cardTitle.innerText = title;
-      cardDesc.innerText = desc;
-      infoCard.style.display = 'block';
+    function onPointerDown(e) {
+      // Don't trigger if clicked on HUD panels
+      if (e.target.closest('.interactive')) return;
+
+      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(interactiveMeshes, false);
+
+      if (intersects.length > 0) {
+        const item = intersects[0].object;
+        openParticleInspector(item.userData.category || item.userData.type);
+        sound.playSelect();
+      }
     }
 
-    function hideInfo() {
-      infoCard.style.display = 'none';
+    function openParticleInspector(category) {
+      const data = SUBATOMIC_DETAILS[category];
+      if (!data) return;
+
+      const inspCard = document.getElementById('particle-inspector');
+      const inspTitle = document.getElementById('insp-title');
+      const inspDesc = document.getElementById('insp-desc');
+      const inspTable = document.getElementById('insp-table');
+      const inspFunFact = document.getElementById('insp-fun-fact');
+
+      inspTitle.innerHTML = `<i class="fa-solid fa-circle-info"></i> ${(state.lang === 'th') ? data.titleTh : data.titleEn}`;
+      inspDesc.innerText = (state.lang === 'th') ? data.descTh : data.descEn;
+
+      // Table specs
+      inspTable.innerHTML = '';
+      data.specs.forEach(spec => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td class="spec-name">${spec.name}</td><td class="spec-val">${spec.val}</td>`;
+        inspTable.appendChild(tr);
+      });
+
+      inspFunFact.innerHTML = `💡 <strong>${state.lang === 'th' ? 'เกร็ดน่ารู้:' : 'Key Fact:'}</strong> ${state.lang === 'th' ? data.factTh : data.specs[0].val}`;
+      inspCard.style.display = 'block';
+    }
+
+    /* ========================================================
+       7. HUD & SCIENCE METRICS UPDATER
+       ======================================================== */
+    function updateHUDInfo() {
+      const p = state.protons;
+      const n = state.neutrons;
+      const e = state.electrons;
+      const z = p;
+      const a = p + n;
+
+      // Find matching standard element
+      const match = ELEMENTS_DATA.find(el => el.z === z);
+      const symbol = match ? match.symbol : (z <= 118 ? `X` : `?`);
+      const nameTh = match ? match.nameTh : `ธาตุสังเคราะห์ (Z=${z})`;
+      const nameEn = match ? match.nameEn : `Unknown Element (Z=${z})`;
+
+      // Update Top/Bottom Deck
+      document.getElementById('deck-z-num').innerText = z;
+      document.getElementById('deck-a-num').innerText = a;
+      document.getElementById('deck-symbol').innerText = symbol;
+      document.getElementById('deck-th-name').innerText = nameTh;
+      document.getElementById('deck-en-name').innerText = `${nameEn} (${symbol})`;
+
+      // Protons, Neutrons, Electrons Counters
+      document.getElementById('stat-protons-val').innerText = p;
+      document.getElementById('stat-neutrons-val').innerText = n;
+      document.getElementById('stat-electrons-val').innerText = e;
+      document.getElementById('lbl-protons-count').innerText = p;
+      document.getElementById('lbl-neutrons-count').innerText = n;
+      document.getElementById('lbl-electrons-count').innerText = e;
+
+      // Sliders Sync
+      document.getElementById('range-protons').value = p;
+      document.getElementById('range-neutrons').value = n;
+      document.getElementById('range-electrons').value = e;
+
+      // Calculate Net Charge
+      const netCharge = p - e;
+      const chargeText = (netCharge === 0) 
+        ? (state.lang === 'th' ? '0 (อะตอมเป็นกลาง)' : '0 (Neutral Atom)')
+        : (netCharge > 0 ? `+${netCharge} (${state.lang === 'th' ? 'ไอออนบวก / Cation' : 'Cation'})` : `${netCharge} (${state.lang === 'th' ? 'ไอออนลบ / Anion' : 'Anion'})`);
+      
+      document.getElementById('deck-net-charge').innerText = chargeText;
+
+      const statusBadge = document.getElementById('deck-status');
+      if (netCharge === 0) {
+        statusBadge.innerText = (state.lang === 'th') ? 'อะตอมเป็นกลาง (Neutral)' : 'Neutral Atom';
+        statusBadge.style.borderColor = 'var(--green)';
+        statusBadge.style.color = 'var(--green)';
+      } else {
+        statusBadge.innerText = (state.lang === 'th') ? `ไอออน (Ion ${netCharge > 0 ? '+' : ''}${netCharge})` : `Ion (${netCharge > 0 ? '+' : ''}${netCharge})`;
+        statusBadge.style.borderColor = 'var(--gold)';
+        statusBadge.style.color = 'var(--gold)';
+      }
+
+      // Calculate Electron Configuration (K, L, M)
+      let remE = e;
+      const k = Math.min(remE, 2); remE -= k;
+      const l = Math.min(remE, 8); remE -= l;
+      const m = remE;
+
+      const configArr = [];
+      if (k > 0) configArr.push(k);
+      if (l > 0) configArr.push(l);
+      if (m > 0) configArr.push(m);
+      
+      document.getElementById('deck-electron-config').innerText = configArr.length ? configArr.join(', ') : '0';
+      
+      const valenceCount = configArr.length ? configArr[configArr.length - 1] : 0;
+      document.getElementById('deck-valence').innerText = `${valenceCount} e⁻`;
+
+      // Shell Pills
+      const shellContainer = document.getElementById('deck-shell-pills');
+      shellContainer.innerHTML = '';
+      if (k > 0) shellContainer.innerHTML += `<span class="shell-dot">K: ${k}/2</span>`;
+      if (l > 0) shellContainer.innerHTML += `<span class="shell-dot">L: ${l}/8</span>`;
+      if (m > 0) shellContainer.innerHTML += `<span class="shell-dot">M: ${m}/18</span>`;
+
+      // Active Preset Pill Highlight
+      document.querySelectorAll('.elem-pill').forEach(pill => {
+        const pz = parseInt(pill.dataset.z);
+        if (pz === z) pill.classList.add('active');
+        else pill.classList.remove('active');
+      });
+    }
+
+    /* Populate Quick-Pick Element Presets Grid */
+    function populateElementPresets() {
+      const container = document.getElementById('element-presets-container');
+      container.innerHTML = '';
+      ELEMENTS_DATA.forEach(elem => {
+        const div = document.createElement('div');
+        div.className = `elem-pill ${elem.z === state.protons ? 'active' : ''}`;
+        div.dataset.z = elem.z;
+        div.innerHTML = `
+          <span class="num">${elem.z}</span>
+          <span class="symbol">${elem.symbol}</span>
+          <span class="name">${state.lang === 'th' ? elem.nameTh : elem.nameEn}</span>
+        `;
+        div.addEventListener('click', () => {
+          state.protons = elem.protons;
+          state.neutrons = elem.neutrons;
+          state.electrons = elem.electrons;
+          state.currentElement = elem;
+          sound.playElementSwitch();
+          rebuildAtomModel();
+          showToast(`เปลี่ยนเป็นธาตุ ${elem.symbol} - ${elem.nameTh}`);
+        });
+        container.appendChild(div);
+      });
+    }
+
+    /* ========================================================
+       8. INTERACTIVE QUIZ LOGIC
+       ======================================================== */
+    function initQuiz() {
+      state.quizIndex = 0;
+      state.quizScore = 0;
+      showQuizQuestion();
+      document.getElementById('quiz-modal').style.display = 'flex';
+    }
+
+    function showQuizQuestion() {
+      const q = QUIZ_QUESTIONS[state.quizIndex];
+      const qText = (state.lang === 'th') ? q.questionTh : q.questionEn;
+      const options = (state.lang === 'th') ? q.optionsTh : q.optionsEn;
+
+      document.getElementById('quiz-progress').innerText = `${state.lang === 'th' ? 'ข้อ' : 'Q'} ${state.quizIndex + 1} / ${QUIZ_QUESTIONS.length}`;
+      document.getElementById('quiz-question-text').innerText = qText;
+      document.getElementById('quiz-score-badge').innerText = `${state.lang === 'th' ? 'คะแนนสะสม' : 'Score'}: ${state.quizScore}`;
+
+      const optionsBox = document.getElementById('quiz-options-container');
+      const feedbackBox = document.getElementById('quiz-feedback-box');
+      const nextBtn = document.getElementById('btn-next-quiz');
+      
+      optionsBox.innerHTML = '';
+      feedbackBox.style.display = 'none';
+      nextBtn.style.display = 'none';
+
+      options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'quiz-option-btn';
+        btn.innerHTML = `<span style="font-family: var(--font-sci); color: var(--cyan);">${String.fromCharCode(65 + idx)}.</span> ${opt}`;
+        
+        btn.addEventListener('click', () => {
+          // Disable all options
+          const allBtns = optionsBox.querySelectorAll('.quiz-option-btn');
+          allBtns.forEach(b => b.disabled = true);
+
+          if (idx === q.correctIndex) {
+            btn.classList.add('correct');
+            feedbackBox.style.background = 'rgba(6, 214, 160, 0.15)';
+            feedbackBox.style.border = '1px solid var(--green)';
+            feedbackBox.style.color = '#fff';
+            feedbackBox.innerHTML = `✅ <strong>${state.lang === 'th' ? 'ถูกต้อง!' : 'Correct!'}</strong> ${q.explanationTh}`;
+            state.quizScore += 20;
+            sound.playSuccess();
+          } else {
+            btn.classList.add('wrong');
+            allBtns[q.correctIndex].classList.add('correct');
+            feedbackBox.style.background = 'rgba(255, 51, 102, 0.15)';
+            feedbackBox.style.border = '1px solid var(--proton-red)';
+            feedbackBox.style.color = '#fff';
+            feedbackBox.innerHTML = `❌ <strong>${state.lang === 'th' ? 'คำตอบยังไม่ถูกต้อง' : 'Incorrect'}</strong> — ${q.explanationTh}`;
+            sound.playWrong();
+          }
+
+          feedbackBox.style.display = 'block';
+          document.getElementById('quiz-score-badge').innerText = `${state.lang === 'th' ? 'คะแนนสะสม' : 'Score'}: ${state.quizScore}`;
+
+          if (state.quizIndex < QUIZ_QUESTIONS.length - 1) {
+            nextBtn.innerText = (state.lang === 'th') ? 'ข้อถัดไป ➔' : 'Next ➔';
+            nextBtn.style.display = 'inline-flex';
+          } else {
+            nextBtn.innerText = (state.lang === 'th') ? 'สรุปผลคะแนน 🎉' : 'Finish Quiz 🎉';
+            nextBtn.style.display = 'inline-flex';
+          }
+        });
+
+        optionsBox.appendChild(btn);
+      });
+    }
+
+    /* ========================================================
+       9. UI EVENT HANDLERS & BINDINGS
+       ======================================================== */
+    function bindUIEvents() {
+      // Toggle Sidebar
+      const sidebar = document.getElementById('sidebar');
+      document.getElementById('btn-toggle-sidebar').addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+        sound.playSelect();
+      });
+
+      // Sound Toggle
+      const soundBtn = document.getElementById('btn-toggle-sound');
+      soundBtn.addEventListener('click', () => {
+        sound.muted = !sound.muted;
+        soundBtn.innerHTML = sound.muted ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>';
+        showToast(sound.muted ? 'ปิดเสียงเอฟเฟกต์แล้ว' : 'เปิดเสียงเอฟเฟกต์แล้ว');
+      });
+
+      // Language Switcher
+      document.getElementById('btn-lang').addEventListener('click', () => {
+        state.lang = (state.lang === 'th') ? 'en' : 'th';
+        sound.playSelect();
+        applyLocalization();
+        showToast(state.lang === 'th' ? 'เปลี่ยนเป็นภาษาไทย' : 'Language set to English');
+      });
+
+      // Reset Camera
+      document.getElementById('btn-reset-cam').addEventListener('click', () => {
+        camera.position.set(0, 0.35, 1.4);
+        controls.target.set(0, 0, 0);
+        controls.update();
+        sound.playSelect();
+        showToast('รีเซ็ตมุมมองกล้องแล้ว');
+      });
+
+      // Screenshot Capture
+      document.getElementById('btn-screenshot').addEventListener('click', () => {
+        takeScreenshot();
+      });
+
+      // Quiz Modal Open/Close
+      document.getElementById('btn-quiz').addEventListener('click', () => {
+        initQuiz();
+        sound.playSelect();
+      });
+      document.getElementById('btn-close-quiz').addEventListener('click', () => {
+        document.getElementById('quiz-modal').style.display = 'none';
+        sound.playSelect();
+      });
+      document.getElementById('btn-next-quiz').addEventListener('click', () => {
+        sound.playSelect();
+        if (state.quizIndex < QUIZ_QUESTIONS.length - 1) {
+          state.quizIndex++;
+          showQuizQuestion();
+        } else {
+          // Finish Modal
+          document.getElementById('quiz-question-text').innerHTML = `
+            <div style="text-align: center; padding: 20px 0;">
+              <i class="fa-solid fa-trophy" style="font-size: 50px; color: var(--gold); margin-bottom: 16px;"></i>
+              <h2>${state.lang === 'th' ? 'ทำแบบทดสอบเสร็จสิ้น!' : 'Quiz Completed!'}</h2>
+              <p style="font-size: 18px; margin-top: 10px; color: var(--cyan);">${state.lang === 'th' ? 'คุณได้คะแนน' : 'Your Score'}: ${state.quizScore} / 100</p>
+            </div>
+          `;
+          document.getElementById('quiz-options-container').innerHTML = '';
+          document.getElementById('quiz-feedback-box').style.display = 'none';
+          document.getElementById('btn-next-quiz').style.display = 'none';
+        }
+      });
+
+      // Mode Switchers
+      document.querySelectorAll('.mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          state.visualMode = btn.dataset.mode;
+          sound.playSelect();
+          rebuildAtomModel();
+          showToast(`เปลี่ยนโหมด: ${btn.querySelector('strong').innerText}`);
+        });
+      });
+
+      // Sandbox Range Inputs
+      const pRange = document.getElementById('range-protons');
+      const nRange = document.getElementById('range-neutrons');
+      const eRange = document.getElementById('range-electrons');
+
+      const onSliderChange = () => {
+        state.protons = parseInt(pRange.value);
+        state.neutrons = parseInt(nRange.value);
+        state.electrons = parseInt(eRange.value);
+        rebuildAtomModel();
+      };
+
+      pRange.addEventListener('input', onSliderChange);
+      nRange.addEventListener('input', onSliderChange);
+      eRange.addEventListener('input', onSliderChange);
+
+      // Quantum Actions (Absorb & Emit Photon)
+      document.getElementById('btn-absorb-photon').addEventListener('click', () => triggerPhotonInteraction(true));
+      document.getElementById('btn-emit-photon').addEventListener('click', () => triggerPhotonInteraction(false));
+
+      // Right Floating Toolbar
+      document.getElementById('btn-toggle-orbitals').addEventListener('click', () => {
+        state.showOrbitals = !state.showOrbitals;
+        orbitsGroup.visible = state.showOrbitals && (state.visualMode === 'bohr');
+        sound.playSelect();
+        showToast(state.showOrbitals ? 'แสดงวงโคจร' : 'ซ่อนวงโคจร');
+      });
+
+      document.getElementById('btn-toggle-rotation').addEventListener('click', () => {
+        state.autoRotate = !state.autoRotate;
+        sound.playSelect();
+        showToast(state.autoRotate ? 'เริ่มหมุนอัตโนมัติ' : 'หยุดหมุนอัตโนมัติ');
+      });
+
+      document.getElementById('btn-toggle-labels').addEventListener('click', () => {
+        state.showLabels = !state.showLabels;
+        labelsGroup.visible = state.showLabels;
+        sound.playSelect();
+        showToast(state.showLabels ? 'แสดงป้ายชื่อ 3D' : 'ซ่อนป้ายชื่อ 3D');
+      });
+
+      document.getElementById('btn-fullscreen').addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+      });
+
+      // Particle Inspector Close
+      document.getElementById('btn-close-inspector').addEventListener('click', () => {
+        document.getElementById('particle-inspector').style.display = 'none';
+        sound.playSelect();
+      });
+
+      // Bottom cards click to inspect
+      document.getElementById('card-click-proton').addEventListener('click', () => openParticleInspector('proton'));
+      document.getElementById('card-click-neutron').addEventListener('click', () => openParticleInspector('neutron'));
+      document.getElementById('card-click-electron').addEventListener('click', () => openParticleInspector('electron'));
+
+      // AR Spawn & Scale Controls
+      document.getElementById('btn-ar-spawn').addEventListener('click', () => {
+        if (!camera) return;
+        const dir = new THREE.Vector3(0, 0, -0.6).applyQuaternion(camera.quaternion);
+        atomRootGroup.position.copy(camera.position).add(dir);
+        atomRootGroup.quaternion.copy(camera.quaternion);
+        sound.playSelect();
+        showToast('วางโมเดลอะตอมในพิกัดใหม่แล้ว');
+      });
+
+      document.getElementById('btn-ar-scale-up').addEventListener('click', () => {
+        state.arScale = Math.min(2.5, state.arScale + 0.15);
+        atomRootGroup.scale.setScalar(state.arScale);
+      });
+
+      document.getElementById('btn-ar-scale-down').addEventListener('click', () => {
+        state.arScale = Math.max(0.2, state.arScale - 0.15);
+        atomRootGroup.scale.setScalar(state.arScale);
+      });
+    }
+
+    /* Localization dictionary application */
+    function applyLocalization() {
+      const isTh = (state.lang === 'th');
+      document.getElementById('txt-subtitle').innerText = isTh ? 'สื่อการเรียนรู้โครงสร้างอะตอม 3 มิติและเทคโนโลยี AR' : '3D Interactive & Augmented Reality Atomic Model';
+      document.getElementById('txt-btn-control').innerText = isTh ? 'แผงควบคุม' : 'Controls';
+      document.getElementById('txt-btn-quiz').innerText = isTh ? 'แบบทดสอบ' : 'Quiz';
+      document.getElementById('txt-elements-title').innerText = isTh ? '⚛️ เลือกธาตุเคมี (Element)' : '⚛️ Select Element';
+      document.getElementById('txt-modes-title').innerText = isTh ? '🔭 โหมดแบบจำลอง (Visual Mode)' : '🔭 Visual Mode';
+      document.getElementById('txt-sandbox-title').innerText = isTh ? '🛠️ ปรับแต่งอะตอม (Atom Sandbox)' : '🛠️ Atom Sandbox';
+      document.getElementById('txt-photon-title').innerText = isTh ? '⚡ ปรากฏการณ์ควอนตัม (Quantum Leap)' : '⚡ Quantum Leap';
+      document.getElementById('txt-absorb-btn').innerText = isTh ? 'ดูดกลืนโฟตอน' : 'Absorb Photon';
+      document.getElementById('txt-emit-btn').innerText = isTh ? 'คายโฟตอน (เรืองแสง)' : 'Emit Photon';
+      document.getElementById('txt-label-proton').innerText = isTh ? 'โปรตอน (Protons - p⁺)' : 'Protons (p⁺)';
+      document.getElementById('txt-label-neutron').innerText = isTh ? 'นิวตรอน (Neutrons - n⁰)' : 'Neutrons (n⁰)';
+      document.getElementById('txt-label-electron').innerText = isTh ? 'อิเล็กตรอน (Electrons - e⁻)' : 'Electrons (e⁻)';
+      
+      document.getElementById('mode-bohr-title').innerText = isTh ? 'แบบจำลองโบร์ (Bohr Model)' : 'Bohr Planetary Model';
+      document.getElementById('mode-bohr-desc').innerText = isTh ? 'วงโคจรระดับพลังงานอิเล็กตรอนชัดเจน' : 'Distinct Energy Level Shells';
+      document.getElementById('mode-cloud-title').innerText = isTh ? 'กลุ่มหมอกควอนตัม (Quantum Cloud)' : 'Quantum Cloud Model';
+      document.getElementById('mode-cloud-desc').innerText = isTh ? 'ความน่าจะเป็นในการพบอิเล็กตรอน (Orbitals)' : 'Electron Probability Orbitals';
+      document.getElementById('mode-quark-title').innerText = isTh ? 'เจาะลึกนิวเคลียส & ควาร์ก (Quarks)' : 'Quarks & Nucleon Zoom';
+      document.getElementById('mode-quark-desc').innerText = isTh ? 'ผ่าดูโปรตอน นิวตรอน และ Up/Down Quarks' : 'Inspect Up/Down Quarks inside';
+
+      document.getElementById('txt-card-proton').innerText = isTh ? 'โปรตอน (p⁺)' : 'Protons (p⁺)';
+      document.getElementById('txt-card-neutron').innerText = isTh ? 'นิวตรอน (n⁰)' : 'Neutrons (n⁰)';
+      document.getElementById('txt-card-electron').innerText = isTh ? 'อิเล็กตรอน (e⁻)' : 'Electrons (e⁻)';
+      document.getElementById('txt-lbl-electron-config').innerText = isTh ? 'การจัดเรียงอิเล็กตรอน:' : 'Electron Configuration:';
+      document.getElementById('txt-lbl-valence').innerText = isTh ? 'เวเลนซ์อิเล็กตรอน:' : 'Valence Electrons:';
+      document.getElementById('txt-lbl-net-charge').innerText = isTh ? 'ประจุสุทธิ (Net Charge):' : 'Net Charge:';
+      document.getElementById('txt-quiz-modal-title').innerText = isTh ? 'แบบทดสอบโครงสร้างอะตอม' : 'Atomic Structure Quiz';
+      document.getElementById('txt-ar-spawn-btn').innerText = isTh ? 'วางอะตอมตรงนี้' : 'Spawn Atom Here';
+
+      populateElementPresets();
+      updateHUDInfo();
+      build3DLabels();
+    }
+
+    /* Screenshot generator */
+    function takeScreenshot() {
+      renderer.render(scene, camera);
+      const dataURL = renderer.domElement.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.download = `atomic_lab_${state.currentElement.symbol}_${Date.now()}.png`;
+      link.href = dataURL;
+      link.click();
+      sound.playSelect();
+      showToast('บันทึกรูปภาพอะตอมเรียบร้อยแล้ว 📸');
+    }
+
+    /* Toast Notification Helper */
+    function showToast(text) {
+      toast.innerText = text;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2600);
     }
 
     function onWindowResize() {
@@ -288,13 +2646,68 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
-    function render() {
-      electronOrbits.forEach((orbit) => {
-        orbit.pivot.rotation.y += 0.01 * orbit.speed;
+    /* ========================================================
+       10. ANIMATION & RENDER LOOP (60 FPS)
+       ======================================================== */
+    const clock = new THREE.Clock();
+
+    function animate() {
+      const delta = clock.getDelta();
+      const time = clock.getElapsedTime();
+
+      // 1. Rotate Background Space Dust
+      if (backgroundStars && !state.isARMode) {
+        backgroundStars.rotation.y = time * 0.02;
+      }
+
+      // 2. Auto-rotate Atom Root Group
+      if (state.autoRotate && !state.isARMode) {
+        atomRootGroup.rotation.y += delta * 0.25;
+      }
+
+      // 3. Animate Electrons around Orbits
+      electronAnimData.forEach((item, idx) => {
+        item.angle += delta * item.baseSpeed;
+        item.mesh.position.x = item.radius * Math.cos(item.angle);
+        item.mesh.position.z = item.radius * Math.sin(item.angle);
+        
+        // Gentle vertical wave
+        item.mesh.position.y = Math.sin(time * 3 + idx) * 0.008;
       });
 
+      // 4. Subtle Nucleus Vibration (Strong Force Energy)
+      nucleusParticles.forEach(item => {
+        const vib = Math.sin(time * 8 + item.seed) * 0.002;
+        item.mesh.position.x = item.basePos.x + vib;
+        item.mesh.position.y = item.basePos.y + vib;
+        item.mesh.position.z = item.basePos.z + vib;
+      });
+
+      // 5. Animate Quarks within Nucleons (Jitter / Strong Force Oscillation)
+      quarkAnimData.forEach((q, idx) => {
+        const qVib = Math.sin(time * 12 + idx) * 0.003;
+        q.mesh.position.x = q.basePos.x + qVib;
+        q.mesh.position.y = q.basePos.y + Math.cos(time * 12 + idx) * 0.003;
+      });
+
+      // 6. Update OrbitControls when not in WebXR
+      if (!state.isARMode && controls) {
+        controls.update();
+      }
+
+      // 7. Render Scene
       renderer.render(scene, camera);
     }
+
+    /* ========================================================
+       ENTRY INITIALIZATION
+       ======================================================== */
+    window.addEventListener('DOMContentLoaded', () => {
+      init3D();
+      populateElementPresets();
+      bindUIEvents();
+    });
+
   </script>
 </body>
 </html>
