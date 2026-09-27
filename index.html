@@ -10,21 +10,37 @@
       overflow: hidden;
       font-family: sans-serif;
     }
-    /* ป้ายข้อความบอกสถานะด้านบน */
-    #status-msg {
+    /* คอนเทนเนอร์ปุ่มควบคุมและ UI ซ้อนทับในโหมด AR */
+    #overlay {
       position: absolute;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.65);
-      color: #00e5ff;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 13px;
-      pointer-events: none;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none; /* เพื่อให้จิ้มทะลุไปแตะ 3D ได้ */
       z-index: 1000;
     }
-    /* กล่องข้อมูลที่จะแสดงเวลาเอานิ้วแตะชิ้นส่วน */
+    /* ปุ่มกดสร้างโมเดลอะตอมตรงหน้า */
+    #spawn-btn {
+      position: absolute;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #00e5ff;
+      color: #050b14;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-size: 15px;
+      font-weight: bold;
+      pointer-events: auto; /* ให้กดปุ่มได้ */
+      box-shadow: 0 4px 15px rgba(0, 229, 255, 0.4);
+      cursor: pointer;
+    }
+    #spawn-btn:active {
+      transform: translateX(-50%) scale(0.95);
+    }
+    /* กล่องข้อมูลอธิบายชิ้นส่วน */
     #info-card {
       position: absolute;
       bottom: 24px;
@@ -32,20 +48,21 @@
       transform: translateX(-50%);
       width: 85%;
       max-width: 360px;
-      background: rgba(15, 15, 20, 0.9);
+      background: rgba(15, 15, 20, 0.92);
       backdrop-filter: blur(10px);
       color: #ffffff;
       padding: 16px;
       border-radius: 14px;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
       display: none;
-      z-index: 1000;
+      pointer-events: auto;
       box-sizing: border-box;
-      border: 1px solid rgba(0, 229, 255, 0.3);
+      border: 1px solid rgba(0, 229, 255, 0.4);
     }
     #info-card h3 {
       margin: 0 0 6px 0;
       color: #00e5ff;
+      font-size: 18px;
     }
     #info-card p {
       margin: 0;
@@ -65,11 +82,13 @@
   </script>
 </head>
 <body>
-  <div id="status-msg">แตะที่ส่วนต่างๆ ของอะตอมเพื่อดูข้อมูล</div>
+  <div id="overlay">
+    <button id="spawn-btn">⚛️ วางอะตอมตรงนี้</button>
 
-  <div id="info-card">
-    <h3 id="card-title">หัวข้อ</h3>
-    <p id="card-desc">รายละเอียดข้อมูลส่วนประกอบ</p>
+    <div id="info-card">
+      <h3 id="card-title">หัวข้อ</h3>
+      <p id="card-desc">รายละเอียดข้อมูลส่วนประกอบ</p>
+    </div>
   </div>
 
   <script type="module">
@@ -77,12 +96,14 @@
     import { ARButton } from 'three/addons/webxr/ARButton.js';
 
     let camera, scene, renderer;
-    let controller;
-    let atomGroup;
+    let atomGroup = null;
     let electronOrbits = [];
     const interactiveObjects = [];
 
     const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    const spawnBtn = document.getElementById('spawn-btn');
     const infoCard = document.getElementById('info-card');
     const cardTitle = document.getElementById('card-title');
     const cardDesc = document.getElementById('card-desc');
@@ -94,47 +115,63 @@
 
       camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
 
-      // แสงสว่าง
-      const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 2.5);
+      // แสงสว่างรอบทิศทาง
+      const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 3.0);
       hemiLight.position.set(0, 2, 0);
       scene.add(hemiLight);
 
-      const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
+      const dirLight = new THREE.DirectionalLight(0xffffff, 2.0);
       dirLight.position.set(1, 2, 1);
       scene.add(dirLight);
 
-      // สร้าง Renderer
+      // WebGL Renderer
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setPixelRatio(window.devicePixelRatio);
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.xr.enabled = true;
       document.body.appendChild(renderer.domElement);
 
-      // สร้างปุ่มเข้าสู่โหมด AR
+      // ติดตั้งปุ่ม Start AR โดยแนบ Overlay เข้าไปใน WebXR Session
       document.body.appendChild(ARButton.createButton(renderer, {
         optionalFeatures: ['dom-overlay'],
-        domOverlay: { root: document.body }
+        domOverlay: { root: document.getElementById('overlay') }
       }));
 
-      // วางโมเดลอะตอมไว้ตรงหน้าทันที (แกน Z = -0.6 เมตร คือห่างไปข้างหน้า 60 ซม.)
-      atomGroup = createAtomModel();
-      atomGroup.position.set(0, 0, -0.6);
-      scene.add(atomGroup);
+      // กดปุ่มเพื่อสร้าง/ย้ายโมเดลอะตอมมาอยู่ตรงหน้ากล้อง
+      spawnBtn.addEventListener('click', spawnAtomInFrontOfCamera);
 
-      // การแตะหน้าจอเพื่อยิง Raycast ตรวจจับชิ้นส่วน
-      controller = renderer.xr.getController(0);
-      controller.addEventListener('select', onSelect);
-      scene.add(controller);
-
+      // รองรับการเอานิ้วจิ้มบนหน้าจอโดยตรง
+      window.addEventListener('pointerdown', onScreenTap);
       window.addEventListener('resize', onWindowResize);
+
       renderer.setAnimationLoop(render);
+    }
+
+    // ฟังก์ชันสร้างและวางโมเดลอะตอมให้อยู่ข้างหน้ากล้อง 50 ซม. ทันที
+    function spawnAtomInFrontOfCamera(e) {
+      if (e) e.stopPropagation();
+
+      if (!atomGroup) {
+        atomGroup = createAtomModel();
+        scene.add(atomGroup);
+      }
+
+      // คำนวณหาทิศทางข้างหน้าของกล้องในปัจจุบัน
+      const dir = new THREE.Vector3(0, 0, -0.5); // ระยะห่าง 50 ซม.
+      dir.applyQuaternion(camera.quaternion);
+
+      // ตั้งตำแหน่งอะตอมให้ลอยอยู่ตรงหน้ากล้องพอดี
+      atomGroup.position.copy(camera.position).add(dir);
+      atomGroup.quaternion.copy(camera.quaternion);
+
+      spawnBtn.innerText = '🔄 ย้ายอะตอมมาตรงหน้า';
     }
 
     function createAtomModel() {
       const group = new THREE.Group();
 
-      // 1. นิวเคลียส (ลูกกลมสีแดงตรงกลาง)
-      const nucleusGeo = new THREE.SphereGeometry(0.06, 32, 32);
+      // 1. นิวเคลียสตรงกลาง
+      const nucleusGeo = new THREE.SphereGeometry(0.05, 32, 32);
       const nucleusMat = new THREE.MeshStandardMaterial({
         color: 0xff3b30,
         roughness: 0.3,
@@ -143,13 +180,13 @@
       const nucleus = new THREE.Mesh(nucleusGeo, nucleusMat);
       nucleus.userData = {
         title: 'นิวเคลียส (Nucleus)',
-        desc: 'ใจกลางของอะตอม ประกอบด้วยโปรตอนและนิวตรอน ยึดเหนี่ยวกันด้วยแรงนิวเคลียร์อย่างเข้ม'
+        desc: 'ใจกลางของอะตอม ประกอบด้วยโปรตอน (ประจุบวก) และนิวตรอน (ไม่มีประจุ) รวมกันเป็นมวลเกือบทั้งหมด'
       };
       group.add(nucleus);
       interactiveObjects.push(nucleus);
 
-      // 2. วงโคจรและเม็ดอิเล็กตรอน (สีฟ้า)
-      const orbitRadii = [0.18, 0.24, 0.30];
+      // 2. วงโคจร 3 วงและอิเล็กตรอนสีฟ้า
+      const orbitRadii = [0.12, 0.17, 0.22];
       const orbitAngles = [
         [0, 0, 0],
         [Math.PI / 3, Math.PI / 4, 0],
@@ -160,15 +197,15 @@
         const orbitPivot = new THREE.Group();
         orbitPivot.rotation.set(...orbitAngles[i]);
 
-        // วงแหวนทางโคจร
+        // วงแหวนวิถีโคจร
         const ringGeo = new THREE.TorusGeometry(radius, 0.002, 16, 64);
-        const ringMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff, transparent: true, opacity: 0.4 });
+        const ringMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff, transparent: true, opacity: 0.5 });
         const ring = new THREE.Mesh(ringGeo, ringMat);
         ring.rotation.x = Math.PI / 2;
         orbitPivot.add(ring);
 
         // เม็ดอิเล็กตรอน
-        const electronGeo = new THREE.SphereGeometry(0.02, 16, 16);
+        const electronGeo = new THREE.SphereGeometry(0.018, 16, 16);
         const electronMat = new THREE.MeshStandardMaterial({
           color: 0x00e5ff,
           emissive: 0x00e5ff,
@@ -178,32 +215,35 @@
         electron.position.x = radius;
         electron.userData = {
           title: 'อิเล็กตรอน (Electron)',
-          desc: 'อนุภาคมีประจุไฟฟ้าเป็นลบ เคลื่อนที่รอบนิวเคลียสด้วยความเร็วสูงมาก'
+          desc: 'อนุภาคที่มีประจุไฟฟ้าเป็นลบ โคจรรอบนิวเคลียสด้วยระดับพลังงานต่างๆ มีมวลน้อยมาก'
         };
 
         orbitPivot.add(electron);
         group.add(orbitPivot);
 
         interactiveObjects.push(electron);
-        electronOrbits.push({ pivot: orbitPivot, speed: 1.2 + i * 0.5 });
+        electronOrbits.push({ pivot: orbitPivot, speed: 1.5 + i * 0.6 });
       });
 
       return group;
     }
 
-    // เมื่อเอานิ้วแตะหน้าจอเพื่อเลือกชิ้นส่วน
-    function onSelect() {
-      const tempMatrix = new THREE.Matrix4();
-      tempMatrix.identity().extractRotation(controller.matrixWorld);
+    // แตะที่หน้าจอเพื่อเลือกชิ้นส่วน
+    function onScreenTap(event) {
+      // ถ้ากดโดนปุ่ม Spawn หรือกล่องข้อความ ไม่ต้องรัน Raycaster
+      if (event.target.id === 'spawn-btn' || infoCard.contains(event.target)) {
+        return;
+      }
 
-      raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
-      raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix);
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-      const intersects = raycaster.intersectObjects(interactiveObjects, true);
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(interactiveObjects, false);
 
       if (intersects.length > 0) {
-        const clicked = intersects[0].object;
-        showInfo(clicked.userData.title, clicked.userData.desc);
+        const item = intersects[0].object;
+        showInfo(item.userData.title, item.userData.desc);
       } else {
         hideInfo();
       }
@@ -226,7 +266,6 @@
     }
 
     function render() {
-      // ให้อิเล็กตรอนวิ่งรอบนิวเคลียสตลอดเวลา
       electronOrbits.forEach((orbit) => {
         orbit.pivot.rotation.y += 0.015 * orbit.speed;
       });
