@@ -72,7 +72,10 @@
       background-color: #0b1120 !important;
       width: 100vw;
       height: 100vh;
+      height: 100dvh;
       overflow: hidden;
+      overscroll-behavior: none;
+      touch-action: none;
     }
 
     body {
@@ -81,8 +84,11 @@
       color: var(--text-main);
       font-family: var(--font-thai);
       overflow: hidden;
+      overscroll-behavior: none;
+      touch-action: none;
       width: 100vw;
       height: 100vh;
+      height: 100dvh;
       position: relative;
     }
 
@@ -1410,53 +1416,224 @@
       animation: phoneRotatePulse 2.5s infinite ease-in-out;
     }
 
-    /* Compact UI for Landscape Phones */
+    /* Fullscreen Button Active State */
+    .edu-nav-btn.fs-active {
+      border-color: var(--edu-blue);
+      color: var(--edu-blue);
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.6);
+      background: rgba(56, 189, 248, 0.18);
+    }
+
+    /* ========================================================
+       MANDATORY MOBILE FULLSCREEN LANDSCAPE LOCK OVERLAY
+       ======================================================== */
+    #mobile-orientation-lock-screen {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      height: 100dvh !important;
+      background: radial-gradient(circle at 50% 30%, #1e293b 0%, #0f172a 70%, #0b1120 100%) !important;
+      backdrop-filter: blur(28px) !important;
+      -webkit-backdrop-filter: blur(28px) !important;
+      z-index: 99999 !important;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+      color: #fff;
+      pointer-events: auto;
+    }
+
+    /* Active when body has .require-landscape AND in portrait on mobile/tablet */
+    @media (max-width: 920px) and (orientation: portrait) {
+      body.require-landscape #mobile-orientation-lock-screen {
+        display: flex !important;
+      }
+    }
+
+    /* ALWAYS hide in landscape orientation */
+    @media (orientation: landscape) {
+      #mobile-orientation-lock-screen {
+        display: none !important;
+      }
+    }
+
+    /* ALWAYS hide on desktop / laptop screens */
+    @media (min-width: 1024px) {
+      #mobile-orientation-lock-screen {
+        display: none !important;
+      }
+    }
+
+    .lock-screen-content {
+      max-width: 360px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 24px 20px;
+      border-radius: 24px;
+    }
+
+    .lock-phone-icon-anim {
+      width: 68px;
+      height: 68px;
+      border-radius: 20px;
+      background: rgba(245, 158, 11, 0.15);
+      border: 1.5px solid var(--gold);
+      box-shadow: 0 0 28px rgba(245, 158, 11, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gold);
+      font-size: 30px;
+      animation: bigPhoneRotate 2.6s infinite ease-in-out;
+    }
+
+    @keyframes bigPhoneRotate {
+      0% { transform: rotate(0deg) scale(1); }
+      25% { transform: rotate(-90deg) scale(1.08); }
+      70% { transform: rotate(-90deg) scale(1.08); }
+      90% { transform: rotate(0deg) scale(1); }
+      100% { transform: rotate(0deg) scale(1); }
+    }
+
+    .lock-screen-content h2 {
+      font-size: 17px;
+      font-weight: 700;
+      color: #fde68a;
+      line-height: 1.35;
+    }
+
+    .lock-screen-content p {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .btn-lock-screen-action {
+      width: 100%;
+      padding: 12px 18px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #0284c7, #38bdf8);
+      border: none;
+      color: #0b1120;
+      font-family: var(--font-thai);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 20px rgba(56, 189, 248, 0.45);
+      transition: all 0.2s;
+    }
+    .btn-lock-screen-action:active {
+      transform: scale(0.96);
+    }
+
+    .lock-screen-hint {
+      font-size: 11px;
+      color: var(--text-dim);
+      line-height: 1.4;
+    }
+
+    .btn-dismiss-lock-screen {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 11px;
+      text-decoration: underline;
+      cursor: pointer;
+      padding: 4px;
+      font-family: var(--font-thai);
+    }
+
+    /* Compact, Non-overlapping UI for Landscape Phones */
     @media (orientation: landscape) and (max-height: 520px) {
       .top-orientation-btn {
         display: none !important;
       }
       #top-nav {
-        top: max(6px, env(safe-area-inset-top)) !important;
+        top: max(4px, env(safe-area-inset-top)) !important;
+        left: max(8px, env(safe-area-inset-left)) !important;
+        right: max(8px, env(safe-area-inset-right)) !important;
+        gap: 5px !important;
       }
       .top-pill {
+        padding: 3px 8px !important;
+        gap: 6px !important;
+      }
+      .top-pill .brand-title {
+        font-size: 11px !important;
+      }
+      .top-pill .brand-title span#top-pill-name {
+        display: inline !important;
+      }
+      .edu-nav-btn {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 12px !important;
+      }
+      .top-mode-switcher {
         padding: 4px 10px !important;
+        font-size: 10px !important;
       }
       #bottom-floating-controls {
-        bottom: max(6px, env(safe-area-inset-bottom)) !important;
-        gap: 4px !important;
-        max-width: 620px !important;
+        bottom: max(4px, env(safe-area-inset-bottom)) !important;
+        left: max(8px, env(safe-area-inset-left)) !important;
+        right: max(8px, env(safe-area-inset-right)) !important;
+        gap: 3px !important;
+        max-width: 650px !important;
       }
       .element-strip-scroll {
-        padding: 3px 6px !important;
+        padding: 2px 6px !important;
       }
       .elem-strip-btn {
-        padding: 3px 8px !important;
-        font-size: 11px !important;
+        padding: 2px 7px !important;
+        font-size: 10px !important;
+        border-radius: 8px !important;
       }
       .models-strip-scroll {
-        padding: 3px 6px !important;
+        padding: 2px 5px !important;
       }
       .model-chip-btn {
-        padding: 3px 9px !important;
-        font-size: 11px !important;
+        padding: 3px 8px !important;
+        font-size: 10px !important;
+        border-radius: 10px !important;
       }
       .mobile-action-bar {
-        padding: 4px 8px !important;
+        padding: 3px 8px !important;
+        border-radius: 14px !important;
       }
       .spawn-anchor-btn {
-        padding: 6px 12px !important;
+        padding: 5px 10px !important;
+        font-size: 11px !important;
+        border-radius: 10px !important;
+      }
+      .mini-tool-btn {
+        width: 26px !important;
+        height: 26px !important;
         font-size: 11px !important;
       }
       #subatomic-popover {
         bottom: auto !important;
-        top: calc(var(--safe-top) + 46px) !important;
-        right: var(--safe-right) !important;
+        top: calc(var(--safe-top) + 40px) !important;
+        right: max(8px, env(safe-area-inset-right)) !important;
         left: auto !important;
         transform: none !important;
-        max-width: 320px !important;
+        max-width: 290px !important;
+        padding: 10px 12px !important;
       }
       #subatomic-popover.active {
         transform: none !important;
+      }
+      #science-drawer {
+        max-height: 94vh !important;
       }
     }
 
@@ -1522,6 +1699,31 @@
           <i class="fa-solid fa-rotate"></i> <span>หมุนจอ</span>
         </button>
         <button id="btn-dismiss-landscape-hint" class="btn-dismiss-landscape" title="ปิดคำแนะนำ">&times;</button>
+      </div>
+    </div>
+
+    <!-- ========================================================
+         MANDATORY MOBILE FULLSCREEN LANDSCAPE LOCK OVERLAY
+         ======================================================== -->
+    <div id="mobile-orientation-lock-screen">
+      <div class="lock-screen-content glass-panel">
+        <div class="lock-phone-icon-anim">
+          <i class="fa-solid fa-mobile-screen-button"></i>
+        </div>
+        <h2>กรุณาหมุนโทรศัพท์เป็นแนวนอน</h2>
+        <p>
+          ระบบจำลองอะตอม 5 ยุค & AR ต้องการการแสดงผลใน <strong>โหมดเต็มจอแนวนอน (Landscape)</strong><br>
+          เพื่อซ่อนแถบเบราว์เซอร์ด้านบน และป้องกันแถบควบคุมซ้อนทับกัน
+        </p>
+        <button id="btn-force-fullscreen-prompt" class="btn-lock-screen-action">
+          <i class="fa-solid fa-expand"></i> เข้าสู่โหมดเต็มจอแนวนอน
+        </button>
+        <div class="lock-screen-hint">
+          <i class="fa-solid fa-lightbulb" style="color: var(--gold);"></i> หากเปิดล็อกแนวตั้งไว้ในโทรศัพท์ กรุณาแตะปลดล็อกในแถบควบคุมของเครื่อง
+        </div>
+        <button id="btn-dismiss-lock-screen" class="btn-dismiss-lock-screen">
+          หรือทดลองใช้งานในแนวตั้งต่อไป
+        </button>
       </div>
     </div>
 
@@ -1598,38 +1800,38 @@
             <i class="fa-solid fa-mobile-screen-button"></i>
           </div>
           <div class="tip-text">
-            <strong>💡 แนะนำสำหรับสมาร์ตโฟน:</strong> ใช้งานใน <strong>แนวนอน (Landscape)</strong> เพื่อมุมมองแบบจำลอง 3 มิติ และห้องเรียน AR ที่กว้างขวางสมบูรณ์ที่สุด
+            <strong>💡 บังคับเต็มจอแนวนอนอัตโนมัติ:</strong> เมื่อกดเลือกโหมด ระบบจะซ่อนแถบค้นหาด้านบนและปรับจอเป็น <strong>แนวนอน (Landscape)</strong> เพื่อมุมมอง 3D & AR ที่กว้างขวางสมบูรณ์แบบที่สุด
           </div>
         </div>
 
         <div class="mode-cards-grid">
           <!-- Mode 1: Web 3D Preview -->
           <div class="mode-choice-card" id="card-mode-3d">
-            <span class="mode-card-badge">💻 แนะนำสำหรับทุกอุปกรณ์</span>
+            <span class="mode-card-badge">💻 เต็มจอแนวนอน</span>
             <div class="mode-choice-icon icon-3d">
               <i class="fa-solid fa-desktop"></i>
             </div>
             <h3>1. โหมดจำลอง 3 มิติ (Web 3D)</h3>
             <p>
-              สำรวจแบบจำลองอะตอม 5 ยุคบนหน้าจอ หมุน 360° ซูมเข้า-ออก ปรับแต่งอนุภาค และทำแบบทดสอบได้ทันที <strong>ไม่ต้องเปิดกล้อง</strong>
+              สำรวจแบบจำลองอะตอม 5 ยุค หมุน 360° ปรับแต่งอนุภาค และทำแบบทดสอบในโหมด <strong>เต็มจอแนวนอน ซ่อนแถบเบราว์เซอร์</strong>
             </p>
             <button class="mode-choice-btn btn-style-3d" id="btn-select-3d">
-              <i class="fa-solid fa-play"></i> เริ่มต้นโหมดจำลอง 3D
+              <i class="fa-solid fa-expand"></i> เริ่มต้นโหมดจำลอง 3D (เต็มจอ)
             </button>
           </div>
 
           <!-- Mode 2: AR Mode -->
           <div class="mode-choice-card featured" id="card-mode-ar">
-            <span class="mode-card-badge" id="badge-ar-status">📱 แนะนำสำหรับมือถือ (แนวนอน)</span>
+            <span class="mode-card-badge" id="badge-ar-status">📱 แนะนำสำหรับมือถือ (เต็มจอ)</span>
             <div class="mode-choice-icon icon-ar">
               <i class="fa-solid fa-vr-cardboard"></i>
             </div>
             <h3>2. โหมดกล้องเสมือนจริง (AR)</h3>
             <p>
-              ฉายภาพแบบจำลองอะตอมลอยอยู่ในโลกจริง ส่องวางบนโต๊ะเรียนหรือพื้นห้อง เดินสำรวจและแตะดูอนุภาคย่อยได้เสมือนจริงผ่านกล้องมือถือ
+              ฉายภาพแบบจำลองอะตอมลอยอยู่ในห้องเรียน ส่องวางบนโต๊ะหรือพื้น เดินสำรวจอนุภาคย่อยในโหมด <strong>กล้อง AR เต็มจอแนวนอน</strong>
             </p>
             <button class="mode-choice-btn btn-style-ar" id="btn-select-ar">
-              <i class="fa-solid fa-camera-retro"></i> เปิดโหมดกล้อง AR
+              <i class="fa-solid fa-camera-retro"></i> เปิดโหมดกล้อง AR (เต็มจอ)
             </button>
           </div>
         </div>
@@ -1680,6 +1882,11 @@
         <button class="top-mode-switcher" id="btn-toggle-ar-mode" title="สลับโหมด 3D / AR">
           <i class="fa-solid fa-vr-cardboard"></i>
           <span id="txt-mode-switch-lbl">โหมด AR</span>
+        </button>
+
+        <!-- Fullscreen Toggle Button (บังคับเต็มจอซ่อนแถบค้นหา) -->
+        <button class="edu-nav-btn" id="btn-toggle-fullscreen" title="เปิด/ปิดเต็มจอ">
+          <i class="fa-solid fa-expand"></i>
         </button>
 
         <!-- Open Science & Sandbox Drawer -->
@@ -2343,6 +2550,66 @@
       onWindowResize();
     }
 
+    /* ========================================================
+       FORCE FULLSCREEN & LANDSCAPE LOCK (บังคับเต็มจอแนวนอนทั้ง 2 โหมด)
+       ======================================================== */
+    async function requestDocFullscreen() {
+      const docEl = document.documentElement;
+      try {
+        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+          if (docEl.requestFullscreen) {
+            await docEl.requestFullscreen({ navigationUI: 'hide' });
+          } else if (docEl.webkitRequestFullscreen) {
+            await docEl.webkitRequestFullscreen();
+          } else if (docEl.mozRequestFullScreen) {
+            await docEl.mozRequestFullScreen();
+          } else if (docEl.msRequestFullscreen) {
+            await docEl.msRequestFullscreen();
+          }
+        }
+      } catch (err) {
+        console.warn('requestFullscreen exception:', err);
+      }
+    }
+
+    async function lockOrientationLandscape() {
+      try {
+        if (screen.orientation && screen.orientation.lock) {
+          await screen.orientation.lock('landscape');
+        } else if (screen.lockOrientation) {
+          screen.lockOrientation('landscape');
+        } else if (screen.webkitLockOrientation) {
+          screen.webkitLockOrientation('landscape');
+        } else if (screen.mozLockOrientation) {
+          screen.mozLockOrientation('landscape');
+        } else if (screen.msLockOrientation) {
+          screen.msLockOrientation('landscape');
+        }
+      } catch (err) {
+        console.warn('lockOrientation exception:', err);
+      }
+    }
+
+    async function forceFullscreenAndLandscape() {
+      // 1. Mark body that user has entered app and requires landscape
+      document.body.classList.add('require-landscape');
+      
+      // 2. Request Fullscreen (hides Chrome omnibox / search bar)
+      await requestDocFullscreen();
+
+      // 3. Lock orientation to landscape (allowed once in fullscreen on mobile)
+      await lockOrientationLandscape();
+
+      // 4. Update orientation check & resize multiple passes
+      if (typeof checkOrientationFn === 'function') {
+        checkOrientationFn();
+      }
+      onWindowResize();
+      setTimeout(onWindowResize, 100);
+      setTimeout(onWindowResize, 300);
+      setTimeout(onWindowResize, 600);
+    }
+
     function setupWebXR() {
       const arSlot = document.getElementById('ar-button-slot');
       const overlayRoot = document.getElementById('ar-ui-overlay');
@@ -2450,6 +2717,14 @@
         setTimeout(restoreUIOverlay, 150);
         setTimeout(restoreUIOverlay, 350);
         setTimeout(restoreUIOverlay, 600);
+
+        // 8. Re-apply Fullscreen & Landscape lock when returning to 3D mode on mobile
+        setTimeout(() => {
+          forceFullscreenAndLandscape();
+        }, 200);
+        setTimeout(() => {
+          forceFullscreenAndLandscape();
+        }, 500);
 
         haptic();
         showToast('กลับสู่โหมดจำลอง 3 มิติ (Web 3D)');
@@ -3464,19 +3739,23 @@
       });
 
       // 13. Top Bar Mode Switcher Button (Clean AR to 3D and back)
-      document.getElementById('btn-toggle-ar-mode').addEventListener('click', () => {
+      document.getElementById('btn-toggle-ar-mode').addEventListener('click', async () => {
         if (state.isARMode) {
           const session = renderer.xr.getSession();
           if (session) {
             session.end().then(() => {
               restoreUIOverlay();
+              forceFullscreenAndLandscape();
             }).catch(() => {
               restoreUIOverlay();
+              forceFullscreenAndLandscape();
             });
           } else {
             restoreUIOverlay();
+            forceFullscreenAndLandscape();
           }
         } else {
+          await forceFullscreenAndLandscape();
           launchARSession();
         }
       });
@@ -3484,26 +3763,96 @@
       // 14. Mode Selection Modal Handlers
       const modeModal = document.getElementById('mode-selection-modal');
 
-      document.getElementById('btn-select-3d').addEventListener('click', () => {
+      document.getElementById('btn-select-3d').addEventListener('click', async () => {
         modeModal.classList.remove('active');
         sound.playSelect();
         haptic();
-        showToast('เข้าสู่โหมดจำลอง 3 มิติ (Web 3D)');
+        await forceFullscreenAndLandscape();
+        showToast('เข้าสู่โหมดจำลอง 3 มิติ (เต็มจอแนวนอน)');
       });
 
-      document.getElementById('btn-select-ar').addEventListener('click', () => {
+      document.getElementById('btn-select-ar').addEventListener('click', async () => {
         modeModal.classList.remove('active');
         sound.playSelect();
         haptic();
+        await forceFullscreenAndLandscape();
         launchARSession();
       });
 
       // 15. Unsupported AR Dialog Fallback to 3D
-      document.getElementById('btn-fallback-to-3d').addEventListener('click', () => {
+      document.getElementById('btn-fallback-to-3d').addEventListener('click', async () => {
         document.getElementById('ar-unsupported-modal').style.display = 'none';
         sound.playSelect();
-        showToast('เข้าสู่โหมดจำลอง 3 มิติ (Web 3D)');
+        await forceFullscreenAndLandscape();
+        showToast('เข้าสู่โหมดจำลอง 3 มิติ (เต็มจอแนวนอน)');
       });
+
+      // 16. Fullscreen Button Toggle (บังคับเต็มจอซ่อนแถบค้นหา)
+      const fsToggleBtn = document.getElementById('btn-toggle-fullscreen');
+      if (fsToggleBtn) {
+        fsToggleBtn.addEventListener('click', async () => {
+          const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+          if (isFs) {
+            if (document.exitFullscreen) await document.exitFullscreen().catch(() => {});
+            else if (document.webkitExitFullscreen) await document.webkitExitFullscreen().catch(() => {});
+            if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
+            showToast('ออกจากโหมดเต็มจอ');
+          } else {
+            await forceFullscreenAndLandscape();
+            showToast('เข้าสู่โหมดเต็มจอแนวนอน');
+          }
+          haptic();
+        });
+      }
+
+      function onFullscreenChange() {
+        const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+        if (fsToggleBtn) {
+          fsToggleBtn.innerHTML = isFs ? '<i class="fa-solid fa-compress"></i>' : '<i class="fa-solid fa-expand"></i>';
+          fsToggleBtn.title = isFs ? 'ออกจากโหมดเต็มจอ' : 'เปิดโหมดเต็มจอ';
+          if (isFs) fsToggleBtn.classList.add('fs-active');
+          else fsToggleBtn.classList.remove('fs-active');
+        }
+        if (!isFs && (window.innerHeight > window.innerWidth) && (window.innerWidth <= 900)) {
+          document.body.classList.add('require-landscape');
+        }
+        onWindowResize();
+      }
+
+      document.addEventListener('fullscreenchange', onFullscreenChange);
+      document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+
+      // 17. Mobile Orientation Lock Screen Actions
+      const lockScreenActionBtn = document.getElementById('btn-force-fullscreen-prompt');
+      if (lockScreenActionBtn) {
+        lockScreenActionBtn.addEventListener('click', async () => {
+          sound.playSelect();
+          haptic();
+          await forceFullscreenAndLandscape();
+        });
+      }
+
+      const dismissLockScreenBtn = document.getElementById('btn-dismiss-lock-screen');
+      if (dismissLockScreenBtn) {
+        dismissLockScreenBtn.addEventListener('click', () => {
+          document.body.classList.remove('require-landscape');
+          sound.playSelect();
+          haptic();
+          showToast('⚠️ แนะนำให้หมุนหน้าจอแนวนอน เพื่อป้องกันแถบเครื่องมือซ้อนทับ');
+        });
+      }
+
+      // 18. Auto Fullscreen on first canvas touch on mobile if not in fullscreen
+      window.addEventListener('pointerdown', (e) => {
+        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+          const isMobile = window.innerWidth <= 900 || window.innerHeight <= 900;
+          if (isMobile && !modeModal.classList.contains('active') && !state.isARMode) {
+            if (e.target.tagName === 'CANVAS' || e.target.id === 'webgl-canvas-container') {
+              forceFullscreenAndLandscape();
+            }
+          }
+        }
+      }, { passive: true });
     }
 
     function showToast(text) {
@@ -3740,18 +4089,8 @@
     }
 
     function tryLockLandscape() {
-      if (screen.orientation && screen.orientation.lock) {
-        if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
-          document.documentElement.requestFullscreen().then(() => {
-            screen.orientation.lock('landscape').catch(() => {});
-          }).catch(() => {
-            screen.orientation.lock('landscape').catch(() => {});
-          });
-        } else {
-          screen.orientation.lock('landscape').catch(() => {});
-        }
-      }
-      showToast('🔄 แนะนำหมุนหน้าจอแนวนอน เพื่อมุมมอง 3D & AR ที่ดีที่สุด');
+      forceFullscreenAndLandscape();
+      showToast('🔄 ปรับเข้าสู่โหมดเต็มจอแนวนอนแล้ว');
     }
 
     /* Entry Point */
