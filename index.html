@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>ATOMIC AR LAB — วิวัฒนาการแบบจำลองอะตอม 5 ยุคในประวัติศาสตร์และ AR</title>
+  <title>ATOMIC AR LAB — สื่อการเรียนรู้วิวัฒนาการแบบจำลองอะตอม 5 ยุค & โลกเสมือนจริง AR</title>
   
-  <!-- Google Fonts: Prompt & Orbitron -->
+  <!-- Google Fonts: Prompt (Thai/English clean sans) & Orbitron (Scientific numbers) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
@@ -14,27 +14,41 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <style>
+    /* ========================================================
+       1. THEME: MODERN EDUCATIONAL & CLASSROOM PALETTE (สื่อการสอน)
+       ======================================================== */
     :root {
-      --bg-dark: #040814;
-      --panel-bg: rgba(8, 14, 30, 0.88);
-      --panel-border: rgba(0, 240, 255, 0.32);
-      --panel-glow: rgba(0, 240, 255, 0.15);
+      --bg-dark: #0b1120;
+      --bg-surface: #0f172a;
+      --bg-gradient: radial-gradient(circle at 50% 25%, #1e293b 0%, #0f172a 60%, #0b1120 100%);
       
-      --cyan: #00f0ff;
-      --cyan-glow: 0 0 15px rgba(0, 240, 255, 0.6);
-      --proton-red: #ff3366;
-      --proton-glow: 0 0 15px rgba(255, 51, 102, 0.7);
+      --panel-bg: rgba(15, 23, 42, 0.88);
+      --panel-bg-subtle: rgba(30, 41, 59, 0.75);
+      --panel-border: rgba(56, 189, 248, 0.28);
+      --panel-border-subtle: rgba(255, 255, 255, 0.12);
+      --panel-glow: rgba(56, 189, 248, 0.12);
+      
+      /* Educational Scientific Accents */
+      --edu-blue: #38bdf8;
+      --edu-blue-dark: #0284c7;
+      --edu-purple: #8b5cf6;
+      --edu-teal: #06b6d4;
+      --proton-red: #ef4444;
+      --proton-glow: 0 0 16px rgba(239, 68, 68, 0.6);
       --neutron-blue: #3b82f6;
-      --neutron-glow: 0 0 15px rgba(59, 130, 246, 0.7);
+      --neutron-glow: 0 0 16px rgba(59, 130, 246, 0.6);
       --electron-cyan: #00f0ff;
-      --quark-up: #ff007f;
-      --quark-down: #00f5d4;
-      --gold: #ffd166;
-      --green: #06d6a0;
+      --electron-glow: 0 0 16px rgba(0, 240, 255, 0.65);
+      --quark-up: #ec4899;
+      --quark-down: #10b981;
+      --gold: #f59e0b;
+      --green: #10b981;
       
-      --text-main: #f0f6fc;
-      --text-muted: #8b9bb4;
-      --font-body: 'Prompt', sans-serif;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      
+      --font-thai: 'Prompt', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       --font-sci: 'Orbitron', monospace, sans-serif;
 
       --safe-top: max(12px, env(safe-area-inset-top));
@@ -54,9 +68,10 @@
     }
 
     body {
-      background-color: var(--bg-dark);
+      background: var(--bg-dark);
+      background-image: var(--bg-gradient);
       color: var(--text-main);
-      font-family: var(--font-body);
+      font-family: var(--font-thai);
       overflow: hidden;
       width: 100vw;
       height: 100vh;
@@ -72,37 +87,33 @@
       z-index: 1;
     }
 
-    .interactive {
-      pointer-events: auto !important;
-    }
-
-    /* Glassmorphism Base */
+    /* Glassmorphic Classroom Panels */
     .glass-panel {
       background: var(--panel-bg);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border: 1px solid var(--panel-border);
       border-radius: 20px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 0 12px var(--panel-glow);
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.55), inset 0 0 12px var(--panel-glow);
       color: var(--text-main);
       transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    /* Toast Notification */
+    /* Educational Toast Notification */
     #toast-msg {
       position: fixed;
       top: calc(var(--safe-top) + 64px);
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(8, 14, 30, 0.94);
-      border: 1px solid var(--cyan);
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--edu-blue);
       backdrop-filter: blur(16px);
       color: #fff;
-      padding: 8px 18px;
+      padding: 9px 20px;
       border-radius: 30px;
       font-size: 13px;
-      font-weight: 600;
-      box-shadow: 0 0 25px rgba(0, 240, 255, 0.5);
+      font-weight: 500;
+      box-shadow: 0 4px 20px rgba(56, 189, 248, 0.35);
       z-index: 500;
       opacity: 0;
       pointer-events: none;
@@ -117,7 +128,417 @@
     }
 
     /* ========================================================
-       TOP NAVIGATION BAR
+       2. FULLSCREEN LOADING SCREEN (แถบความคืบหน้า & ข้อความเกิน 10 วิ)
+       ======================================================== */
+    #loading-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: radial-gradient(circle at center, #1e293b 0%, #0b1120 100%);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+
+    #loading-screen.fade-out {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .loading-content-box {
+      max-width: 440px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    /* Animated CSS Atom Icon */
+    .atom-loader-graphic {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      margin-bottom: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .atom-nucleus-core {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #ff3366, #ef4444 60%, #b91c1c 100%);
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 35px rgba(56, 189, 248, 0.4);
+      z-index: 2;
+      animation: pulseCore 2s infinite alternate ease-in-out;
+    }
+
+    @keyframes pulseCore {
+      0% { transform: scale(0.9); }
+      100% { transform: scale(1.15); filter: drop-shadow(0 0 12px #38bdf8); }
+    }
+
+    .atom-orbit-ring {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 2px solid rgba(56, 189, 248, 0.45);
+      border-top-color: #38bdf8;
+      box-sizing: border-box;
+    }
+
+    .orbit-1 {
+      animation: spinOrbit1 3s linear infinite;
+      transform: rotate(0deg);
+    }
+    .orbit-2 {
+      animation: spinOrbit2 3.5s linear infinite reverse;
+      transform: rotate(60deg);
+    }
+    .orbit-3 {
+      animation: spinOrbit3 4s linear infinite;
+      transform: rotate(120deg);
+    }
+
+    @keyframes spinOrbit1 {
+      0% { transform: rotateX(70deg) rotateY(0deg) rotateZ(0deg); }
+      100% { transform: rotateX(70deg) rotateY(0deg) rotateZ(360deg); }
+    }
+    @keyframes spinOrbit2 {
+      0% { transform: rotateX(70deg) rotateY(60deg) rotateZ(0deg); }
+      100% { transform: rotateX(70deg) rotateY(60deg) rotateZ(360deg); }
+    }
+    @keyframes spinOrbit3 {
+      0% { transform: rotateX(70deg) rotateY(120deg) rotateZ(0deg); }
+      100% { transform: rotateX(70deg) rotateY(120deg) rotateZ(360deg); }
+    }
+
+    .loading-edu-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: var(--edu-blue);
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .loading-main-title {
+      font-family: var(--font-sci);
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      color: #fff;
+      margin-bottom: 4px;
+      background: linear-gradient(135deg, #ffffff 40%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .loading-sub-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    /* Progress Bar */
+    .progress-track-wrapper {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+    }
+
+    .progress-fill-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #38bdf8, #8b5cf6, #3b82f6);
+      border-radius: 999px;
+      transition: width 0.25s ease-out;
+      box-shadow: 0 0 14px rgba(56, 189, 248, 0.6);
+    }
+
+    .progress-info-row {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .progress-pct-txt {
+      font-family: var(--font-sci);
+      font-weight: 700;
+      color: var(--edu-blue);
+      font-size: 13px;
+    }
+
+    /* 10-Second Warning Box */
+    .loading-slow-alert-box {
+      margin-top: 20px;
+      width: 100%;
+      padding: 12px 14px;
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      border-radius: 14px;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .loading-slow-alert-text {
+      font-size: 12px;
+      color: #fde68a;
+      line-height: 1.4;
+    }
+
+    .btn-skip-loading-screen {
+      padding: 8px 16px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #0b1120;
+      font-family: var(--font-thai);
+      font-size: 12px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+      transition: transform 0.15s;
+    }
+    .btn-skip-loading-screen:active { transform: scale(0.96); }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ========================================================
+       3. MODE SELECTION MODAL (โหมด Web 3D Preview vs โหมด AR)
+       ======================================================== */
+    #mode-selection-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(11, 17, 32, 0.88);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      z-index: 900;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+
+    #mode-selection-modal.active {
+      display: flex;
+      animation: fadeIn 0.35s ease;
+    }
+
+    .mode-modal-panel {
+      width: 100%;
+      max-width: 680px;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 24px;
+      padding: 24px 22px;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .mode-modal-header {
+      text-align: center;
+    }
+    .mode-modal-header h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+    .mode-modal-header p {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .mode-cards-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 600px) {
+      .mode-cards-grid { grid-template-columns: 1fr; gap: 12px; }
+      .mode-modal-panel { padding: 20px 16px; }
+    }
+
+    .mode-choice-card {
+      background: rgba(30, 41, 59, 0.5);
+      border: 1.5px solid rgba(255, 255, 255, 0.1);
+      border-radius: 18px;
+      padding: 18px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .mode-choice-card:hover, .mode-choice-card:active {
+      border-color: var(--edu-blue);
+      background: rgba(56, 189, 248, 0.12);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(56, 189, 248, 0.2);
+    }
+
+    .mode-choice-card.featured {
+      border-color: rgba(139, 92, 246, 0.4);
+      background: rgba(139, 92, 246, 0.08);
+    }
+    .mode-choice-card.featured:hover {
+      border-color: #a78bfa;
+      background: rgba(139, 92, 246, 0.18);
+    }
+
+    .mode-card-badge {
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+    }
+    .mode-choice-card.featured .mode-card-badge {
+      background: rgba(139, 92, 246, 0.25);
+      color: #c4b5fd;
+    }
+
+    .mode-choice-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 12px;
+    }
+    .icon-3d {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(2, 132, 199, 0.35));
+      color: var(--edu-blue);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+    }
+    .icon-ar {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(124, 58, 237, 0.35));
+      color: #c4b5fd;
+      border: 1px solid rgba(139, 92, 246, 0.4);
+    }
+
+    .mode-choice-card h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .mode-choice-card p {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.45;
+      margin-bottom: 14px;
+      flex-grow: 1;
+    }
+
+    .mode-choice-btn {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-family: var(--font-thai);
+      font-size: 12px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .btn-style-3d {
+      background: linear-gradient(135deg, #0284c7, #38bdf8);
+      color: #0b1120;
+      box-shadow: 0 4px 14px rgba(56, 189, 248, 0.35);
+    }
+    .btn-style-ar {
+      background: linear-gradient(135deg, #7c3aed, #a78bfa);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35);
+    }
+
+    .mode-modal-footer-note {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    /* AR Unsupported Dialog Modal */
+    #ar-unsupported-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(11, 17, 32, 0.85);
+      backdrop-filter: blur(12px);
+      z-index: 950;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .ar-unsupported-panel {
+      max-width: 420px;
+      width: 100%;
+      background: var(--panel-bg);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      border-radius: 20px;
+      padding: 22px;
+      text-align: center;
+    }
+
+    /* ========================================================
+       4. TOP NAVIGATION BAR (Clean Educational Style - No Camera)
        ======================================================== */
     #top-nav {
       position: absolute;
@@ -136,7 +557,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 8px 14px;
+      padding: 7px 14px;
       border-radius: 30px;
       pointer-events: auto;
     }
@@ -152,11 +573,13 @@
     }
 
     .top-pill .brand-title span.badge {
-      background: linear-gradient(135deg, #00f0ff, #7928ca);
+      background: linear-gradient(135deg, #0284c7, #38bdf8);
+      color: #0b1120;
       font-size: 9px;
-      padding: 2px 6px;
+      padding: 2px 7px;
       border-radius: 8px;
       font-weight: 700;
+      font-family: var(--font-thai);
     }
 
     .top-nav-actions {
@@ -166,9 +589,10 @@
       pointer-events: auto;
     }
 
-    .circle-btn {
-      width: 40px;
-      height: 40px;
+    /* Educational Round Icon Buttons */
+    .edu-nav-btn {
+      width: 38px;
+      height: 38px;
       border-radius: 50%;
       background: var(--panel-bg);
       border: 1px solid var(--panel-border);
@@ -178,52 +602,59 @@
       justify-content: center;
       font-size: 14px;
       cursor: pointer;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
       transition: all 0.2s;
       flex-shrink: 0;
     }
-
-    .circle-btn:active {
+    .edu-nav-btn:active {
       transform: scale(0.92);
-      border-color: var(--cyan);
-      background: rgba(0, 240, 255, 0.2);
+      border-color: var(--edu-blue);
+      background: rgba(56, 189, 248, 0.2);
+    }
+    .edu-nav-btn.primary {
+      background: linear-gradient(135deg, rgba(2, 132, 199, 0.4), rgba(56, 189, 248, 0.3));
+      border-color: var(--edu-blue);
+      color: var(--edu-blue);
     }
 
-    .circle-btn.primary {
-      background: linear-gradient(135deg, rgba(0, 240, 255, 0.3), rgba(121, 40, 202, 0.4));
-      border-color: var(--cyan);
-      color: var(--cyan);
-      font-weight: 700;
+    /* Mode Switcher Pill in Top Bar */
+    .top-mode-switcher {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 13px;
+      border-radius: 20px;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .top-mode-switcher:active { transform: scale(0.94); }
+    .top-mode-switcher.ar-active {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.35), rgba(124, 58, 237, 0.4));
+      border-color: #a78bfa;
+      color: #c4b5fd;
     }
 
-    /* Container for WebXR AR Button */
-    #ar-button-slot button {
-      background: linear-gradient(135deg, #00f0ff, #7928ca) !important;
-      border: none !important;
-      color: #040814 !important;
-      font-family: var(--font-body) !important;
-      font-size: 12px !important;
-      font-weight: 700 !important;
-      padding: 8px 14px !important;
-      border-radius: 20px !important;
-      height: 40px !important;
-      cursor: pointer !important;
-      display: inline-flex !important;
-      align-items: center !important;
-      gap: 6px !important;
-      box-shadow: 0 0 16px rgba(0, 240, 255, 0.5) !important;
-      white-space: nowrap !important;
+    /* Hidden Three.js ARButton container */
+    #ar-button-slot {
+      display: none !important;
     }
 
     /* ========================================================
-       FLOATING CONTROLS BOTTOM (Designed specifically for Mobile & AR)
+       5. FLOATING CONTROLS BOTTOM (Designed for Mobile & AR)
        ======================================================== */
     #bottom-floating-controls {
       position: absolute;
       bottom: var(--safe-bottom);
       left: var(--safe-left);
       right: var(--safe-right);
-      max-width: 520px;
+      max-width: 540px;
       margin: 0 auto;
       z-index: 100;
       display: flex;
@@ -240,7 +671,7 @@
       padding: 5px 8px;
       scrollbar-width: none;
       -webkit-overflow-scrolling: touch;
-      border-radius: 20px;
+      border-radius: 18px;
       pointer-events: auto;
     }
     .element-strip-scroll::-webkit-scrollbar { display: none; }
@@ -265,27 +696,27 @@
 
     .elem-strip-btn span.num {
       font-size: 9px;
-      color: var(--cyan);
-      opacity: 0.8;
+      color: var(--edu-blue);
+      opacity: 0.85;
     }
 
     .elem-strip-btn.active {
-      background: var(--cyan);
-      color: #040814;
-      border-color: var(--cyan);
-      box-shadow: 0 0 12px var(--cyan);
+      background: var(--edu-blue);
+      color: #0b1120;
+      border-color: var(--edu-blue);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.6);
     }
     .elem-strip-btn.active span.num {
-      color: #040814;
+      color: #0b1120;
       font-weight: 800;
     }
 
-    /* 2. Historical 5 Models Horizontal Scroll Strip (Never wraps!) */
+    /* 2. Historical 5 Models Horizontal Scroll Strip */
     .models-strip-scroll {
       display: flex;
       gap: 6px;
       overflow-x: auto;
-      padding: 4px 6px;
+      padding: 5px 6px;
       scrollbar-width: none;
       -webkit-overflow-scrolling: touch;
       background: var(--panel-bg);
@@ -303,7 +734,7 @@
       border: 1px solid rgba(255, 255, 255, 0.1);
       background: rgba(255, 255, 255, 0.05);
       color: var(--text-muted);
-      font-family: var(--font-body);
+      font-family: var(--font-thai);
       font-size: 11px;
       font-weight: 600;
       cursor: pointer;
@@ -316,41 +747,41 @@
     }
 
     .model-chip-btn.active {
-      background: rgba(0, 240, 255, 0.25);
-      border-color: var(--cyan);
-      color: var(--cyan);
-      box-shadow: 0 0 10px rgba(0, 240, 255, 0.35);
+      background: rgba(56, 189, 248, 0.22);
+      border-color: var(--edu-blue);
+      color: var(--edu-blue);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
     }
 
-    /* 3. Action Toolbar (Spawn, Scale, Quantum, Labels, Info) */
+    /* 3. Mobile Action Bar (Spawn, Scale, Quantum, Labels) */
     .mobile-action-bar {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 6px;
       padding: 7px 10px;
-      border-radius: 24px;
+      border-radius: 22px;
       pointer-events: auto;
     }
 
-    /* Primary Spawn Button */
+    /* Primary Spawn Button (Dedicated reposition button) */
     .spawn-anchor-btn {
       flex: 1.2;
-      background: linear-gradient(135deg, #00f0ff, #7928ca);
+      background: linear-gradient(135deg, #0284c7, #38bdf8);
       border: none;
-      color: #040814;
-      font-family: var(--font-body);
+      color: #0b1120;
+      font-family: var(--font-thai);
       font-size: 12px;
       font-weight: 700;
       padding: 9px 12px;
-      border-radius: 18px;
+      border-radius: 16px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
       white-space: nowrap;
-      box-shadow: 0 0 16px rgba(0, 240, 255, 0.5);
+      box-shadow: 0 4px 16px rgba(56, 189, 248, 0.4);
     }
     .spawn-anchor-btn:active {
       transform: scale(0.94);
@@ -362,13 +793,13 @@
       gap: 4px;
       background: rgba(0, 0, 0, 0.3);
       padding: 3px;
-      border-radius: 18px;
+      border-radius: 16px;
       border: 1px solid rgba(255, 255, 255, 0.08);
     }
 
     .mini-tool-btn {
-      width: 34px;
-      height: 34px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       border: 1px solid rgba(255, 255, 255, 0.12);
       background: rgba(255, 255, 255, 0.06);
@@ -381,20 +812,20 @@
     }
     .mini-tool-btn:active {
       transform: scale(0.9);
-      background: var(--cyan);
-      color: #040814;
+      background: var(--edu-blue);
+      color: #0b1120;
     }
 
     .scale-indicator {
       font-family: var(--font-sci);
       font-size: 10px;
-      color: var(--cyan);
+      color: var(--edu-blue);
       padding: 0 4px;
       font-weight: 600;
     }
 
     /* ========================================================
-       FLOATING SUBATOMIC INSPECTOR CARD (When tapping particle)
+       6. FLOATING SUBATOMIC INSPECTOR CARD (When tapping particle)
        ======================================================== */
     #subatomic-popover {
       position: absolute;
@@ -402,8 +833,8 @@
       left: 50%;
       transform: translateX(-50%) translateY(20px);
       width: calc(100vw - 32px);
-      max-width: 380px;
-      padding: 14px 16px;
+      max-width: 390px;
+      padding: 15px 16px;
       z-index: 120;
       display: none;
       opacity: 0;
@@ -428,7 +859,7 @@
     .popover-header h3 {
       font-size: 15px;
       font-weight: 700;
-      color: var(--cyan);
+      color: var(--edu-blue);
       display: flex;
       align-items: center;
       gap: 6px;
@@ -461,20 +892,20 @@
     .popover-specs td.val { font-family: var(--font-sci); color: #fff; }
 
     /* ========================================================
-       FULL SCIENCE DRAWER / BOTTOM SHEET
+       7. FULL SCIENCE DRAWER / BOTTOM SHEET
        ======================================================== */
     #science-drawer {
       position: fixed;
       bottom: 0;
       left: 0;
       width: 100vw;
-      max-height: 82vh;
+      max-height: 84vh;
       background: var(--panel-bg);
       backdrop-filter: blur(24px);
       -webkit-backdrop-filter: blur(24px);
-      border-top: 2px solid var(--cyan);
+      border-top: 2px solid var(--edu-blue);
       border-radius: 24px 24px 0 0;
-      box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.8);
+      box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.75);
       z-index: 250;
       padding: 12px 18px var(--safe-bottom) 18px;
       overflow-y: auto;
@@ -509,7 +940,7 @@
       gap: 8px;
     }
 
-    /* Elemental Overview Grid */
+    /* Summary Card */
     .drawer-summary-card {
       display: flex;
       align-items: center;
@@ -524,8 +955,8 @@
     .symbol-square {
       width: 58px;
       height: 58px;
-      background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(121, 40, 202, 0.25));
-      border: 1px solid var(--cyan);
+      background: linear-gradient(135deg, rgba(2, 132, 199, 0.25), rgba(56, 189, 248, 0.25));
+      border: 1px solid var(--edu-blue);
       border-radius: 12px;
       display: flex;
       flex-direction: column;
@@ -535,7 +966,7 @@
       flex-shrink: 0;
     }
 
-    .symbol-square .z-sub { position: absolute; top: 2px; left: 5px; font-size: 9px; font-family: var(--font-sci); color: var(--cyan); }
+    .symbol-square .z-sub { position: absolute; top: 2px; left: 5px; font-size: 9px; font-family: var(--font-sci); color: var(--edu-blue); }
     .symbol-square .a-sub { position: absolute; bottom: 2px; right: 5px; font-size: 9px; font-family: var(--font-sci); color: var(--gold); }
     .symbol-square .sym-big { font-size: 26px; font-weight: 900; font-family: var(--font-sci); color: #fff; }
 
@@ -555,7 +986,7 @@
       cursor: pointer;
       text-align: center;
     }
-    .particle-p-card.p { border-color: rgba(255, 51, 102, 0.3); }
+    .particle-p-card.p { border-color: rgba(239, 68, 68, 0.3); }
     .particle-p-card.n { border-color: rgba(59, 130, 246, 0.3); }
     .particle-p-card.e { border-color: rgba(0, 240, 255, 0.3); }
 
@@ -564,7 +995,7 @@
 
     /* Custom Sandbox Sliders */
     .sandbox-box {
-      background: rgba(0, 0, 0, 0.3);
+      background: rgba(0, 0, 0, 0.25);
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 14px;
       padding: 12px;
@@ -588,7 +1019,7 @@
     .slider-row-lbl span.val { font-family: var(--font-sci); font-weight: 700; }
     .slider-row.p span.val { color: var(--proton-red); }
     .slider-row.n span.val { color: var(--neutron-blue); }
-    .slider-row.e span.val { color: var(--cyan); }
+    .slider-row.e span.val { color: var(--electron-cyan); }
 
     input[type=range] {
       -webkit-appearance: none;
@@ -605,20 +1036,20 @@
       border-radius: 50%;
       background: #fff;
       cursor: pointer;
-      box-shadow: 0 0 10px rgba(0, 240, 255, 0.8);
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
     }
 
     /* Model History Card in Drawer */
     .history-model-card {
-      background: rgba(0, 240, 255, 0.05);
-      border: 1px solid rgba(0, 240, 255, 0.2);
+      background: rgba(56, 189, 248, 0.06);
+      border: 1px solid rgba(56, 189, 248, 0.2);
       border-radius: 14px;
       padding: 12px;
       margin-bottom: 12px;
     }
     .history-model-card h4 {
       font-size: 13px;
-      color: var(--cyan);
+      color: var(--edu-blue);
       margin-bottom: 4px;
       display: flex;
       align-items: center;
@@ -665,10 +1096,10 @@
       width: 100%;
       max-width: 480px;
       background: var(--panel-bg);
-      border: 1px solid var(--cyan);
+      border: 1px solid var(--edu-blue);
       border-radius: 20px;
       padding: 20px;
-      box-shadow: 0 0 35px rgba(0, 240, 255, 0.35);
+      box-shadow: 0 0 35px rgba(56, 189, 248, 0.35);
     }
 
     .quiz-options {
@@ -684,13 +1115,13 @@
       border: 1px solid rgba(255, 255, 255, 0.12);
       background: rgba(255, 255, 255, 0.05);
       color: #fff;
-      font-family: var(--font-body);
+      font-family: var(--font-thai);
       font-size: 13px;
       text-align: left;
       cursor: pointer;
     }
-    .quiz-opt-btn.correct { background: rgba(6, 214, 160, 0.25); border-color: var(--green); }
-    .quiz-opt-btn.wrong { background: rgba(255, 51, 102, 0.25); border-color: var(--proton-red); }
+    .quiz-opt-btn.correct { background: rgba(16, 185, 129, 0.25); border-color: var(--green); }
+    .quiz-opt-btn.wrong { background: rgba(239, 68, 68, 0.25); border-color: var(--proton-red); }
 
     .quiz-feedback-box {
       margin-top: 12px;
@@ -716,15 +1147,15 @@
       width: 46px;
       height: 46px;
       border-radius: 50%;
-      background: rgba(8, 14, 30, 0.9);
-      border: 1px solid var(--cyan);
-      color: var(--cyan);
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid var(--edu-blue);
+      color: var(--edu-blue);
       font-size: 18px;
       display: none;
       align-items: center;
       justify-content: center;
       z-index: 400;
-      box-shadow: 0 0 20px var(--cyan);
+      box-shadow: 0 0 20px var(--edu-blue);
       cursor: pointer;
     }
     body.clean-view #btn-exit-clean { display: flex; }
@@ -754,11 +1185,130 @@
   </button>
 
   <!-- ========================================================
-       TOP NAVIGATION BAR
-       ======================================================== -->
+       1. FULLSCREEN LOADING SCREEN (แถบความคืบหน้า 0-100% & เตือนเกิน 10 วิ)
+       ======================================================== */
+  -->
+  <div id="loading-screen">
+    <div class="loading-content-box">
+      <!-- Animated Atom Spinner -->
+      <div class="atom-loader-graphic">
+        <div class="atom-nucleus-core"></div>
+        <div class="atom-orbit-ring orbit-1"></div>
+        <div class="atom-orbit-ring orbit-2"></div>
+        <div class="atom-orbit-ring orbit-3"></div>
+      </div>
+
+      <div class="loading-edu-badge">
+        <i class="fa-solid fa-atom"></i> สื่อการเรียนรู้วิทยาศาสตร์เสมือนจริง
+      </div>
+
+      <h1 class="loading-main-title">ATOMIC AR LAB</h1>
+      <p class="loading-subdesc" style="color: var(--text-muted); font-size: 13px; margin-bottom: 22px;">
+        วิวัฒนาการแบบจำลองอะตอม 5 ยุคในประวัติศาสตร์ & AR
+      </p>
+
+      <!-- Progress Track & Text -->
+      <div class="progress-track-wrapper">
+        <div id="loading-progress-bar" class="progress-fill-bar"></div>
+      </div>
+
+      <div class="progress-info-row">
+        <span id="loading-status-text">กำลังโหลดทรัพยากร 3 มิติ...</span>
+        <span id="loading-percentage" class="progress-pct-txt">0%</span>
+      </div>
+
+      <!-- 10-Second Warning Alert Box -->
+      <div id="loading-slow-alert" class="loading-slow-alert-box">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-triangle-exclamation" style="color: #f59e0b; font-size: 18px;"></i>
+          <strong style="color: #fde68a; font-size: 13px;">กำลังใช้เวลาโหลดนานกว่าปกติ</strong>
+        </div>
+        <p class="loading-slow-alert-text">
+          อาจเกิดจากความเร็วอินเทอร์เน็ต หรืออุปกรณ์กำลังเตรียมกราฟิก 3 มิติ ท่านสามารถกดข้ามเพื่อเข้าสู่บทเรียนได้ทันที
+        </p>
+        <button id="btn-force-skip-loading" class="btn-skip-loading-screen">
+          ข้ามและเข้าสู่บทเรียนทันที <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================
+       2. MODE SELECTION MODAL (2 โหมด: Web 3D Preview vs AR Mode)
+       ======================================================== */
+  -->
+  <div id="mode-selection-modal">
+    <div class="mode-modal-panel">
+      <div class="mode-modal-header">
+        <div class="loading-edu-badge" style="margin-bottom: 6px;">
+          <i class="fa-solid fa-graduation-cap"></i> ระบบพร้อมใช้งาน
+        </div>
+        <h2>เลือกโหมดการเรียนรู้</h2>
+        <p>กรุณาเลือกรูปแบบที่เหมาะสมกับอุปกรณ์และสภาพแวดล้อมของคุณ</p>
+      </div>
+
+      <div class="mode-cards-grid">
+        <!-- Mode 1: Web 3D Preview -->
+        <div class="mode-choice-card" id="card-mode-3d">
+          <span class="mode-card-badge">💻 แนะนำสำหรับทุกอุปกรณ์</span>
+          <div class="mode-choice-icon icon-3d">
+            <i class="fa-solid fa-desktop"></i>
+          </div>
+          <h3>1. โหมดจำลอง 3 มิติ (Web 3D)</h3>
+          <p>
+            สำรวจแบบจำลองอะตอม 5 ยุคบนหน้าจอ หมุน 360° ซูมเข้า-ออก ปรับแต่งอนุภาค และทำแบบทดสอบได้ทันที <strong>ไม่ต้องเปิดกล้อง</strong>
+          </p>
+          <button class="mode-choice-btn btn-style-3d" id="btn-select-3d">
+            <i class="fa-solid fa-play"></i> เริ่มต้นโหมดจำลอง 3D
+          </button>
+        </div>
+
+        <!-- Mode 2: AR Mode -->
+        <div class="mode-choice-card featured" id="card-mode-ar">
+          <span class="mode-card-badge" id="badge-ar-status">📱 แนะนำสำหรับมือถือ</span>
+          <div class="mode-choice-icon icon-ar">
+            <i class="fa-solid fa-vr-cardboard"></i>
+          </div>
+          <h3>2. โหมดกล้องเสมือนจริง (AR)</h3>
+          <p>
+            ฉายภาพแบบจำลองอะตอมลอยอยู่ในโลกจริง ส่องวางบนโต๊ะเรียนหรือพื้นห้อง เดินสำรวจและแตะดูอนุภาคย่อยได้เสมือนจริงผ่านกล้องมือถือ
+          </p>
+          <button class="mode-choice-btn btn-style-ar" id="btn-select-ar">
+            <i class="fa-solid fa-camera-retro"></i> เปิดโหมดกล้อง AR
+          </button>
+        </div>
+      </div>
+
+      <div class="mode-modal-footer-note">
+        <i class="fa-regular fa-lightbulb" style="color: var(--gold);"></i> 
+        ท่านสามารถกดสลับโหมด 3D และ AR ได้ตลอดเวลาจากแถบเมนูด้านบน
+      </div>
+    </div>
+  </div>
+
+  <!-- AR Unsupported Info Modal -->
+  <div id="ar-unsupported-modal">
+    <div class="ar-unsupported-panel">
+      <i class="fa-solid fa-circle-exclamation" style="font-size: 38px; color: #f59e0b; margin-bottom: 12px;"></i>
+      <h3 style="font-size: 16px; margin-bottom: 8px; color: #fff;">อุปกรณ์นี้ยังไม่รองรับ WebXR AR</h3>
+      <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px;">
+        โหมดกล้องเสมือนจริง (AR) ต้องการเบราว์เซอร์ Google Chrome บน Android ที่รองรับ Google Play Services for AR (ARCore)<br><br>
+        ท่านสามารถเรียนรู้และทดลองฟังก์ชันทั้งหมดได้อย่างสมบูรณ์ใน <strong>โหมดจำลอง 3 มิติ (Web 3D)</strong>
+      </p>
+      <button class="mode-choice-btn btn-style-3d" id="btn-fallback-to-3d" style="width: auto; padding: 10px 24px; margin: 0 auto;">
+        เข้าสู่โหมดจำลอง 3D ทันที <i class="fa-solid fa-arrow-right"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       3. TOP NAVIGATION BAR (Clean Educational - No Camera)
+       ======================================================== */
+  -->
   <nav id="top-nav">
     <div class="top-pill glass-panel">
-      <i class="fa-solid fa-atom" style="color: var(--cyan); font-size: 18px;"></i>
+      <i class="fa-solid fa-atom" style="color: var(--edu-blue); font-size: 17px;"></i>
       <div class="brand-title">
         <span id="top-pill-symbol">C</span>
         <span id="top-pill-name">คาร์บอน (Z=6)</span>
@@ -767,39 +1317,41 @@
     </div>
 
     <div class="top-nav-actions">
-      <!-- WebXR AR Button -->
-      <span id="ar-button-slot"></span>
+      <!-- Mode Switcher Button (Switch between 3D and AR anytime) -->
+      <button class="top-mode-switcher" id="btn-toggle-ar-mode" title="สลับโหมด 3D / AR">
+        <i class="fa-solid fa-vr-cardboard"></i>
+        <span id="txt-mode-switch-lbl">โหมด AR</span>
+      </button>
 
       <!-- Open Science & Sandbox Drawer -->
-      <button class="circle-btn primary" id="btn-open-drawer" title="ข้อมูลวิทยาศาสตร์ & ประวัติแบบจำลอง">
-        <i class="fa-solid fa-bars"></i>
+      <button class="edu-nav-btn primary" id="btn-open-drawer" title="ข้อมูลวิทยาศาสตร์ & ประวัติแบบจำลอง">
+        <i class="fa-solid fa-book-open"></i>
       </button>
 
       <!-- Quiz -->
-      <button class="circle-btn" id="btn-open-quiz" title="แบบทดสอบ 5 แบบจำลอง">
+      <button class="edu-nav-btn" id="btn-open-quiz" title="แบบทดสอบ 5 แบบจำลอง">
         <i class="fa-solid fa-graduation-cap" style="color: var(--gold);"></i>
       </button>
 
-      <!-- Screenshot Photo -->
-      <button class="circle-btn" id="btn-take-photo" title="ถ่ายภาพโมเดล">
-        <i class="fa-solid fa-camera"></i>
-      </button>
-
       <!-- Toggle Sound -->
-      <button class="circle-btn" id="btn-toggle-sound" title="เปิด/ปิดเสียง">
+      <button class="edu-nav-btn" id="btn-toggle-sound" title="เปิด/ปิดเสียง">
         <i class="fa-solid fa-volume-high"></i>
       </button>
 
-      <!-- Clean Mode -->
-      <button class="circle-btn" id="btn-clean-mode" title="โหมดโฟกัส">
+      <!-- Clean View Mode -->
+      <button class="edu-nav-btn" id="btn-clean-mode" title="โหมดโฟกัส">
         <i class="fa-regular fa-eye-slash"></i>
       </button>
     </div>
   </nav>
 
+  <!-- Container for WebXR AR Button (hidden, programmatically triggered) -->
+  <span id="ar-button-slot"></span>
+
   <!-- ========================================================
-       FLOATING CONTROLS BOTTOM (For Mobile & AR)
-       ======================================================== -->
+       4. FLOATING CONTROLS BOTTOM (For Mobile & AR)
+       ======================================================== */
+  -->
   <div id="bottom-floating-controls">
     
     <!-- 1. Horizontal Scrollable Element Strip -->
@@ -845,12 +1397,12 @@
       </div>
 
       <!-- Quantum Leap Button -->
-      <button class="circle-btn" id="btn-quantum-leap" title="กระตุ้นโฟตอน" style="width: 38px; height: 38px; color: var(--gold);">
+      <button class="edu-nav-btn" id="btn-quantum-leap" title="กระตุ้นโฟตอน" style="width: 36px; height: 36px; color: var(--gold);">
         <i class="fa-solid fa-bolt"></i>
       </button>
 
       <!-- 3D Labels Toggle -->
-      <button class="circle-btn" id="btn-toggle-labels" title="เปิด/ปิดป้ายชื่อ 3D" style="width: 38px; height: 38px;">
+      <button class="edu-nav-btn" id="btn-toggle-labels" title="เปิด/ปิดป้ายชื่อ 3D" style="width: 36px; height: 36px;">
         <i class="fa-solid fa-tag"></i>
       </button>
     </div>
@@ -858,8 +1410,9 @@
   </div>
 
   <!-- ========================================================
-       FLOATING SUBATOMIC INSPECTOR CARD (When tapping particle)
-       ======================================================== -->
+       5. FLOATING SUBATOMIC INSPECTOR CARD (When tapping particle)
+       ======================================================== */
+  -->
   <div id="subatomic-popover" class="glass-panel">
     <div class="popover-header">
       <h3 id="popover-title">🔴 โปรตอน (Proton, p⁺)</h3>
@@ -873,15 +1426,16 @@
   </div>
 
   <!-- ========================================================
-       SCIENCE & SANDBOX DRAWER / BOTTOM SHEET
-       ======================================================== -->
+       6. SCIENCE & SANDBOX DRAWER / BOTTOM SHEET
+       ======================================================== */
+  -->
   <div id="drawer-backdrop"></div>
   <div id="science-drawer">
     <div class="drawer-handle-bar" id="drawer-handle"></div>
     
     <div class="drawer-header">
-      <h2><i class="fa-solid fa-atom" style="color: var(--cyan);"></i> ข้อมูลวิทยาศาสตร์และประวัติแบบจำลอง</h2>
-      <button class="circle-btn" id="btn-close-drawer" style="width: 32px; height: 32px;">&times;</button>
+      <h2><i class="fa-solid fa-atom" style="color: var(--edu-blue);"></i> ข้อมูลวิทยาศาสตร์และประวัติแบบจำลอง</h2>
+      <button class="edu-nav-btn" id="btn-close-drawer" style="width: 32px; height: 32px;">&times;</button>
     </div>
 
     <!-- Active Historical Model Guide Card -->
@@ -902,7 +1456,7 @@
       </div>
       <div>
         <h3 id="drw-name-th" style="font-size: 16px; color: #fff;">คาร์บอน</h3>
-        <p id="drw-name-en" style="font-size: 12px; color: var(--cyan); font-family: var(--font-sci);">Carbon (C)</p>
+        <p id="drw-name-en" style="font-size: 12px; color: var(--edu-blue); font-family: var(--font-sci);">Carbon (C)</p>
         <div style="font-size: 11px; margin-top: 3px; color: var(--green);" id="drw-charge-status">อะตอมเป็นกลาง (ประจุสุทธิ 0)</div>
       </div>
     </div>
@@ -920,7 +1474,7 @@
         <div class="sub-lbl">เป็นกลาง (0)</div>
       </div>
       <div class="particle-p-card e" id="drw-card-electron">
-        <div class="sub-lbl" style="color: var(--cyan);">อิเล็กตรอน (e⁻)</div>
+        <div class="sub-lbl" style="color: var(--electron-cyan);">อิเล็กตรอน (e⁻)</div>
         <div class="cnt" id="drw-electrons-val">6</div>
         <div class="sub-lbl">ประจุลบ (-1)</div>
       </div>
@@ -930,7 +1484,7 @@
     <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 10px; margin-bottom: 12px; font-size: 11px;">
       <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
         <span style="color: var(--text-muted);">การจัดเรียงระดับพลังงาน:</span>
-        <strong style="color: var(--cyan); font-family: var(--font-sci);" id="drw-config-txt">2, 4</strong>
+        <strong style="color: var(--edu-blue); font-family: var(--font-sci);" id="drw-config-txt">2, 4</strong>
       </div>
       <div style="display: flex; justify-content: space-between;">
         <span style="color: var(--text-muted);">เวเลนซ์อิเล็กตรอน:</span>
@@ -940,7 +1494,7 @@
 
     <!-- Atom Sandbox Sliders -->
     <div class="sandbox-box">
-      <div style="font-family: var(--font-sci); font-size: 11px; color: var(--cyan); margin-bottom: 8px;">
+      <div style="font-family: var(--font-sci); font-size: 11px; color: var(--edu-blue); margin-bottom: 8px;">
         🛠️ ปรับแต่งอะตอมอิสระ (Atom Sandbox)
       </div>
       <div class="slider-row p">
@@ -968,10 +1522,10 @@
 
     <!-- Quantum experiment buttons -->
     <div style="display: flex; gap: 8px; margin-top: 10px;">
-      <button class="spawn-anchor-btn" id="btn-drw-absorb" style="background: rgba(255,209,102,0.25); color: #ffd166; border: 1px solid var(--gold);">
+      <button class="spawn-anchor-btn" id="btn-drw-absorb" style="background: rgba(245,158,11,0.25); color: #f59e0b; border: 1px solid var(--gold);">
         ⚡ ดูดกลืนโฟตอน
       </button>
-      <button class="spawn-anchor-btn" id="btn-drw-emit" style="background: rgba(0,240,255,0.2); color: var(--cyan); border: 1px solid var(--cyan);">
+      <button class="spawn-anchor-btn" id="btn-drw-emit" style="background: rgba(56,189,248,0.2); color: var(--edu-blue); border: 1px solid var(--edu-blue);">
         ✨ คายโฟตอน
       </button>
     </div>
@@ -981,8 +1535,8 @@
   <div id="quiz-modal">
     <div class="quiz-container">
       <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; margin-bottom: 12px;">
-        <h2 style="font-family: var(--font-sci); font-size: 15px; color: var(--cyan);"><i class="fa-solid fa-graduation-cap"></i> แบบทดสอบ 5 แบบจำลองอะตอม</h2>
-        <span style="font-size: 10px; padding: 2px 8px; border-radius: 10px; background: rgba(255,209,102,0.2); color: var(--gold);" id="quiz-progress-txt">ข้อ 1 / 5</span>
+        <h2 style="font-family: var(--font-sci); font-size: 15px; color: var(--edu-blue);"><i class="fa-solid fa-graduation-cap"></i> แบบทดสอบ 5 แบบจำลองอะตอม</h2>
+        <span style="font-size: 10px; padding: 2px 8px; border-radius: 10px; background: rgba(245,158,11,0.2); color: var(--gold);" id="quiz-progress-txt">ข้อ 1 / 5</span>
       </div>
 
       <div id="quiz-question-txt" style="font-size: 14px; font-weight: 500; line-height: 1.5; margin-bottom: 10px;"></div>
@@ -992,7 +1546,7 @@
       <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px;">
         <span style="font-size: 12px; font-weight: 600;" id="quiz-score-txt">คะแนน: 0</span>
         <div style="display: flex; gap: 6px;">
-          <button class="circle-btn" id="btn-close-quiz" style="width: 34px; height: 34px;">&times;</button>
+          <button class="edu-nav-btn" id="btn-close-quiz" style="width: 34px; height: 34px;">&times;</button>
           <button class="spawn-anchor-btn" id="btn-next-quiz" style="display: none; padding: 6px 14px; font-size: 12px;">ข้อถัดไป ➔</button>
         </div>
       </div>
@@ -1268,9 +1822,11 @@
       autoRotate: true,
       showLabels: true,
       isARMode: false,
+      arSupported: false,
       arScale: 0.65,
       quizIndex: 0,
-      quizScore: 0
+      quizScore: 0,
+      isLoaded: false
     };
 
     /* ========================================================
@@ -1287,6 +1843,7 @@
     const container = document.getElementById('webgl-canvas-container');
     const toast = document.getElementById('toast-msg');
     const popover = document.getElementById('subatomic-popover');
+    let nativeArButton = null;
 
     function init3D() {
       scene = new THREE.Scene();
@@ -1309,15 +1866,15 @@
       controls.maxDistance = 4.0;
       controls.target.set(0, 0, 0);
 
-      // Lighting
-      const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+      // Educational Lighting
+      const ambientLight = new THREE.AmbientLight(0xffffff, 1.3);
       scene.add(ambientLight);
 
-      const dirLight1 = new THREE.DirectionalLight(0x00f0ff, 2.6);
+      const dirLight1 = new THREE.DirectionalLight(0x38bdf8, 2.5);
       dirLight1.position.set(3, 4, 3);
       scene.add(dirLight1);
 
-      const dirLight2 = new THREE.DirectionalLight(0xff3366, 2.0);
+      const dirLight2 = new THREE.DirectionalLight(0xef4444, 1.8);
       dirLight2.position.set(-3, -2, -3);
       scene.add(dirLight2);
 
@@ -1356,12 +1913,26 @@
     function setupWebXR() {
       const arSlot = document.getElementById('ar-button-slot');
       
-      const arBtn = ARButton.createButton(renderer, {
+      nativeArButton = ARButton.createButton(renderer, {
         optionalFeatures: ['dom-overlay'],
         domOverlay: { root: document.body }
       });
 
-      arSlot.appendChild(arBtn);
+      arSlot.appendChild(nativeArButton);
+
+      // Check if WebXR AR is supported
+      if ('xr' in navigator && navigator.xr.isSessionSupported) {
+        navigator.xr.isSessionSupported('immersive-ar').then((supported) => {
+          state.arSupported = supported;
+          const badge = document.getElementById('badge-ar-status');
+          if (badge) {
+            badge.innerText = supported ? '✓ รองรับ WebXR AR' : 'ℹ️ ต้องการ Android ARCore';
+            if (supported) badge.style.color = '#34d399';
+          }
+        }).catch(() => {
+          state.arSupported = false;
+        });
+      }
 
       renderer.xr.addEventListener('sessionstart', () => {
         state.isARMode = true;
@@ -1371,6 +1942,14 @@
         atomRootGroup.position.set(0, 0, -0.45);
         atomRootGroup.scale.setScalar(state.arScale);
         
+        // Update top mode button label
+        const modeBtn = document.getElementById('btn-toggle-ar-mode');
+        const modeLbl = document.getElementById('txt-mode-switch-lbl');
+        if (modeBtn && modeLbl) {
+          modeBtn.classList.add('ar-active');
+          modeBtn.innerHTML = '<i class="fa-solid fa-desktop"></i> <span>โหมด 3D</span>';
+        }
+
         haptic();
         showToast('เข้าสู่โหมด AR แล้ว — แตะเม็ดอนุภาคเพื่อดูคำอธิบาย');
       });
@@ -1383,6 +1962,12 @@
         atomRootGroup.position.set(0, 0, 0);
         atomRootGroup.scale.setScalar(1.0);
         
+        const modeBtn = document.getElementById('btn-toggle-ar-mode');
+        if (modeBtn) {
+          modeBtn.classList.remove('ar-active');
+          modeBtn.innerHTML = '<i class="fa-solid fa-vr-cardboard"></i> <span>โหมด AR</span>';
+        }
+
         haptic();
         showToast('ออกจากโหมด AR กลับสู่โหมด 3D');
       });
@@ -1419,7 +2004,7 @@
 
     function createBackgroundStars() {
       const starGeo = new THREE.BufferGeometry();
-      const count = 1000;
+      const count = 900;
       const positions = new Float32Array(count * 3);
       const colors = new Float32Array(count * 3);
 
@@ -1428,9 +2013,9 @@
         positions[i + 1] = (Math.random() - 0.5) * 12;
         positions[i + 2] = (Math.random() - 0.5) * 12;
 
-        colors[i] = 0.2 + Math.random() * 0.3;
-        colors[i + 1] = 0.6 + Math.random() * 0.4;
-        colors[i + 2] = 0.9;
+        colors[i] = 0.3 + Math.random() * 0.3;
+        colors[i + 1] = 0.6 + Math.random() * 0.3;
+        colors[i + 2] = 0.95;
       }
 
       starGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -1440,7 +2025,7 @@
         size: 0.02,
         vertexColors: true,
         transparent: true,
-        opacity: 0.75
+        opacity: 0.7
       });
 
       backgroundStars = new THREE.Points(starGeo, starMat);
@@ -1514,10 +2099,10 @@
     function buildDaltonModel() {
       const geo = new THREE.SphereGeometry(0.16, 32, 32);
       const mat = new THREE.MeshStandardMaterial({
-        color: 0x48bfe3,
-        roughness: 0.15,
-        metalness: 0.65,
-        emissive: 0x0077b6,
+        color: 0x38bdf8,
+        roughness: 0.2,
+        metalness: 0.6,
+        emissive: 0x0284c7,
         emissiveIntensity: 0.25
       });
       const mesh = new THREE.Mesh(geo, mat);
@@ -1531,14 +2116,13 @@
 
     /* 2. Thomson Model: Positive sphere with embedded electron raisins (1904) */
     function buildThomsonModel(electronCount) {
-      // Positive matter sphere (semi-transparent glowing red/amber)
       const sphereGeo = new THREE.SphereGeometry(0.18, 32, 32);
       const sphereMat = new THREE.MeshStandardMaterial({
-        color: 0xff4d6d,
+        color: 0xef4444,
         roughness: 0.3,
         transparent: true,
         opacity: 0.42,
-        emissive: 0xff0054,
+        emissive: 0xdc2626,
         emissiveIntensity: 0.35,
         depthWrite: false
       });
@@ -1589,12 +2173,11 @@
 
     /* 3. Rutherford Model: Tiny Dense Nucleus + Large Empty Space & Free Orbiting Electrons (1911) */
     function buildRutherfordModel(electronCount) {
-      // Tiny dense central nucleus (radius only 0.02)
       const nucGeo = new THREE.SphereGeometry(0.024, 24, 24);
       const nucMat = new THREE.MeshStandardMaterial({
-        color: 0xff1744,
+        color: 0xef4444,
         roughness: 0.2,
-        emissive: 0xff1744,
+        emissive: 0xef4444,
         emissiveIntensity: 1.0
       });
       const nucMesh = new THREE.Mesh(nucGeo, nucMat);
@@ -1612,11 +2195,10 @@
       interactiveMeshes.push(hitSphere);
       rutherfordGroup.add(nucMesh);
 
-      // Light glow from tiny nucleus
-      const coreLight = new THREE.PointLight(0xff1744, 2, 0.4);
+      const coreLight = new THREE.PointLight(0xef4444, 2, 0.4);
       rutherfordGroup.add(coreLight);
 
-      // Outer boundary boundary representation (vast space)
+      // Boundary torus representing vast empty space
       const boundaryGeo = new THREE.TorusGeometry(0.32, 0.001, 16, 60);
       const boundaryMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.15 });
       const bRing = new THREE.Mesh(boundaryGeo, boundaryMat);
@@ -1657,16 +2239,16 @@
       const totalNucleons = protons + neutrons;
       const isExplodedQuarkMode = (state.visualMode === 'nucleus_zoom');
       
-      const coreLight = new THREE.PointLight(0xff3366, 1.8, 0.5);
+      const coreLight = new THREE.PointLight(0xef4444, 1.8, 0.5);
       nucleusGroup.add(coreLight);
 
       const sphereGeo = new THREE.SphereGeometry(isExplodedQuarkMode ? 0.038 : 0.028, 24, 24);
       
       const protonMat = new THREE.MeshStandardMaterial({
-        color: 0xff3366,
+        color: 0xef4444,
         roughness: 0.25,
         metalness: 0.35,
-        emissive: 0xff1744,
+        emissive: 0xdc2626,
         emissiveIntensity: 0.35,
         transparent: isExplodedQuarkMode,
         opacity: isExplodedQuarkMode ? 0.42 : 1.0
@@ -1725,8 +2307,8 @@
       const quarks = (nucleonType === 'proton') ? ['up', 'up', 'down'] : ['up', 'down', 'down'];
       const quarkGeo = new THREE.SphereGeometry(0.012, 16, 16);
       
-      const upMat = new THREE.MeshStandardMaterial({ color: 0xff007f, emissive: 0xff007f, emissiveIntensity: 0.8 });
-      const downMat = new THREE.MeshStandardMaterial({ color: 0x00f5d4, emissive: 0x00f5d4, emissiveIntensity: 0.8 });
+      const upMat = new THREE.MeshStandardMaterial({ color: 0xec4899, emissive: 0xec4899, emissiveIntensity: 0.8 });
+      const downMat = new THREE.MeshStandardMaterial({ color: 0x10b981, emissive: 0x10b981, emissiveIntensity: 0.8 });
 
       const dist = 0.022;
       const offsets = [
@@ -1736,7 +2318,7 @@
       ];
 
       const gluonLineGeo = new THREE.BufferGeometry().setFromPoints([offsets[0], offsets[1], offsets[2], offsets[0]]);
-      const gluonLineMat = new THREE.LineBasicMaterial({ color: 0xffd166, transparent: true, opacity: 0.8 });
+      const gluonLineMat = new THREE.LineBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.8 });
       const gluonLine = new THREE.Line(gluonLineGeo, gluonLineMat);
       nucleonMesh.add(gluonLine);
 
@@ -1781,7 +2363,7 @@
         const { shell, n, count, radius } = shellInfo;
 
         const ringGeo = new THREE.TorusGeometry(radius, 0.0016, 16, 100);
-        const ringMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.35 });
+        const ringMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.4 });
 
         const orbitPivot = new THREE.Group();
         if (sIdx === 0) orbitPivot.rotation.set(0, 0, 0);
@@ -1799,86 +2381,94 @@
           ePivot.rotation.copy(orbitPivot.rotation);
 
           const eMesh = new THREE.Mesh(electronGeo, electronMat);
-          eMesh.position.x = radius;
-          eMesh.userData = { type: 'electron', category: 'electron' };
+          eMesh.position.x = radius * Math.cos(angleOffset);
+          eMesh.position.z = radius * Math.sin(angleOffset);
+          eMesh.userData = {
+            type: 'electron',
+            category: 'electron',
+            shell: shell,
+            n: n
+          };
 
-          const hitSphere = new THREE.Mesh(new THREE.SphereGeometry(0.055, 12, 12), new THREE.MeshBasicMaterial({ visible: false }));
-          hitSphere.userData = eMesh.userData;
-          eMesh.add(hitSphere);
-          interactiveMeshes.push(hitSphere);
+          const eHitbox = new THREE.Mesh(
+            new THREE.SphereGeometry(0.045, 10, 10),
+            new THREE.MeshBasicMaterial({ visible: false })
+          );
+          eHitbox.userData = eMesh.userData;
+          eMesh.add(eHitbox);
+          interactiveMeshes.push(eHitbox);
 
           ePivot.add(eMesh);
           electronsGroup.add(ePivot);
 
           electronAnimData.push({
+            mesh: eMesh,
             pivot: ePivot,
             radius: radius,
-            baseSpeed: 1.2 / Math.sqrt(n),
             angle: angleOffset,
-            mesh: eMesh
+            baseSpeed: 2.2 / Math.sqrt(n)
           });
         }
       });
     }
 
+    /* 5. Quantum Cloud Model: Wave-mechanical probability density (1926) */
     function buildQuantumCloud(electronCount) {
-      if (electronCount <= 0) return;
-      const particleCount = Math.min(2200, electronCount * 280);
+      const pointCount = Math.min(2400, Math.max(700, electronCount * 300));
       const cloudGeo = new THREE.BufferGeometry();
-      const pos = new Float32Array(particleCount * 3);
-      const cols = new Float32Array(particleCount * 3);
+      const posArray = new Float32Array(pointCount * 3);
+      const colArray = new Float32Array(pointCount * 3);
 
-      for (let i = 0; i < particleCount * 3; i += 3) {
+      for (let i = 0; i < pointCount * 3; i += 3) {
         const u = Math.random();
-        const r = -0.22 * Math.log(1 - u * 0.92) + 0.05;
+        const r = -0.18 * Math.log(1 - u * 0.96);
+
         const theta = Math.random() * Math.PI * 2;
         const phi = Math.acos(2 * Math.random() - 1);
 
-        pos[i] = r * Math.sin(phi) * Math.cos(theta);
-        pos[i + 1] = r * Math.sin(phi) * Math.sin(theta);
-        pos[i + 2] = r * Math.cos(phi);
+        posArray[i] = r * Math.sin(phi) * Math.cos(theta);
+        posArray[i + 1] = r * Math.sin(phi) * Math.sin(theta);
+        posArray[i + 2] = r * Math.cos(phi);
 
-        cols[i] = 0.0;
-        cols[i + 1] = 0.85 + Math.random() * 0.15;
-        cols[i + 2] = 1.0;
+        const intensity = Math.max(0.3, 1.0 - r / 0.45);
+        colArray[i] = 0.05 * intensity;
+        colArray[i + 1] = 0.85 * intensity;
+        colArray[i + 2] = 1.0 * intensity;
       }
 
-      cloudGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-      cloudGeo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+      cloudGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+      cloudGeo.setAttribute('color', new THREE.BufferAttribute(colArray, 3));
 
       const cloudMat = new THREE.PointsMaterial({
-        size: 0.014,
+        size: 0.016,
         vertexColors: true,
         transparent: true,
         opacity: 0.65,
-        blending: THREE.AdditiveBlending
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
       });
 
-      const cloudMesh = new THREE.Points(cloudGeo, cloudMat);
-      cloudGroup.add(cloudMesh);
+      const cloudPoints = new THREE.Points(cloudGeo, cloudMat);
+      cloudGroup.add(cloudPoints);
     }
 
-    function createTextSprite(text, borderColor = '#00f0ff') {
+    /* 6. 3D Text Billboard Labels */
+    function createTextSprite(text, color = '#38bdf8') {
       const canvas = document.createElement('canvas');
       canvas.width = 256;
       canvas.height = 64;
       const ctx = canvas.getContext('2d');
 
-      ctx.fillStyle = 'rgba(6, 12, 28, 0.88)';
-      ctx.strokeStyle = borderColor;
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+      ctx.strokeStyle = color;
       ctx.lineWidth = 3;
-      if (ctx.roundRect) {
-        ctx.beginPath();
-        ctx.roundRect(4, 4, 248, 56, 12);
-        ctx.fill();
-        ctx.stroke();
-      } else {
-        ctx.fillRect(4, 4, 248, 56);
-        ctx.strokeRect(4, 4, 248, 56);
-      }
+      ctx.beginPath();
+      ctx.roundRect(8, 8, 240, 48, 24);
+      ctx.fill();
+      ctx.stroke();
 
-      ctx.fillStyle = '#ffffff';
       ctx.font = 'bold 22px Prompt, sans-serif';
+      ctx.fillStyle = '#ffffff';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(text, 128, 32);
@@ -1886,25 +2476,25 @@
       const texture = new THREE.CanvasTexture(canvas);
       const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true });
       const sprite = new THREE.Sprite(spriteMat);
-      sprite.scale.set(0.18, 0.045, 1.0);
+      sprite.scale.set(0.22, 0.055, 1);
       return sprite;
     }
 
     function build3DLabels() {
       if (state.visualMode === 'dalton') {
-        const label = createTextSprite('⚪ ทรงกลมตันดอลตัน', '#48bfe3');
-        label.position.set(0, 0.20, 0);
+        const label = createTextSprite('⚪ ทรงกลมตันดอลตัน', '#38bdf8');
+        label.position.set(0, 0.22, 0);
         labelsGroup.add(label);
       } else if (state.visualMode === 'thomson') {
-        const label = createTextSprite('🥧 ขนมปังลูกเกดทอมสัน', '#ff4d6d');
+        const label = createTextSprite('🥧 ขนมปังลูกเกดทอมสัน', '#ef4444');
         label.position.set(0, 0.22, 0);
         labelsGroup.add(label);
       } else if (state.visualMode === 'rutherford') {
-        const label = createTextSprite('🎯 นิวเคลียสจิ๋วรัทเทอร์ฟอร์ด', '#ff1744');
+        const label = createTextSprite('🎯 นิวเคลียสจิ๋วรัทเทอร์ฟอร์ด', '#ef4444');
         label.position.set(0, 0.12, 0);
         labelsGroup.add(label);
       } else if (state.visualMode === 'bohr') {
-        const nucLabel = createTextSprite('⚛️ นิวเคลียส', '#ff3366');
+        const nucLabel = createTextSprite('⚛️ นิวเคลียส', '#ef4444');
         nucLabel.position.set(0, 0.12, 0);
         labelsGroup.add(nucLabel);
 
@@ -1918,7 +2508,7 @@
         label.position.set(0, 0.24, 0);
         labelsGroup.add(label);
       } else if (state.visualMode === 'nucleus_zoom') {
-        const label = createTextSprite('🔬 ควาร์ก (u/d)', '#ff007f');
+        const label = createTextSprite('🔬 ควาร์ก (u/d)', '#ec4899');
         label.position.set(0, 0.20, 0);
         labelsGroup.add(label);
       }
@@ -1934,7 +2524,6 @@
       thomsonGroup.visible = (mode === 'thomson');
       rutherfordGroup.visible = (mode === 'rutherford');
 
-      // Nucleus group used in bohr, cloud, nucleus_zoom
       nucleusGroup.visible = (mode === 'bohr' || mode === 'cloud' || mode === 'nucleus_zoom');
       electronsGroup.visible = (mode === 'bohr');
       orbitsGroup.visible = (mode === 'bohr' && state.showOrbitals);
@@ -1967,10 +2556,10 @@
       const targetElectron = electronAnimData[electronAnimData.length - 1];
       
       const photonGeo = new THREE.SphereGeometry(0.02, 16, 16);
-      const photonMat = new THREE.MeshBasicMaterial({ color: isAbsorb ? 0xffd166 : 0x00f0ff });
+      const photonMat = new THREE.MeshBasicMaterial({ color: isAbsorb ? 0xf59e0b : 0x00f0ff });
       const photonMesh = new THREE.Mesh(photonGeo, photonMat);
 
-      const light = new THREE.PointLight(isAbsorb ? 0xffd166 : 0x00f0ff, 3, 0.5);
+      const light = new THREE.PointLight(isAbsorb ? 0xf59e0b : 0x00f0ff, 3, 0.5);
       photonMesh.add(light);
       scene.add(photonMesh);
 
@@ -2016,6 +2605,8 @@
           e.target.closest('#bottom-floating-controls') || 
           e.target.closest('#science-drawer') || 
           e.target.closest('#quiz-modal') ||
+          e.target.closest('#mode-selection-modal') ||
+          e.target.closest('#ar-unsupported-modal') ||
           e.target.closest('#subatomic-popover')) {
         return;
       }
@@ -2170,14 +2761,14 @@
       q.options.forEach((opt, idx) => {
         const btn = document.createElement('button');
         btn.className = 'quiz-opt-btn';
-        btn.innerHTML = `<span style="font-family: var(--font-sci); color: var(--cyan);">${String.fromCharCode(65 + idx)}.</span> ${opt}`;
+        btn.innerHTML = `<span style="font-family: var(--font-sci); color: var(--edu-blue);">${String.fromCharCode(65 + idx)}.</span> ${opt}`;
         
         btn.addEventListener('click', () => {
           optionsBox.querySelectorAll('.quiz-opt-btn').forEach(b => b.disabled = true);
 
           if (idx === q.correctIndex) {
             btn.classList.add('correct');
-            feedbackBox.style.background = 'rgba(6, 214, 160, 0.2)';
+            feedbackBox.style.background = 'rgba(16, 185, 129, 0.2)';
             feedbackBox.style.border = '1px solid var(--green)';
             feedbackBox.style.color = '#fff';
             feedbackBox.innerHTML = `✅ <strong>ถูกต้อง!</strong> ${q.explanation}`;
@@ -2186,7 +2777,7 @@
           } else {
             btn.classList.add('wrong');
             optionsBox.querySelectorAll('.quiz-opt-btn')[q.correctIndex].classList.add('correct');
-            feedbackBox.style.background = 'rgba(255, 51, 102, 0.2)';
+            feedbackBox.style.background = 'rgba(239, 68, 68, 0.2)';
             feedbackBox.style.border = '1px solid var(--proton-red)';
             feedbackBox.style.color = '#fff';
             feedbackBox.innerHTML = `❌ <strong>ยังไม่ถูกต้อง</strong> — ${q.explanation}`;
@@ -2207,6 +2798,38 @@
 
         optionsBox.appendChild(btn);
       });
+    }
+
+    /* Launch WebXR AR Session safely */
+    function launchARSession() {
+      if (state.isARMode) {
+        // Exit AR session
+        if (renderer.xr.getSession()) {
+          renderer.xr.getSession().end();
+        }
+        return;
+      }
+
+      if (!state.arSupported) {
+        document.getElementById('ar-unsupported-modal').style.display = 'flex';
+        sound.playWrong();
+        return;
+      }
+
+      const nativeBtn = document.querySelector('#ar-button-slot button');
+      if (nativeBtn) {
+        nativeBtn.click();
+      } else {
+        navigator.xr.requestSession('immersive-ar', {
+          optionalFeatures: ['dom-overlay'],
+          domOverlay: { root: document.body }
+        }).then(session => {
+          renderer.xr.setSession(session);
+        }).catch(err => {
+          console.warn('AR launch error:', err);
+          document.getElementById('ar-unsupported-modal').style.display = 'flex';
+        });
+      }
     }
 
     function bindUIEvents() {
@@ -2331,20 +2954,7 @@
         document.body.classList.remove('clean-view');
       });
 
-      // 12. Screenshot
-      document.getElementById('btn-take-photo').addEventListener('click', () => {
-        renderer.render(scene, camera);
-        const dataURL = renderer.domElement.toDataURL('image/png');
-        const link = document.createElement('a');
-        link.download = `atom_${state.visualMode}_${state.currentElement.symbol}_${Date.now()}.png`;
-        link.href = dataURL;
-        link.click();
-        sound.playSelect();
-        haptic();
-        showToast('บันทึกรูปภาพเรียบร้อย 📸');
-      });
-
-      // 13. Quiz Modal
+      // 12. Quiz Modal
       document.getElementById('btn-open-quiz').addEventListener('click', initQuiz);
       document.getElementById('btn-close-quiz').addEventListener('click', () => {
         document.getElementById('quiz-modal').style.display = 'none';
@@ -2361,13 +2971,46 @@
             <div style="text-align: center; padding: 12px 0;">
               <i class="fa-solid fa-trophy" style="font-size: 40px; color: var(--gold); margin-bottom: 10px;"></i>
               <h2>ทำแบบทดสอบเสร็จสิ้น!</h2>
-              <p style="font-size: 16px; margin-top: 6px; color: var(--cyan);">คะแนนของคุณ: ${state.quizScore} / 100</p>
+              <p style="font-size: 16px; margin-top: 6px; color: var(--edu-blue);">คะแนนของคุณ: ${state.quizScore} / 100</p>
             </div>
           `;
           document.getElementById('quiz-options-box').innerHTML = '';
           document.getElementById('quiz-feedback-box').style.display = 'none';
           document.getElementById('btn-next-quiz').style.display = 'none';
         }
+      });
+
+      // 13. Top Bar Mode Switcher Button
+      document.getElementById('btn-toggle-ar-mode').addEventListener('click', () => {
+        if (state.isARMode) {
+          if (renderer.xr.getSession()) renderer.xr.getSession().end();
+        } else {
+          launchARSession();
+        }
+      });
+
+      // 14. Mode Selection Modal Handlers
+      const modeModal = document.getElementById('mode-selection-modal');
+
+      document.getElementById('btn-select-3d').addEventListener('click', () => {
+        modeModal.classList.remove('active');
+        sound.playSelect();
+        haptic();
+        showToast('เข้าสู่โหมดจำลอง 3 มิติ (Web 3D)');
+      });
+
+      document.getElementById('btn-select-ar').addEventListener('click', () => {
+        modeModal.classList.remove('active');
+        sound.playSelect();
+        haptic();
+        launchARSession();
+      });
+
+      // 15. Unsupported AR Dialog Fallback to 3D
+      document.getElementById('btn-fallback-to-3d').addEventListener('click', () => {
+        document.getElementById('ar-unsupported-modal').style.display = 'none';
+        sound.playSelect();
+        showToast('เข้าสู่โหมดจำลอง 3 มิติ (Web 3D)');
       });
     }
 
@@ -2443,11 +3086,94 @@
       renderer.render(scene, camera);
     }
 
+    /* ========================================================
+       8. LOADING SEQUENCE WITH PROGRESS BAR & 10s TIMEOUT
+       ======================================================== */
+    function runLoadingSequence() {
+      const progressBar = document.getElementById('loading-progress-bar');
+      const progressPct = document.getElementById('loading-percentage');
+      const statusText = document.getElementById('loading-status-text');
+      const slowAlert = document.getElementById('loading-slow-alert');
+      const forceSkipBtn = document.getElementById('btn-force-skip-loading');
+      const loadingScreen = document.getElementById('loading-screen');
+      const modeModal = document.getElementById('mode-selection-modal');
+
+      let currentPct = 0;
+      let isDone = false;
+
+      // 10-Second Timeout Warning
+      const timeout10s = setTimeout(() => {
+        if (!isDone) {
+          slowAlert.style.display = 'flex';
+        }
+      }, 10000);
+
+      // Force skip button handler
+      forceSkipBtn.addEventListener('click', () => {
+        completeLoading();
+      });
+
+      const loadingSteps = [
+        { target: 25, msg: 'กำลังเริ่มต้นระบบกราฟิก 3 มิติ...' },
+        { target: 55, msg: 'กำลังสร้างแบบจำลองอะตอม 5 ยุค...' },
+        { target: 80, msg: 'กำลังตรวจสอบการรองรับ WebXR AR...' },
+        { target: 100, msg: 'ระบบพร้อมเริ่มต้นการทดลอง!' }
+      ];
+
+      let stepIdx = 0;
+
+      const progressInterval = setInterval(() => {
+        if (isDone) {
+          clearInterval(progressInterval);
+          return;
+        }
+
+        const currentStep = loadingSteps[stepIdx];
+        if (currentPct < currentStep.target) {
+          currentPct += 2;
+          if (currentPct > currentStep.target) currentPct = currentStep.target;
+          
+          progressBar.style.width = `${currentPct}%`;
+          progressPct.innerText = `${currentPct}%`;
+          statusText.innerText = currentStep.msg;
+        } else {
+          stepIdx++;
+          if (stepIdx >= loadingSteps.length) {
+            clearInterval(progressInterval);
+            setTimeout(() => {
+              completeLoading();
+            }, 300);
+          }
+        }
+      }, 35);
+
+      function completeLoading() {
+        if (isDone) return;
+        isDone = true;
+        clearTimeout(timeout10s);
+        clearInterval(progressInterval);
+
+        progressBar.style.width = '100%';
+        progressPct.innerText = '100%';
+        statusText.innerText = 'ระบบพร้อมใช้งาน!';
+
+        setTimeout(() => {
+          loadingScreen.classList.add('fade-out');
+          setTimeout(() => {
+            loadingScreen.style.display = 'none';
+            modeModal.classList.add('active');
+            sound.playChime();
+          }, 450);
+        }, 350);
+      }
+    }
+
     /* Entry Point */
     window.addEventListener('DOMContentLoaded', () => {
       init3D();
       populateElementStrip();
       bindUIEvents();
+      runLoadingSequence();
     });
 
   </script>
