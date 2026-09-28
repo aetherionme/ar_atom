@@ -67,9 +67,17 @@
       touch-action: manipulation;
     }
 
+    /* Guaranteed Dark Background for both HTML & BODY to prevent white flashes */
+    html {
+      background-color: #0b1120 !important;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
     body {
-      background: var(--bg-dark);
-      background-image: var(--bg-gradient);
+      background-color: #0b1120 !important;
+      background-image: var(--bg-gradient) !important;
       color: var(--text-main);
       font-family: var(--font-thai);
       overflow: hidden;
@@ -78,6 +86,7 @@
       position: relative;
     }
 
+    /* 3D WebGL Canvas Layer (Direct Child of Body, NEVER inside DOM Overlay) */
     #webgl-canvas-container {
       position: absolute;
       top: 0;
@@ -85,6 +94,24 @@
       width: 100%;
       height: 100%;
       z-index: 1;
+      background-color: #0b1120;
+    }
+
+    #webgl-canvas-container canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* AR UI Overlay Container (Used as domOverlay.root for WebXR) */
+    #ar-ui-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 10;
     }
 
     /* Glassmorphic Classroom Panels */
@@ -144,6 +171,7 @@
       justify-content: center;
       padding: 24px;
       transition: opacity 0.5s ease, visibility 0.5s ease;
+      pointer-events: auto;
     }
 
     #loading-screen.fade-out {
@@ -356,6 +384,7 @@
       align-items: center;
       justify-content: center;
       padding: 18px;
+      pointer-events: auto;
     }
 
     #mode-selection-modal.active {
@@ -526,6 +555,7 @@
       align-items: center;
       justify-content: center;
       padding: 20px;
+      pointer-events: auto;
     }
     .ar-unsupported-panel {
       max-width: 420px;
@@ -639,11 +669,6 @@
       background: linear-gradient(135deg, rgba(139, 92, 246, 0.35), rgba(124, 58, 237, 0.4));
       border-color: #a78bfa;
       color: #c4b5fd;
-    }
-
-    /* Hidden Three.js ARButton container */
-    #ar-button-slot {
-      display: none !important;
     }
 
     /* ========================================================
@@ -911,6 +936,7 @@
       overflow-y: auto;
       transform: translateY(105%);
       transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: auto;
     }
     #science-drawer.open {
       transform: translateY(0);
@@ -1073,6 +1099,7 @@
       backdrop-filter: blur(4px);
       z-index: 240;
       display: none;
+      pointer-events: auto;
     }
     #drawer-backdrop.active { display: block; }
 
@@ -1090,6 +1117,7 @@
       align-items: center;
       justify-content: center;
       padding: 20px;
+      pointer-events: auto;
     }
 
     .quiz-container {
@@ -1100,6 +1128,7 @@
       border-radius: 20px;
       padding: 20px;
       box-shadow: 0 0 35px rgba(56, 189, 248, 0.35);
+      pointer-events: auto;
     }
 
     .quiz-options {
@@ -1157,6 +1186,7 @@
       z-index: 400;
       box-shadow: 0 0 20px var(--edu-blue);
       cursor: pointer;
+      pointer-events: auto;
     }
     body.clean-view #btn-exit-clean { display: flex; }
   </style>
@@ -1173,385 +1203,384 @@
 </head>
 
 <body>
-  <!-- 3D WebGL Canvas -->
+  <!-- 3D WebGL Canvas (Kept OUTSIDE the DOM overlay root so it NEVER gets detached or corrupted by Chromium!) -->
   <div id="webgl-canvas-container"></div>
 
-  <!-- Toast Notification -->
-  <div id="toast-msg">แจ้งเตือน</div>
+  <!-- AR UI OVERLAY CONTAINER (Used specifically as domOverlay.root for WebXR) -->
+  <div id="ar-ui-overlay">
 
-  <!-- Exit Clean View Floating Button -->
-  <button id="btn-exit-clean" title="แสดงแถบเครื่องมือ">
-    <i class="fa-solid fa-eye"></i>
-  </button>
+    <!-- Toast Notification -->
+    <div id="toast-msg">แจ้งเตือน</div>
 
-  <!-- ========================================================
-       1. FULLSCREEN LOADING SCREEN (แถบความคืบหน้า 0-100% & เตือนเกิน 10 วิ)
-       ======================================================== */
-  -->
-  <div id="loading-screen">
-    <div class="loading-content-box">
-      <!-- Animated Atom Spinner -->
-      <div class="atom-loader-graphic">
-        <div class="atom-nucleus-core"></div>
-        <div class="atom-orbit-ring orbit-1"></div>
-        <div class="atom-orbit-ring orbit-2"></div>
-        <div class="atom-orbit-ring orbit-3"></div>
-      </div>
+    <!-- Exit Clean View Floating Button -->
+    <button id="btn-exit-clean" title="แสดงแถบเครื่องมือ">
+      <i class="fa-solid fa-eye"></i>
+    </button>
 
-      <div class="loading-edu-badge">
-        <i class="fa-solid fa-atom"></i> สื่อการเรียนรู้วิทยาศาสตร์เสมือนจริง
-      </div>
-
-      <h1 class="loading-main-title">ATOMIC AR LAB</h1>
-      <p class="loading-subdesc" style="color: var(--text-muted); font-size: 13px; margin-bottom: 22px;">
-        วิวัฒนาการแบบจำลองอะตอม 5 ยุคในประวัติศาสตร์ & AR
-      </p>
-
-      <!-- Progress Track & Text -->
-      <div class="progress-track-wrapper">
-        <div id="loading-progress-bar" class="progress-fill-bar"></div>
-      </div>
-
-      <div class="progress-info-row">
-        <span id="loading-status-text">กำลังโหลดทรัพยากร 3 มิติ...</span>
-        <span id="loading-percentage" class="progress-pct-txt">0%</span>
-      </div>
-
-      <!-- 10-Second Warning Alert Box -->
-      <div id="loading-slow-alert" class="loading-slow-alert-box">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <i class="fa-solid fa-triangle-exclamation" style="color: #f59e0b; font-size: 18px;"></i>
-          <strong style="color: #fde68a; font-size: 13px;">กำลังใช้เวลาโหลดนานกว่าปกติ</strong>
+    <!-- ========================================================
+         1. FULLSCREEN LOADING SCREEN (แถบความคืบหน้า 0-100% & เตือนเกิน 10 วิ)
+         ======================================================== -->
+    <div id="loading-screen">
+      <div class="loading-content-box">
+        <!-- Animated Atom Spinner -->
+        <div class="atom-loader-graphic">
+          <div class="atom-nucleus-core"></div>
+          <div class="atom-orbit-ring orbit-1"></div>
+          <div class="atom-orbit-ring orbit-2"></div>
+          <div class="atom-orbit-ring orbit-3"></div>
         </div>
-        <p class="loading-slow-alert-text">
-          อาจเกิดจากความเร็วอินเทอร์เน็ต หรืออุปกรณ์กำลังเตรียมกราฟิก 3 มิติ ท่านสามารถกดข้ามเพื่อเข้าสู่บทเรียนได้ทันที
+
+        <div class="loading-edu-badge">
+          <i class="fa-solid fa-atom"></i> สื่อการเรียนรู้วิทยาศาสตร์เสมือนจริง
+        </div>
+
+        <h1 class="loading-main-title">ATOMIC AR LAB</h1>
+        <p class="loading-subdesc" style="color: var(--text-muted); font-size: 13px; margin-bottom: 22px;">
+          วิวัฒนาการแบบจำลองอะตอม 5 ยุคในประวัติศาสตร์ & AR
         </p>
-        <button id="btn-force-skip-loading" class="btn-skip-loading-screen">
-          ข้ามและเข้าสู่บทเรียนทันที <i class="fa-solid fa-arrow-right"></i>
+
+        <!-- Progress Track & Text -->
+        <div class="progress-track-wrapper">
+          <div id="loading-progress-bar" class="progress-fill-bar"></div>
+        </div>
+
+        <div class="progress-info-row">
+          <span id="loading-status-text">กำลังโหลดทรัพยากร 3 มิติ...</span>
+          <span id="loading-percentage" class="progress-pct-txt">0%</span>
+        </div>
+
+        <!-- 10-Second Warning Alert Box -->
+        <div id="loading-slow-alert" class="loading-slow-alert-box">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-triangle-exclamation" style="color: #f59e0b; font-size: 18px;"></i>
+            <strong style="color: #fde68a; font-size: 13px;">กำลังใช้เวลาโหลดนานกว่าปกติ</strong>
+          </div>
+          <p class="loading-slow-alert-text">
+            อาจเกิดจากความเร็วอินเทอร์เน็ต หรืออุปกรณ์กำลังเตรียมกราฟิก 3 มิติ ท่านสามารถกดข้ามเพื่อเข้าสู่บทเรียนได้ทันที
+          </p>
+          <button id="btn-force-skip-loading" class="btn-skip-loading-screen">
+            ข้ามและเข้าสู่บทเรียนทันที <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ========================================================
+         2. MODE SELECTION MODAL (2 โหมด: Web 3D Preview vs AR Mode)
+         ======================================================== -->
+    <div id="mode-selection-modal">
+      <div class="mode-modal-panel">
+        <div class="mode-modal-header">
+          <div class="loading-edu-badge" style="margin-bottom: 6px;">
+            <i class="fa-solid fa-graduation-cap"></i> ระบบพร้อมใช้งาน
+          </div>
+          <h2>เลือกโหมดการเรียนรู้</h2>
+          <p>กรุณาเลือกรูปแบบที่เหมาะสมกับอุปกรณ์และสภาพแวดล้อมของคุณ</p>
+        </div>
+
+        <div class="mode-cards-grid">
+          <!-- Mode 1: Web 3D Preview -->
+          <div class="mode-choice-card" id="card-mode-3d">
+            <span class="mode-card-badge">💻 แนะนำสำหรับทุกอุปกรณ์</span>
+            <div class="mode-choice-icon icon-3d">
+              <i class="fa-solid fa-desktop"></i>
+            </div>
+            <h3>1. โหมดจำลอง 3 มิติ (Web 3D)</h3>
+            <p>
+              สำรวจแบบจำลองอะตอม 5 ยุคบนหน้าจอ หมุน 360° ซูมเข้า-ออก ปรับแต่งอนุภาค และทำแบบทดสอบได้ทันที <strong>ไม่ต้องเปิดกล้อง</strong>
+            </p>
+            <button class="mode-choice-btn btn-style-3d" id="btn-select-3d">
+              <i class="fa-solid fa-play"></i> เริ่มต้นโหมดจำลอง 3D
+            </button>
+          </div>
+
+          <!-- Mode 2: AR Mode -->
+          <div class="mode-choice-card featured" id="card-mode-ar">
+            <span class="mode-card-badge" id="badge-ar-status">📱 แนะนำสำหรับมือถือ</span>
+            <div class="mode-choice-icon icon-ar">
+              <i class="fa-solid fa-vr-cardboard"></i>
+            </div>
+            <h3>2. โหมดกล้องเสมือนจริง (AR)</h3>
+            <p>
+              ฉายภาพแบบจำลองอะตอมลอยอยู่ในโลกจริง ส่องวางบนโต๊ะเรียนหรือพื้นห้อง เดินสำรวจและแตะดูอนุภาคย่อยได้เสมือนจริงผ่านกล้องมือถือ
+            </p>
+            <button class="mode-choice-btn btn-style-ar" id="btn-select-ar">
+              <i class="fa-solid fa-camera-retro"></i> เปิดโหมดกล้อง AR
+            </button>
+          </div>
+        </div>
+
+        <div class="mode-modal-footer-note">
+          <i class="fa-regular fa-lightbulb" style="color: var(--gold);"></i> 
+          ท่านสามารถกดสลับโหมด 3D และ AR ได้ตลอดเวลาจากแถบเมนูด้านบน
+        </div>
+      </div>
+    </div>
+
+    <!-- AR Unsupported Info Modal -->
+    <div id="ar-unsupported-modal">
+      <div class="ar-unsupported-panel">
+        <i class="fa-solid fa-circle-exclamation" style="font-size: 38px; color: #f59e0b; margin-bottom: 12px;"></i>
+        <h3 style="font-size: 16px; margin-bottom: 8px; color: #fff;">อุปกรณ์นี้ยังไม่รองรับ WebXR AR</h3>
+        <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px;">
+          โหมดกล้องเสมือนจริง (AR) ต้องการเบราว์เซอร์ Google Chrome บน Android ที่รองรับ Google Play Services for AR (ARCore)<br><br>
+          ท่านสามารถเรียนรู้และทดลองฟังก์ชันทั้งหมดได้อย่างสมบูรณ์ใน <strong>โหมดจำลอง 3 มิติ (Web 3D)</strong>
+        </p>
+        <button class="mode-choice-btn btn-style-3d" id="btn-fallback-to-3d" style="width: auto; padding: 10px 24px; margin: 0 auto;">
+          เข้าสู่โหมดจำลอง 3D ทันที <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- ========================================================
+         3. TOP NAVIGATION BAR (Clean Educational - No Camera)
+         ======================================================== -->
+    <nav id="top-nav">
+      <div class="top-pill glass-panel">
+        <i class="fa-solid fa-atom" style="color: var(--edu-blue); font-size: 17px;"></i>
+        <div class="brand-title">
+          <span id="top-pill-symbol">C</span>
+          <span id="top-pill-name">คาร์บอน (Z=6)</span>
+          <span class="badge" id="top-pill-model-badge">โบร์ (1913)</span>
+        </div>
+      </div>
+
+      <div class="top-nav-actions">
+        <!-- Mode Switcher Button (Switch between 3D and AR anytime) -->
+        <button class="top-mode-switcher" id="btn-toggle-ar-mode" title="สลับโหมด 3D / AR">
+          <i class="fa-solid fa-vr-cardboard"></i>
+          <span id="txt-mode-switch-lbl">โหมด AR</span>
+        </button>
+
+        <!-- Open Science & Sandbox Drawer -->
+        <button class="edu-nav-btn primary" id="btn-open-drawer" title="ข้อมูลวิทยาศาสตร์ & ประวัติแบบจำลอง">
+          <i class="fa-solid fa-book-open"></i>
+        </button>
+
+        <!-- Quiz -->
+        <button class="edu-nav-btn" id="btn-open-quiz" title="แบบทดสอบ 5 แบบจำลอง">
+          <i class="fa-solid fa-graduation-cap" style="color: var(--gold);"></i>
+        </button>
+
+        <!-- Toggle Sound -->
+        <button class="edu-nav-btn" id="btn-toggle-sound" title="เปิด/ปิดเสียง">
+          <i class="fa-solid fa-volume-high"></i>
+        </button>
+
+        <!-- Clean View Mode -->
+        <button class="edu-nav-btn" id="btn-clean-mode" title="โหมดโฟกัส">
+          <i class="fa-regular fa-eye-slash"></i>
+        </button>
+      </div>
+    </nav>
+
+    <!-- ========================================================
+         4. FLOATING CONTROLS BOTTOM (For Mobile & AR)
+         ======================================================== -->
+    <div id="bottom-floating-controls">
+      
+      <!-- 1. Horizontal Scrollable Element Strip -->
+      <div class="element-strip-scroll glass-panel" id="element-strip-scroll">
+        <!-- Generated via JS -->
+      </div>
+
+      <!-- 2. THE 5 HISTORICAL ATOMIC MODELS STRIP -->
+      <div class="models-strip-scroll" id="models-strip-scroll">
+        <button class="model-chip-btn" data-mode="dalton" title="1. แบบจำลองของดอลตัน (1803)">
+          <span>⚪</span> <span>1. ดอลตัน (1803)</span>
+        </button>
+        <button class="model-chip-btn" data-mode="thomson" title="2. แบบจำลองของทอมสัน (1904)">
+          <span>🥧</span> <span>2. ทอมสัน (1904)</span>
+        </button>
+        <button class="model-chip-btn" data-mode="rutherford" title="3. แบบจำลองของรัทเทอร์ฟอร์ด (1911)">
+          <span>🎯</span> <span>3. รัทเทอร์ฟอร์ด (1911)</span>
+        </button>
+        <button class="model-chip-btn active" data-mode="bohr" title="4. แบบจำลองของโบร์ (1913)">
+          <span>🪐</span> <span>4. โบร์ (1913)</span>
+        </button>
+        <button class="model-chip-btn" data-mode="cloud" title="5. แบบจำลองกลุ่มหมอก (1926-ปัจจุบัน)">
+          <span>☁️</span> <span>5. กลุ่มหมอก (ควอนตัม)</span>
+        </button>
+        <button class="model-chip-btn" data-mode="nucleus_zoom" title="เจาะลึกนิวเคลียสและควาร์ก">
+          <span>🔬</span> <span>ผ่าดูควาร์ก (u/d)</span>
+        </button>
+      </div>
+
+      <!-- 3. Mobile Action Bar (Spawn Anchor, Scale, Quantum, Labels) -->
+      <div class="mobile-action-bar glass-panel">
+        <!-- Dedicated Spawn Anchor Button (ONLY this button repositions the atom!) -->
+        <button class="spawn-anchor-btn" id="btn-spawn-anchor">
+          <i class="fa-solid fa-location-crosshairs"></i>
+          <span id="txt-spawn-btn">วางตรงหน้า</span>
+        </button>
+
+        <!-- Scale Control Group -->
+        <div class="action-icon-pill">
+          <button class="mini-tool-btn" id="btn-scale-down" title="ย่อขนาด">-</button>
+          <span class="scale-indicator" id="scale-indicator-txt">1.0x</span>
+          <button class="mini-tool-btn" id="btn-scale-up" title="ขยายขนาด">+</button>
+        </div>
+
+        <!-- Quantum Leap Button -->
+        <button class="edu-nav-btn" id="btn-quantum-leap" title="กระตุ้นโฟตอน" style="width: 36px; height: 36px; color: var(--gold);">
+          <i class="fa-solid fa-bolt"></i>
+        </button>
+
+        <!-- 3D Labels Toggle -->
+        <button class="edu-nav-btn" id="btn-toggle-labels" title="เปิด/ปิดป้ายชื่อ 3D" style="width: 36px; height: 36px;">
+          <i class="fa-solid fa-tag"></i>
         </button>
       </div>
 
     </div>
-  </div>
 
-  <!-- ========================================================
-       2. MODE SELECTION MODAL (2 โหมด: Web 3D Preview vs AR Mode)
-       ======================================================== */
-  -->
-  <div id="mode-selection-modal">
-    <div class="mode-modal-panel">
-      <div class="mode-modal-header">
-        <div class="loading-edu-badge" style="margin-bottom: 6px;">
-          <i class="fa-solid fa-graduation-cap"></i> ระบบพร้อมใช้งาน
-        </div>
-        <h2>เลือกโหมดการเรียนรู้</h2>
-        <p>กรุณาเลือกรูปแบบที่เหมาะสมกับอุปกรณ์และสภาพแวดล้อมของคุณ</p>
+    <!-- ========================================================
+         5. FLOATING SUBATOMIC INSPECTOR CARD (When tapping particle)
+         ======================================================== -->
+    <div id="subatomic-popover" class="glass-panel">
+      <div class="popover-header">
+        <h3 id="popover-title">🔴 โปรตอน (Proton, p⁺)</h3>
+        <button class="popover-close-btn" id="btn-close-popover">&times;</button>
+      </div>
+      <div class="popover-body">
+        <p id="popover-desc" style="font-size: 11px; margin-bottom: 6px; color: #e2e8f0;"></p>
+        <table class="popover-specs" id="popover-specs-table"></table>
+        <div style="font-size: 10px; color: var(--gold); margin-top: 4px;" id="popover-fact"></div>
+      </div>
+    </div>
+
+    <!-- ========================================================
+         6. SCIENCE & SANDBOX DRAWER / BOTTOM SHEET
+         ======================================================== -->
+    <div id="drawer-backdrop"></div>
+    <div id="science-drawer">
+      <div class="drawer-handle-bar" id="drawer-handle"></div>
+      
+      <div class="drawer-header">
+        <h2><i class="fa-solid fa-atom" style="color: var(--edu-blue);"></i> ข้อมูลวิทยาศาสตร์และประวัติแบบจำลอง</h2>
+        <button class="edu-nav-btn" id="btn-close-drawer" style="width: 32px; height: 32px;">&times;</button>
       </div>
 
-      <div class="mode-cards-grid">
-        <!-- Mode 1: Web 3D Preview -->
-        <div class="mode-choice-card" id="card-mode-3d">
-          <span class="mode-card-badge">💻 แนะนำสำหรับทุกอุปกรณ์</span>
-          <div class="mode-choice-icon icon-3d">
-            <i class="fa-solid fa-desktop"></i>
+      <!-- Active Historical Model Guide Card -->
+      <div class="history-model-card" id="drw-history-card">
+        <h4 id="drw-history-title"><i class="fa-solid fa-book-bookmark"></i> แบบจำลองของโบร์ (ค.ศ. 1913)</h4>
+        <p id="drw-history-concept">อิเล็กตรอนวิ่งรอบนิวเคลียสเป็นวงโคจรเฉพาะที่มีระดับพลังงานคงที่ (n=1, 2, 3...) ไม่สูญเสียพลังงาน</p>
+        <div style="font-size: 10px; color: var(--gold);" id="drw-history-limitation">
+          ⚠️ <strong>ข้อจำกัด/การพัฒนาต่อ:</strong> อธิบายอะตอมที่มีหลายอิเล็กตรอนได้ไม่สมบูรณ์ นำไปสู่แบบจำลองกลุ่มหมอก
+        </div>
+      </div>
+
+      <!-- Summary Box -->
+      <div class="drawer-summary-card">
+        <div class="symbol-square">
+          <span class="z-sub" id="drw-z">6</span>
+          <span class="sym-big" id="drw-sym">C</span>
+          <span class="a-sub" id="drw-a">12</span>
+        </div>
+        <div>
+          <h3 id="drw-name-th" style="font-size: 16px; color: #fff;">คาร์บอน</h3>
+          <p id="drw-name-en" style="font-size: 12px; color: var(--edu-blue); font-family: var(--font-sci);">Carbon (C)</p>
+          <div style="font-size: 11px; margin-top: 3px; color: var(--green);" id="drw-charge-status">อะตอมเป็นกลาง (ประจุสุทธิ 0)</div>
+        </div>
+      </div>
+
+      <!-- 3 Particle Cards -->
+      <div class="drawer-particles-grid">
+        <div class="particle-p-card p" id="drw-card-proton">
+          <div class="sub-lbl" style="color: var(--proton-red);">โปรตอน (p⁺)</div>
+          <div class="cnt" id="drw-protons-val">6</div>
+          <div class="sub-lbl">ประจุบวก (+1)</div>
+        </div>
+        <div class="particle-p-card n" id="drw-card-neutron">
+          <div class="sub-lbl" style="color: var(--neutron-blue);">นิวตรอน (n⁰)</div>
+          <div class="cnt" id="drw-neutrons-val">6</div>
+          <div class="sub-lbl">เป็นกลาง (0)</div>
+        </div>
+        <div class="particle-p-card e" id="drw-card-electron">
+          <div class="sub-lbl" style="color: var(--electron-cyan);">อิเล็กตรอน (e⁻)</div>
+          <div class="cnt" id="drw-electrons-val">6</div>
+          <div class="sub-lbl">ประจุลบ (-1)</div>
+        </div>
+      </div>
+
+      <!-- Quantum Configuration info -->
+      <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 10px; margin-bottom: 12px; font-size: 11px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+          <span style="color: var(--text-muted);">การจัดเรียงระดับพลังงาน:</span>
+          <strong style="color: var(--edu-blue); font-family: var(--font-sci);" id="drw-config-txt">2, 4</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="color: var(--text-muted);">เวเลนซ์อิเล็กตรอน:</span>
+          <strong style="color: var(--gold); font-family: var(--font-sci);" id="drw-valence-txt">4 e⁻</strong>
+        </div>
+      </div>
+
+      <!-- Atom Sandbox Sliders -->
+      <div class="sandbox-box">
+        <div style="font-family: var(--font-sci); font-size: 11px; color: var(--edu-blue); margin-bottom: 8px;">
+          🛠️ ปรับแต่งอะตอมอิสระ (Atom Sandbox)
+        </div>
+        <div class="slider-row p">
+          <div class="slider-row-lbl">
+            <span>โปรตอน (Protons)</span>
+            <span class="val" id="drw-lbl-p">6</span>
           </div>
-          <h3>1. โหมดจำลอง 3 มิติ (Web 3D)</h3>
-          <p>
-            สำรวจแบบจำลองอะตอม 5 ยุคบนหน้าจอ หมุน 360° ซูมเข้า-ออก ปรับแต่งอนุภาค และทำแบบทดสอบได้ทันที <strong>ไม่ต้องเปิดกล้อง</strong>
-          </p>
-          <button class="mode-choice-btn btn-style-3d" id="btn-select-3d">
-            <i class="fa-solid fa-play"></i> เริ่มต้นโหมดจำลอง 3D
-          </button>
+          <input type="range" id="drw-range-p" min="1" max="18" value="6">
         </div>
-
-        <!-- Mode 2: AR Mode -->
-        <div class="mode-choice-card featured" id="card-mode-ar">
-          <span class="mode-card-badge" id="badge-ar-status">📱 แนะนำสำหรับมือถือ</span>
-          <div class="mode-choice-icon icon-ar">
-            <i class="fa-solid fa-vr-cardboard"></i>
+        <div class="slider-row n">
+          <div class="slider-row-lbl">
+            <span>นิวตรอน (Neutrons)</span>
+            <span class="val" id="drw-lbl-n">6</span>
           </div>
-          <h3>2. โหมดกล้องเสมือนจริง (AR)</h3>
-          <p>
-            ฉายภาพแบบจำลองอะตอมลอยอยู่ในโลกจริง ส่องวางบนโต๊ะเรียนหรือพื้นห้อง เดินสำรวจและแตะดูอนุภาคย่อยได้เสมือนจริงผ่านกล้องมือถือ
-          </p>
-          <button class="mode-choice-btn btn-style-ar" id="btn-select-ar">
-            <i class="fa-solid fa-camera-retro"></i> เปิดโหมดกล้อง AR
-          </button>
+          <input type="range" id="drw-range-n" min="0" max="22" value="6">
+        </div>
+        <div class="slider-row e">
+          <div class="slider-row-lbl">
+            <span>อิเล็กตรอน (Electrons)</span>
+            <span class="val" id="drw-lbl-e">6</span>
+          </div>
+          <input type="range" id="drw-range-e" min="0" max="18" value="6">
         </div>
       </div>
 
-      <div class="mode-modal-footer-note">
-        <i class="fa-regular fa-lightbulb" style="color: var(--gold);"></i> 
-        ท่านสามารถกดสลับโหมด 3D และ AR ได้ตลอดเวลาจากแถบเมนูด้านบน
-      </div>
-    </div>
-  </div>
-
-  <!-- AR Unsupported Info Modal -->
-  <div id="ar-unsupported-modal">
-    <div class="ar-unsupported-panel">
-      <i class="fa-solid fa-circle-exclamation" style="font-size: 38px; color: #f59e0b; margin-bottom: 12px;"></i>
-      <h3 style="font-size: 16px; margin-bottom: 8px; color: #fff;">อุปกรณ์นี้ยังไม่รองรับ WebXR AR</h3>
-      <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px;">
-        โหมดกล้องเสมือนจริง (AR) ต้องการเบราว์เซอร์ Google Chrome บน Android ที่รองรับ Google Play Services for AR (ARCore)<br><br>
-        ท่านสามารถเรียนรู้และทดลองฟังก์ชันทั้งหมดได้อย่างสมบูรณ์ใน <strong>โหมดจำลอง 3 มิติ (Web 3D)</strong>
-      </p>
-      <button class="mode-choice-btn btn-style-3d" id="btn-fallback-to-3d" style="width: auto; padding: 10px 24px; margin: 0 auto;">
-        เข้าสู่โหมดจำลอง 3D ทันที <i class="fa-solid fa-arrow-right"></i>
-      </button>
-    </div>
-  </div>
-
-  <!-- ========================================================
-       3. TOP NAVIGATION BAR (Clean Educational - No Camera)
-       ======================================================== */
-  -->
-  <nav id="top-nav">
-    <div class="top-pill glass-panel">
-      <i class="fa-solid fa-atom" style="color: var(--edu-blue); font-size: 17px;"></i>
-      <div class="brand-title">
-        <span id="top-pill-symbol">C</span>
-        <span id="top-pill-name">คาร์บอน (Z=6)</span>
-        <span class="badge" id="top-pill-model-badge">โบร์ (1913)</span>
+      <!-- Quantum experiment buttons -->
+      <div style="display: flex; gap: 8px; margin-top: 10px;">
+        <button class="spawn-anchor-btn" id="btn-drw-absorb" style="background: rgba(245,158,11,0.25); color: #f59e0b; border: 1px solid var(--gold);">
+          ⚡ ดูดกลืนโฟตอน
+        </button>
+        <button class="spawn-anchor-btn" id="btn-drw-emit" style="background: rgba(56,189,248,0.2); color: var(--edu-blue); border: 1px solid var(--edu-blue);">
+          ✨ คายโฟตอน
+        </button>
       </div>
     </div>
 
-    <div class="top-nav-actions">
-      <!-- Mode Switcher Button (Switch between 3D and AR anytime) -->
-      <button class="top-mode-switcher" id="btn-toggle-ar-mode" title="สลับโหมด 3D / AR">
-        <i class="fa-solid fa-vr-cardboard"></i>
-        <span id="txt-mode-switch-lbl">โหมด AR</span>
-      </button>
+    <!-- Quiz Modal -->
+    <div id="quiz-modal">
+      <div class="quiz-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; margin-bottom: 12px;">
+          <h2 style="font-family: var(--font-sci); font-size: 15px; color: var(--edu-blue);"><i class="fa-solid fa-graduation-cap"></i> แบบทดสอบ 5 แบบจำลองอะตอม</h2>
+          <span style="font-size: 10px; padding: 2px 8px; border-radius: 10px; background: rgba(245,158,11,0.2); color: var(--gold);" id="quiz-progress-txt">ข้อ 1 / 5</span>
+        </div>
 
-      <!-- Open Science & Sandbox Drawer -->
-      <button class="edu-nav-btn primary" id="btn-open-drawer" title="ข้อมูลวิทยาศาสตร์ & ประวัติแบบจำลอง">
-        <i class="fa-solid fa-book-open"></i>
-      </button>
+        <div id="quiz-question-txt" style="font-size: 14px; font-weight: 500; line-height: 1.5; margin-bottom: 10px;"></div>
+        <div class="quiz-options" id="quiz-options-box"></div>
+        <div class="quiz-feedback-box" id="quiz-feedback-box"></div>
 
-      <!-- Quiz -->
-      <button class="edu-nav-btn" id="btn-open-quiz" title="แบบทดสอบ 5 แบบจำลอง">
-        <i class="fa-solid fa-graduation-cap" style="color: var(--gold);"></i>
-      </button>
-
-      <!-- Toggle Sound -->
-      <button class="edu-nav-btn" id="btn-toggle-sound" title="เปิด/ปิดเสียง">
-        <i class="fa-solid fa-volume-high"></i>
-      </button>
-
-      <!-- Clean View Mode -->
-      <button class="edu-nav-btn" id="btn-clean-mode" title="โหมดโฟกัส">
-        <i class="fa-regular fa-eye-slash"></i>
-      </button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px;">
+          <span style="font-size: 12px; font-weight: 600;" id="quiz-score-txt">คะแนน: 0</span>
+          <div style="display: flex; gap: 6px;">
+            <button class="edu-nav-btn" id="btn-close-quiz" style="width: 34px; height: 34px;">&times;</button>
+            <button class="spawn-anchor-btn" id="btn-next-quiz" style="display: none; padding: 6px 14px; font-size: 12px;">ข้อถัดไป ➔</button>
+          </div>
+        </div>
+      </div>
     </div>
-  </nav>
+
+  </div> <!-- End #ar-ui-overlay -->
 
   <!-- Container for WebXR AR Button (hidden, programmatically triggered) -->
-  <span id="ar-button-slot"></span>
-
-  <!-- ========================================================
-       4. FLOATING CONTROLS BOTTOM (For Mobile & AR)
-       ======================================================== */
-  -->
-  <div id="bottom-floating-controls">
-    
-    <!-- 1. Horizontal Scrollable Element Strip -->
-    <div class="element-strip-scroll glass-panel" id="element-strip-scroll">
-      <!-- Generated via JS -->
-    </div>
-
-    <!-- 2. THE 5 HISTORICAL ATOMIC MODELS STRIP -->
-    <div class="models-strip-scroll" id="models-strip-scroll">
-      <button class="model-chip-btn" data-mode="dalton" title="1. แบบจำลองของดอลตัน (1803)">
-        <span>⚪</span> <span>1. ดอลตัน (1803)</span>
-      </button>
-      <button class="model-chip-btn" data-mode="thomson" title="2. แบบจำลองของทอมสัน (1904)">
-        <span>🥧</span> <span>2. ทอมสัน (1904)</span>
-      </button>
-      <button class="model-chip-btn" data-mode="rutherford" title="3. แบบจำลองของรัทเทอร์ฟอร์ด (1911)">
-        <span>🎯</span> <span>3. รัทเทอร์ฟอร์ด (1911)</span>
-      </button>
-      <button class="model-chip-btn active" data-mode="bohr" title="4. แบบจำลองของโบร์ (1913)">
-        <span>🪐</span> <span>4. โบร์ (1913)</span>
-      </button>
-      <button class="model-chip-btn" data-mode="cloud" title="5. แบบจำลองกลุ่มหมอก (1926-ปัจจุบัน)">
-        <span>☁️</span> <span>5. กลุ่มหมอก (ควอนตัม)</span>
-      </button>
-      <button class="model-chip-btn" data-mode="nucleus_zoom" title="เจาะลึกนิวเคลียสและควาร์ก">
-        <span>🔬</span> <span>ผ่าดูควาร์ก (u/d)</span>
-      </button>
-    </div>
-
-    <!-- 3. Mobile Action Bar (Spawn Anchor, Scale, Quantum, Labels) -->
-    <div class="mobile-action-bar glass-panel">
-      <!-- Dedicated Spawn Anchor Button (ONLY this button repositions the atom!) -->
-      <button class="spawn-anchor-btn" id="btn-spawn-anchor">
-        <i class="fa-solid fa-location-crosshairs"></i>
-        <span id="txt-spawn-btn">วางตรงหน้า</span>
-      </button>
-
-      <!-- Scale Control Group -->
-      <div class="action-icon-pill">
-        <button class="mini-tool-btn" id="btn-scale-down" title="ย่อขนาด">-</button>
-        <span class="scale-indicator" id="scale-indicator-txt">1.0x</span>
-        <button class="mini-tool-btn" id="btn-scale-up" title="ขยายขนาด">+</button>
-      </div>
-
-      <!-- Quantum Leap Button -->
-      <button class="edu-nav-btn" id="btn-quantum-leap" title="กระตุ้นโฟตอน" style="width: 36px; height: 36px; color: var(--gold);">
-        <i class="fa-solid fa-bolt"></i>
-      </button>
-
-      <!-- 3D Labels Toggle -->
-      <button class="edu-nav-btn" id="btn-toggle-labels" title="เปิด/ปิดป้ายชื่อ 3D" style="width: 36px; height: 36px;">
-        <i class="fa-solid fa-tag"></i>
-      </button>
-    </div>
-
-  </div>
-
-  <!-- ========================================================
-       5. FLOATING SUBATOMIC INSPECTOR CARD (When tapping particle)
-       ======================================================== */
-  -->
-  <div id="subatomic-popover" class="glass-panel">
-    <div class="popover-header">
-      <h3 id="popover-title">🔴 โปรตอน (Proton, p⁺)</h3>
-      <button class="popover-close-btn" id="btn-close-popover">&times;</button>
-    </div>
-    <div class="popover-body">
-      <p id="popover-desc" style="font-size: 11px; margin-bottom: 6px; color: #e2e8f0;"></p>
-      <table class="popover-specs" id="popover-specs-table"></table>
-      <div style="font-size: 10px; color: var(--gold); margin-top: 4px;" id="popover-fact"></div>
-    </div>
-  </div>
-
-  <!-- ========================================================
-       6. SCIENCE & SANDBOX DRAWER / BOTTOM SHEET
-       ======================================================== */
-  -->
-  <div id="drawer-backdrop"></div>
-  <div id="science-drawer">
-    <div class="drawer-handle-bar" id="drawer-handle"></div>
-    
-    <div class="drawer-header">
-      <h2><i class="fa-solid fa-atom" style="color: var(--edu-blue);"></i> ข้อมูลวิทยาศาสตร์และประวัติแบบจำลอง</h2>
-      <button class="edu-nav-btn" id="btn-close-drawer" style="width: 32px; height: 32px;">&times;</button>
-    </div>
-
-    <!-- Active Historical Model Guide Card -->
-    <div class="history-model-card" id="drw-history-card">
-      <h4 id="drw-history-title"><i class="fa-solid fa-book-bookmark"></i> แบบจำลองของโบร์ (ค.ศ. 1913)</h4>
-      <p id="drw-history-concept">อิเล็กตรอนวิ่งรอบนิวเคลียสเป็นวงโคจรเฉพาะที่มีระดับพลังงานคงที่ (n=1, 2, 3...) ไม่สูญเสียพลังงาน</p>
-      <div style="font-size: 10px; color: var(--gold);" id="drw-history-limitation">
-        ⚠️ <strong>ข้อจำกัด/การพัฒนาต่อ:</strong> อธิบายอะตอมที่มีหลายอิเล็กตรอนได้ไม่สมบูรณ์ นำไปสู่แบบจำลองกลุ่มหมอก
-      </div>
-    </div>
-
-    <!-- Summary Box -->
-    <div class="drawer-summary-card">
-      <div class="symbol-square">
-        <span class="z-sub" id="drw-z">6</span>
-        <span class="sym-big" id="drw-sym">C</span>
-        <span class="a-sub" id="drw-a">12</span>
-      </div>
-      <div>
-        <h3 id="drw-name-th" style="font-size: 16px; color: #fff;">คาร์บอน</h3>
-        <p id="drw-name-en" style="font-size: 12px; color: var(--edu-blue); font-family: var(--font-sci);">Carbon (C)</p>
-        <div style="font-size: 11px; margin-top: 3px; color: var(--green);" id="drw-charge-status">อะตอมเป็นกลาง (ประจุสุทธิ 0)</div>
-      </div>
-    </div>
-
-    <!-- 3 Particle Cards -->
-    <div class="drawer-particles-grid">
-      <div class="particle-p-card p" id="drw-card-proton">
-        <div class="sub-lbl" style="color: var(--proton-red);">โปรตอน (p⁺)</div>
-        <div class="cnt" id="drw-protons-val">6</div>
-        <div class="sub-lbl">ประจุบวก (+1)</div>
-      </div>
-      <div class="particle-p-card n" id="drw-card-neutron">
-        <div class="sub-lbl" style="color: var(--neutron-blue);">นิวตรอน (n⁰)</div>
-        <div class="cnt" id="drw-neutrons-val">6</div>
-        <div class="sub-lbl">เป็นกลาง (0)</div>
-      </div>
-      <div class="particle-p-card e" id="drw-card-electron">
-        <div class="sub-lbl" style="color: var(--electron-cyan);">อิเล็กตรอน (e⁻)</div>
-        <div class="cnt" id="drw-electrons-val">6</div>
-        <div class="sub-lbl">ประจุลบ (-1)</div>
-      </div>
-    </div>
-
-    <!-- Quantum Configuration info -->
-    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 10px; margin-bottom: 12px; font-size: 11px;">
-      <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-        <span style="color: var(--text-muted);">การจัดเรียงระดับพลังงาน:</span>
-        <strong style="color: var(--edu-blue); font-family: var(--font-sci);" id="drw-config-txt">2, 4</strong>
-      </div>
-      <div style="display: flex; justify-content: space-between;">
-        <span style="color: var(--text-muted);">เวเลนซ์อิเล็กตรอน:</span>
-        <strong style="color: var(--gold); font-family: var(--font-sci);" id="drw-valence-txt">4 e⁻</strong>
-      </div>
-    </div>
-
-    <!-- Atom Sandbox Sliders -->
-    <div class="sandbox-box">
-      <div style="font-family: var(--font-sci); font-size: 11px; color: var(--edu-blue); margin-bottom: 8px;">
-        🛠️ ปรับแต่งอะตอมอิสระ (Atom Sandbox)
-      </div>
-      <div class="slider-row p">
-        <div class="slider-row-lbl">
-          <span>โปรตอน (Protons)</span>
-          <span class="val" id="drw-lbl-p">6</span>
-        </div>
-        <input type="range" id="drw-range-p" min="1" max="18" value="6">
-      </div>
-      <div class="slider-row n">
-        <div class="slider-row-lbl">
-          <span>นิวตรอน (Neutrons)</span>
-          <span class="val" id="drw-lbl-n">6</span>
-        </div>
-        <input type="range" id="drw-range-n" min="0" max="22" value="6">
-      </div>
-      <div class="slider-row e">
-        <div class="slider-row-lbl">
-          <span>อิเล็กตรอน (Electrons)</span>
-          <span class="val" id="drw-lbl-e">6</span>
-        </div>
-        <input type="range" id="drw-range-e" min="0" max="18" value="6">
-      </div>
-    </div>
-
-    <!-- Quantum experiment buttons -->
-    <div style="display: flex; gap: 8px; margin-top: 10px;">
-      <button class="spawn-anchor-btn" id="btn-drw-absorb" style="background: rgba(245,158,11,0.25); color: #f59e0b; border: 1px solid var(--gold);">
-        ⚡ ดูดกลืนโฟตอน
-      </button>
-      <button class="spawn-anchor-btn" id="btn-drw-emit" style="background: rgba(56,189,248,0.2); color: var(--edu-blue); border: 1px solid var(--edu-blue);">
-        ✨ คายโฟตอน
-      </button>
-    </div>
-  </div>
-
-  <!-- Quiz Modal -->
-  <div id="quiz-modal">
-    <div class="quiz-container">
-      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; margin-bottom: 12px;">
-        <h2 style="font-family: var(--font-sci); font-size: 15px; color: var(--edu-blue);"><i class="fa-solid fa-graduation-cap"></i> แบบทดสอบ 5 แบบจำลองอะตอม</h2>
-        <span style="font-size: 10px; padding: 2px 8px; border-radius: 10px; background: rgba(245,158,11,0.2); color: var(--gold);" id="quiz-progress-txt">ข้อ 1 / 5</span>
-      </div>
-
-      <div id="quiz-question-txt" style="font-size: 14px; font-weight: 500; line-height: 1.5; margin-bottom: 10px;"></div>
-      <div class="quiz-options" id="quiz-options-box"></div>
-      <div class="quiz-feedback-box" id="quiz-feedback-box"></div>
-
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px;">
-        <span style="font-size: 12px; font-weight: 600;" id="quiz-score-txt">คะแนน: 0</span>
-        <div style="display: flex; gap: 6px;">
-          <button class="edu-nav-btn" id="btn-close-quiz" style="width: 34px; height: 34px;">&times;</button>
-          <button class="spawn-anchor-btn" id="btn-next-quiz" style="display: none; padding: 6px 14px; font-size: 12px;">ข้อถัดไป ➔</button>
-        </div>
-      </div>
-    </div>
-  </div>
+  <span id="ar-button-slot" style="display: none;"></span>
 
   <!-- ==========================================
        MAIN THREE.JS & INTERACTIVE LOGIC
@@ -1854,10 +1883,23 @@
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setClearColor(0x0b1120, 1.0); // Opaque classroom background by default
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.25;
       renderer.xr.enabled = true;
       container.appendChild(renderer.domElement);
+
+      // WebGL Context Lost & Restored Protection
+      renderer.domElement.addEventListener('webglcontextlost', (event) => {
+        event.preventDefault();
+        console.warn('WebGL Context Lost during transition. Awaiting restore...');
+      });
+
+      renderer.domElement.addEventListener('webglcontextrestored', () => {
+        console.log('WebGL Context Restored successfully.');
+        rebuildAtomModel();
+        onWindowResize();
+      });
 
       controls = new OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
@@ -1912,10 +1954,12 @@
 
     function setupWebXR() {
       const arSlot = document.getElementById('ar-button-slot');
+      const overlayRoot = document.getElementById('ar-ui-overlay');
       
+      // CRITICAL FIX: Pass overlayRoot instead of document.body so the WebGL canvas is NEVER inside the DOM overlay!
       nativeArButton = ARButton.createButton(renderer, {
         optionalFeatures: ['dom-overlay'],
-        domOverlay: { root: document.body }
+        domOverlay: { root: overlayRoot }
       });
 
       arSlot.appendChild(nativeArButton);
@@ -1936,6 +1980,8 @@
 
       renderer.xr.addEventListener('sessionstart', () => {
         state.isARMode = true;
+        // Make canvas transparent so AR camera feed passes through
+        renderer.setClearColor(0x000000, 0.0);
         backgroundStars.visible = false;
         controls.enabled = false;
 
@@ -1956,20 +2002,46 @@
 
       renderer.xr.addEventListener('sessionend', () => {
         state.isARMode = false;
-        backgroundStars.visible = true;
-        controls.enabled = true;
         
+        // 1. Immediately restore opaque classroom background color
+        renderer.setClearColor(0x0b1120, 1.0);
+        
+        // 2. Restore background stars
+        if (backgroundStars) backgroundStars.visible = true;
+
+        // 3. Reset camera transform and projection cleanly
+        camera.matrixAutoUpdate = true;
+        camera.position.set(0, 0.25, 1.25);
+        camera.quaternion.identity();
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+
+        // 4. Restore OrbitControls cleanly
+        if (controls) {
+          controls.enabled = true;
+          controls.target.set(0, 0, 0);
+          controls.update();
+        }
+        
+        // 5. Reset atom model transform to center
         atomRootGroup.position.set(0, 0, 0);
+        atomRootGroup.rotation.set(0, 0, 0);
         atomRootGroup.scale.setScalar(1.0);
         
+        // 6. Update top mode button label
         const modeBtn = document.getElementById('btn-toggle-ar-mode');
         if (modeBtn) {
           modeBtn.classList.remove('ar-active');
           modeBtn.innerHTML = '<i class="fa-solid fa-vr-cardboard"></i> <span>โหมด AR</span>';
         }
 
+        // 7. Force resize multiple times to adapt to Android navigation bar restoring
+        onWindowResize();
+        setTimeout(onWindowResize, 100);
+        setTimeout(onWindowResize, 300);
+
         haptic();
-        showToast('ออกจากโหมด AR กลับสู่โหมด 3D');
+        showToast('กลับสู่โหมดจำลอง 3 มิติ (Web 3D)');
       });
 
       // Controller interaction: Raycast for particle inspection ONLY!
@@ -2803,9 +2875,8 @@
     /* Launch WebXR AR Session safely */
     function launchARSession() {
       if (state.isARMode) {
-        // Exit AR session
         if (renderer.xr.getSession()) {
-          renderer.xr.getSession().end();
+          renderer.xr.getSession().end().catch(() => {});
         }
         return;
       }
@@ -2820,9 +2891,10 @@
       if (nativeBtn) {
         nativeBtn.click();
       } else {
+        const overlayRoot = document.getElementById('ar-ui-overlay');
         navigator.xr.requestSession('immersive-ar', {
           optionalFeatures: ['dom-overlay'],
-          domOverlay: { root: document.body }
+          domOverlay: { root: overlayRoot }
         }).then(session => {
           renderer.xr.setSession(session);
         }).catch(err => {
@@ -2980,10 +3052,13 @@
         }
       });
 
-      // 13. Top Bar Mode Switcher Button
+      // 13. Top Bar Mode Switcher Button (Clean AR to 3D and back)
       document.getElementById('btn-toggle-ar-mode').addEventListener('click', () => {
         if (state.isARMode) {
-          if (renderer.xr.getSession()) renderer.xr.getSession().end();
+          const session = renderer.xr.getSession();
+          if (session) {
+            session.end().catch(() => {});
+          }
         } else {
           launchARSession();
         }
@@ -3021,9 +3096,13 @@
     }
 
     function onWindowResize() {
-      camera.aspect = window.innerWidth / window.innerHeight;
+      if (!camera || !renderer) return;
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      if (w <= 0 || h <= 0) return;
+      camera.aspect = w / h;
       camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setSize(w, h, true);
     }
 
     /* ========================================================
