@@ -103,15 +103,26 @@
       height: 100%;
     }
 
-    /* AR UI Overlay Container (Used as domOverlay.root for WebXR) */
+    /* AR UI Overlay Container (Used specifically as domOverlay.root for WebXR) */
     #ar-ui-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 10;
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      pointer-events: none !important;
+      z-index: 1000 !important;
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+
+    #ar-ui-overlay:not(:xr-overlay) {
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
     }
 
     /* Glassmorphic Classroom Panels */
@@ -571,16 +582,18 @@
        4. TOP NAVIGATION BAR (Clean Educational Style - No Camera)
        ======================================================== */
     #top-nav {
-      position: absolute;
-      top: var(--safe-top);
-      left: var(--safe-left);
-      right: var(--safe-right);
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      pointer-events: none;
+      position: absolute !important;
+      top: var(--safe-top) !important;
+      left: var(--safe-left) !important;
+      right: var(--safe-right) !important;
+      z-index: 1100 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      gap: 8px !important;
+      pointer-events: none !important;
+      visibility: visible !important;
+      opacity: 1 !important;
     }
 
     .top-pill {
@@ -671,21 +684,47 @@
       color: #c4b5fd;
     }
 
+    /* Landscape Mode Suggestion Pill in Top Bar */
+    .top-orientation-btn {
+      display: none;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.5);
+      color: var(--gold);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.2);
+      transition: all 0.2s;
+      white-space: nowrap;
+      pointer-events: auto;
+    }
+    .top-orientation-btn:active {
+      transform: scale(0.92);
+      background: var(--gold);
+      color: #0b1120;
+    }
+
     /* ========================================================
        5. FLOATING CONTROLS BOTTOM (Designed for Mobile & AR)
        ======================================================== */
     #bottom-floating-controls {
-      position: absolute;
-      bottom: var(--safe-bottom);
-      left: var(--safe-left);
-      right: var(--safe-right);
-      max-width: 540px;
-      margin: 0 auto;
-      z-index: 100;
-      display: flex;
-      flex-direction: column;
-      gap: 7px;
-      pointer-events: none;
+      position: absolute !important;
+      bottom: var(--safe-bottom) !important;
+      left: var(--safe-left) !important;
+      right: var(--safe-right) !important;
+      max-width: 540px !important;
+      margin: 0 auto !important;
+      z-index: 1100 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 7px !important;
+      pointer-events: none !important;
+      visibility: visible !important;
+      opacity: 1 !important;
     }
 
     /* 1. Element Horizontal Scroll Strip */
@@ -1164,9 +1203,11 @@
     /* Clean View Mode */
     body.clean-view #top-nav,
     body.clean-view #bottom-floating-controls,
-    body.clean-view #subatomic-popover {
-      opacity: 0;
-      pointer-events: none;
+    body.clean-view #subatomic-popover,
+    body.clean-view #landscape-hint-banner {
+      display: none !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
     }
 
     #btn-exit-clean {
@@ -1183,12 +1224,261 @@
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 400;
+      z-index: 2500;
       box-shadow: 0 0 20px var(--edu-blue);
       cursor: pointer;
       pointer-events: auto;
     }
-    body.clean-view #btn-exit-clean { display: flex; }
+    body.clean-view #btn-exit-clean { display: flex !important; }
+
+    /* ========================================================
+       8. MOBILE LANDSCAPE RECOMMENDATION BANNER & GUIDANCE
+       ======================================================== */
+    #landscape-hint-banner {
+      position: absolute;
+      top: calc(var(--safe-top) + 54px);
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100vw - 24px);
+      max-width: 480px;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1.5px solid var(--gold);
+      border-radius: 18px;
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.65), 0 0 20px rgba(245, 158, 11, 0.25);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      z-index: 1200;
+      pointer-events: auto;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      animation: slideDownHint 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    #landscape-hint-banner.dismissed {
+      opacity: 0 !important;
+      pointer-events: none !important;
+      transform: translateX(-50%) translateY(-20px) !important;
+    }
+
+    @media (orientation: landscape) {
+      #landscape-hint-banner {
+        display: none !important;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      #landscape-hint-banner {
+        display: none !important;
+      }
+    }
+
+    @keyframes slideDownHint {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-15px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    }
+
+    .landscape-hint-left {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .landscape-icon-anim-wrap {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gold);
+      font-size: 19px;
+      flex-shrink: 0;
+      animation: phoneRotatePulse 2.5s infinite ease-in-out;
+    }
+
+    @keyframes phoneRotatePulse {
+      0% { transform: rotate(0deg); }
+      30% { transform: rotate(-90deg); }
+      70% { transform: rotate(-90deg); }
+      95% { transform: rotate(0deg); }
+      100% { transform: rotate(0deg); }
+    }
+
+    .landscape-hint-text {
+      font-size: 12px;
+      line-height: 1.4;
+      color: #fff;
+      min-width: 0;
+    }
+    .landscape-hint-text .title {
+      font-weight: 700;
+      color: #fde68a;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 2px;
+    }
+    .landscape-hint-text .desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: normal;
+    }
+
+    .btn-rotate-action-pill {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(217, 119, 6, 0.4));
+      border: 1px solid var(--gold);
+      color: #fff;
+      padding: 6px 11px;
+      border-radius: 14px;
+      font-family: var(--font-thai);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .btn-rotate-action-pill:active {
+      transform: scale(0.92);
+      background: var(--gold);
+      color: #0b1120;
+    }
+
+    .btn-dismiss-landscape {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-muted);
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    .btn-dismiss-landscape:active {
+      background: rgba(255, 255, 255, 0.25);
+      color: #fff;
+      transform: scale(0.92);
+    }
+
+    /* Mode Selection Modal Landscape Tip */
+    .mode-landscape-tip-banner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      border-radius: 14px;
+      padding: 10px 14px;
+      margin-bottom: 16px;
+      font-size: 12px;
+      line-height: 1.45;
+      color: #fde68a;
+      text-align: left;
+    }
+    .tip-icon-rotate {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: rgba(245, 158, 11, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gold);
+      font-size: 16px;
+      flex-shrink: 0;
+      animation: phoneRotatePulse 2.5s infinite ease-in-out;
+    }
+
+    /* Compact UI for Landscape Phones */
+    @media (orientation: landscape) and (max-height: 520px) {
+      .top-orientation-btn {
+        display: none !important;
+      }
+      #top-nav {
+        top: max(6px, env(safe-area-inset-top)) !important;
+      }
+      .top-pill {
+        padding: 4px 10px !important;
+      }
+      #bottom-floating-controls {
+        bottom: max(6px, env(safe-area-inset-bottom)) !important;
+        gap: 4px !important;
+        max-width: 620px !important;
+      }
+      .element-strip-scroll {
+        padding: 3px 6px !important;
+      }
+      .elem-strip-btn {
+        padding: 3px 8px !important;
+        font-size: 11px !important;
+      }
+      .models-strip-scroll {
+        padding: 3px 6px !important;
+      }
+      .model-chip-btn {
+        padding: 3px 9px !important;
+        font-size: 11px !important;
+      }
+      .mobile-action-bar {
+        padding: 4px 8px !important;
+      }
+      .spawn-anchor-btn {
+        padding: 6px 12px !important;
+        font-size: 11px !important;
+      }
+      #subatomic-popover {
+        bottom: auto !important;
+        top: calc(var(--safe-top) + 46px) !important;
+        right: var(--safe-right) !important;
+        left: auto !important;
+        transform: none !important;
+        max-width: 320px !important;
+      }
+      #subatomic-popover.active {
+        transform: none !important;
+      }
+    }
+
+    /* Mobile portrait compact top navigation */
+    @media (max-width: 600px) {
+      .top-pill {
+        padding: 5px 10px;
+        gap: 6px;
+      }
+      .top-pill .brand-title {
+        font-size: 11px;
+      }
+      .edu-nav-btn {
+        width: 34px;
+        height: 34px;
+        font-size: 13px;
+      }
+      .top-mode-switcher {
+        padding: 5px 10px;
+        font-size: 10px;
+      }
+    }
   </style>
 
   <!-- Import maps polyfill & Three.js Modules -->
@@ -1211,6 +1501,29 @@
 
     <!-- Toast Notification -->
     <div id="toast-msg">แจ้งเตือน</div>
+
+    <!-- Mobile Landscape Orientation Recommendation Banner -->
+    <div id="landscape-hint-banner">
+      <div class="landscape-hint-left">
+        <div class="landscape-icon-anim-wrap">
+          <i class="fa-solid fa-mobile-screen-button"></i>
+        </div>
+        <div class="landscape-hint-text">
+          <div class="title">
+            <span>💡 แนะนำหมุนหน้าจอแนวนอน</span>
+          </div>
+          <div class="desc">
+            หมุนเป็น <strong>แนวนอน (Landscape)</strong> เพื่อมุมมอง 3D & ห้องเรียน AR ที่กว้างขวางชัดเจนที่สุด
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+        <button id="btn-lock-landscape-action" class="btn-rotate-action-pill" title="หมุนหน้าจอ">
+          <i class="fa-solid fa-rotate"></i> <span>หมุนจอ</span>
+        </button>
+        <button id="btn-dismiss-landscape-hint" class="btn-dismiss-landscape" title="ปิดคำแนะนำ">&times;</button>
+      </div>
+    </div>
 
     <!-- Exit Clean View Floating Button -->
     <button id="btn-exit-clean" title="แสดงแถบเครื่องมือ">
@@ -1279,6 +1592,16 @@
           <p>กรุณาเลือกรูปแบบที่เหมาะสมกับอุปกรณ์และสภาพแวดล้อมของคุณ</p>
         </div>
 
+        <!-- Educational Mobile Landscape Tip -->
+        <div class="mode-landscape-tip-banner">
+          <div class="tip-icon-rotate">
+            <i class="fa-solid fa-mobile-screen-button"></i>
+          </div>
+          <div class="tip-text">
+            <strong>💡 แนะนำสำหรับสมาร์ตโฟน:</strong> ใช้งานใน <strong>แนวนอน (Landscape)</strong> เพื่อมุมมองแบบจำลอง 3 มิติ และห้องเรียน AR ที่กว้างขวางสมบูรณ์ที่สุด
+          </div>
+        </div>
+
         <div class="mode-cards-grid">
           <!-- Mode 1: Web 3D Preview -->
           <div class="mode-choice-card" id="card-mode-3d">
@@ -1297,7 +1620,7 @@
 
           <!-- Mode 2: AR Mode -->
           <div class="mode-choice-card featured" id="card-mode-ar">
-            <span class="mode-card-badge" id="badge-ar-status">📱 แนะนำสำหรับมือถือ</span>
+            <span class="mode-card-badge" id="badge-ar-status">📱 แนะนำสำหรับมือถือ (แนวนอน)</span>
             <div class="mode-choice-icon icon-ar">
               <i class="fa-solid fa-vr-cardboard"></i>
             </div>
@@ -1347,6 +1670,12 @@
       </div>
 
       <div class="top-nav-actions">
+        <!-- Landscape Mode Suggestion Button (Visible on mobile portrait) -->
+        <button class="top-orientation-btn" id="btn-top-orientation-hint" title="แนะนำใช้งานแนวนอน">
+          <i class="fa-solid fa-rotate"></i>
+          <span>แนวนอน</span>
+        </button>
+
         <!-- Mode Switcher Button (Switch between 3D and AR anytime) -->
         <button class="top-mode-switcher" id="btn-toggle-ar-mode" title="สลับโหมด 3D / AR">
           <i class="fa-solid fa-vr-cardboard"></i>
@@ -1952,6 +2281,68 @@
       renderer.setAnimationLoop(animate);
     }
 
+    /* CRITICAL UI RESTORATION FUNCTION
+       Ensures that when WebXR DOM Overlay tears down, all 2D UI elements
+       are re-attached if detached, unhidden, and restored with 100% reliability. */
+    function restoreUIOverlay() {
+      const overlay = document.getElementById('ar-ui-overlay');
+      if (overlay) {
+        // 1. If detached by Chromium WebXR DOM overlay teardown, re-insert to body
+        if (!document.body.contains(overlay)) {
+          document.body.appendChild(overlay);
+        }
+        
+        // 2. Remove any inline attributes Chromium might have set
+        overlay.removeAttribute('hidden');
+        overlay.removeAttribute('aria-hidden');
+        overlay.removeAttribute('style');
+
+        // 3. Set explicit styles with fallback
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0px';
+        overlay.style.left = '0px';
+        overlay.style.width = '100vw';
+        overlay.style.height = '100vh';
+        overlay.style.zIndex = '1000';
+        overlay.style.pointerEvents = 'none';
+        overlay.style.display = 'block';
+        overlay.style.visibility = 'visible';
+        overlay.style.opacity = '1';
+      }
+
+      const topNav = document.getElementById('top-nav');
+      if (topNav) {
+        topNav.removeAttribute('hidden');
+        topNav.removeAttribute('style');
+        topNav.style.display = 'flex';
+        topNav.style.visibility = 'visible';
+        topNav.style.opacity = '1';
+        topNav.style.pointerEvents = 'none';
+      }
+
+      const btmCtrl = document.getElementById('bottom-floating-controls');
+      if (btmCtrl) {
+        btmCtrl.removeAttribute('hidden');
+        btmCtrl.removeAttribute('style');
+        btmCtrl.style.display = 'flex';
+        btmCtrl.style.visibility = 'visible';
+        btmCtrl.style.opacity = '1';
+        btmCtrl.style.pointerEvents = 'none';
+      }
+
+      // Ensure body clean-view class is removed
+      document.body.classList.remove('clean-view');
+
+      // Trigger orientation check
+      if (typeof checkOrientationFn === 'function') {
+        checkOrientationFn();
+      }
+
+      // Force layout recalculation and resize
+      if (overlay) void overlay.offsetHeight;
+      onWindowResize();
+    }
+
     function setupWebXR() {
       const arSlot = document.getElementById('ar-button-slot');
       const overlayRoot = document.getElementById('ar-ui-overlay');
@@ -1980,6 +2371,20 @@
 
       renderer.xr.addEventListener('sessionstart', () => {
         state.isARMode = true;
+
+        // Listen for session end event directly on XRSession object
+        const session = renderer.xr.getSession();
+        if (session) {
+          session.addEventListener('end', () => {
+            restoreUIOverlay();
+            requestAnimationFrame(restoreUIOverlay);
+            setTimeout(restoreUIOverlay, 50);
+            setTimeout(restoreUIOverlay, 150);
+            setTimeout(restoreUIOverlay, 350);
+            setTimeout(restoreUIOverlay, 600);
+          });
+        }
+
         // Make canvas transparent so AR camera feed passes through
         renderer.setClearColor(0x000000, 0.0);
         backgroundStars.visible = false;
@@ -1990,11 +2395,14 @@
         
         // Update top mode button label
         const modeBtn = document.getElementById('btn-toggle-ar-mode');
-        const modeLbl = document.getElementById('txt-mode-switch-lbl');
-        if (modeBtn && modeLbl) {
+        if (modeBtn) {
           modeBtn.classList.add('ar-active');
           modeBtn.innerHTML = '<i class="fa-solid fa-desktop"></i> <span>โหมด 3D</span>';
         }
+
+        // Hide landscape hint banner during AR
+        const hintBanner = document.getElementById('landscape-hint-banner');
+        if (hintBanner) hintBanner.style.display = 'none';
 
         haptic();
         showToast('เข้าสู่โหมด AR แล้ว — แตะเม็ดอนุภาคเพื่อดูคำอธิบาย');
@@ -2035,10 +2443,13 @@
           modeBtn.innerHTML = '<i class="fa-solid fa-vr-cardboard"></i> <span>โหมด AR</span>';
         }
 
-        // 7. Force resize multiple times to adapt to Android navigation bar restoring
-        onWindowResize();
-        setTimeout(onWindowResize, 100);
-        setTimeout(onWindowResize, 300);
+        // 7. CRITICAL RESTORATION: Explicitly restore UI Overlay from WebXR DOM Overlay teardown
+        restoreUIOverlay();
+        requestAnimationFrame(restoreUIOverlay);
+        setTimeout(restoreUIOverlay, 50);
+        setTimeout(restoreUIOverlay, 150);
+        setTimeout(restoreUIOverlay, 350);
+        setTimeout(restoreUIOverlay, 600);
 
         haptic();
         showToast('กลับสู่โหมดจำลอง 3 มิติ (Web 3D)');
@@ -3057,7 +3468,13 @@
         if (state.isARMode) {
           const session = renderer.xr.getSession();
           if (session) {
-            session.end().catch(() => {});
+            session.end().then(() => {
+              restoreUIOverlay();
+            }).catch(() => {
+              restoreUIOverlay();
+            });
+          } else {
+            restoreUIOverlay();
           }
         } else {
           launchARSession();
@@ -3247,11 +3664,102 @@
       }
     }
 
+    /* ========================================================
+       9. MOBILE LANDSCAPE ORIENTATION GUIDANCE
+       ======================================================== */
+    let checkOrientationFn = null;
+
+    function initOrientationHint() {
+      const hintBanner = document.getElementById('landscape-hint-banner');
+      const dismissBtn = document.getElementById('btn-dismiss-landscape-hint');
+      const rotateActionBtn = document.getElementById('btn-lock-landscape-action');
+      const topHintBtn = document.getElementById('btn-top-orientation-hint');
+
+      let userDismissed = false;
+
+      function checkOrientation() {
+        const isPortrait = window.innerHeight > window.innerWidth;
+        const isMobile = window.innerWidth <= 900 || window.innerHeight <= 900;
+
+        if (hintBanner) {
+          if (isPortrait && isMobile && !userDismissed && !state.isARMode) {
+            hintBanner.classList.remove('dismissed');
+            hintBanner.style.display = 'flex';
+          } else {
+            hintBanner.classList.add('dismissed');
+            hintBanner.style.display = 'none';
+          }
+        }
+
+        if (topHintBtn) {
+          if (isPortrait && isMobile && !state.isARMode) {
+            topHintBtn.style.display = 'inline-flex';
+          } else {
+            topHintBtn.style.display = 'none';
+          }
+        }
+      }
+
+      checkOrientationFn = checkOrientation;
+
+      if (dismissBtn) {
+        dismissBtn.addEventListener('click', () => {
+          userDismissed = true;
+          if (hintBanner) {
+            hintBanner.classList.add('dismissed');
+            setTimeout(() => {
+              hintBanner.style.display = 'none';
+            }, 300);
+          }
+          sound.playSelect();
+          haptic();
+        });
+      }
+
+      if (rotateActionBtn) {
+        rotateActionBtn.addEventListener('click', () => {
+          tryLockLandscape();
+          haptic();
+        });
+      }
+
+      if (topHintBtn) {
+        topHintBtn.addEventListener('click', () => {
+          tryLockLandscape();
+          haptic();
+        });
+      }
+
+      window.addEventListener('resize', checkOrientation);
+      window.addEventListener('orientationchange', () => {
+        setTimeout(checkOrientation, 150);
+        setTimeout(checkOrientation, 400);
+      });
+
+      checkOrientation();
+    }
+
+    function tryLockLandscape() {
+      if (screen.orientation && screen.orientation.lock) {
+        if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
+          document.documentElement.requestFullscreen().then(() => {
+            screen.orientation.lock('landscape').catch(() => {});
+          }).catch(() => {
+            screen.orientation.lock('landscape').catch(() => {});
+          });
+        } else {
+          screen.orientation.lock('landscape').catch(() => {});
+        }
+      }
+      showToast('🔄 แนะนำหมุนหน้าจอแนวนอน เพื่อมุมมอง 3D & AR ที่ดีที่สุด');
+    }
+
     /* Entry Point */
     window.addEventListener('DOMContentLoaded', () => {
       init3D();
       populateElementStrip();
       bindUIEvents();
+      initOrientationHint();
       runLoadingSequence();
     });
 
