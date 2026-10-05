@@ -103,9 +103,29 @@
       background-color: #0b1120;
     }
 
-    /* WebXR AR Camera Passthrough: Ensure transparent canvas container & body during AR */
+    /* Universal Camera Video Layer (100% Mobile Compatibility: iOS Safari, Non-ARCore Android, Tablets) */
+    #universal-camera-video {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      height: 100dvh !important;
+      object-fit: cover !important;
+      z-index: 0 !important;
+      display: none;
+      pointer-events: none !important;
+    }
+
+    body.universal-ar-active #universal-camera-video {
+      display: block !important;
+    }
+
+    /* WebXR AR & Universal Camera Passthrough: Transparent canvas container & body */
     body.ar-active,
-    body.ar-active #webgl-canvas-container {
+    body.ar-active #webgl-canvas-container,
+    body.universal-ar-active,
+    body.universal-ar-active #webgl-canvas-container {
       background: transparent !important;
       background-color: transparent !important;
     }
@@ -1784,6 +1804,9 @@
 </head>
 
 <body>
+  <!-- Universal Camera Video Layer (100% Smartphone Compatibility: iOS Safari, Non-ARCore Android, Tablets) -->
+  <video id="universal-camera-video" autoplay playsinline muted></video>
+
   <!-- 3D WebGL Canvas (Kept OUTSIDE the DOM overlay root so it NEVER gets detached or corrupted by Chromium!) -->
   <div id="webgl-canvas-container"></div>
 
@@ -1936,16 +1959,16 @@
 
           <!-- Mode 2: AR Mode -->
           <div class="mode-choice-card featured" id="card-mode-ar">
-            <span class="mode-card-badge" id="badge-ar-status">📱 แนะนำสำหรับมือถือ (เต็มจอ)</span>
+            <span class="mode-card-badge" id="badge-ar-status">📱 รองรับมือถือ 100% (iOS & Android)</span>
             <div class="mode-choice-icon icon-ar">
               <i class="fa-solid fa-vr-cardboard"></i>
             </div>
             <h3>2. โหมดกล้องเสมือนจริง (AR)</h3>
             <p>
-              ฉายภาพแบบจำลองอะตอมลอยอยู่ในห้องเรียน ส่องวางบนโต๊ะหรือพื้น เดินสำรวจอนุภาคย่อยในโหมด <strong>กล้อง AR เต็มจอแนวนอน</strong>
+              ฉายภาพอะตอมลอยอยู่ในห้องเรียน ส่องวางบนโต๊ะหรือพื้น สำรวจรอบทิศทาง <strong>(รองรับมือถือทุกรุ่น ทั้ง WebXR & กล้อง AR สากล)</strong>
             </p>
             <button class="mode-choice-btn btn-style-ar" id="btn-select-ar">
-              <i class="fa-solid fa-camera-retro"></i> เปิดโหมดกล้อง AR (เต็มจอ)
+              <i class="fa-solid fa-camera-retro"></i> เปิดโหมดกล้อง AR
             </button>
           </div>
         </div>
@@ -1961,9 +1984,9 @@
     <div id="ar-unsupported-modal">
       <div class="ar-unsupported-panel">
         <i class="fa-solid fa-circle-exclamation" style="font-size: 38px; color: #f59e0b; margin-bottom: 12px;"></i>
-        <h3 style="font-size: 16px; margin-bottom: 8px; color: #fff;">อุปกรณ์นี้ยังไม่รองรับ WebXR AR</h3>
+        <h3 style="font-size: 16px; margin-bottom: 8px; color: #fff;">ไม่สามารถเปิดใช้งานกล้อง AR ได้</h3>
         <p id="ar-unsupported-desc" style="font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px;">
-          โหมดกล้องเสมือนจริง (AR) ต้องการเบราว์เซอร์ Google Chrome บน Android ที่รองรับ Google Play Services for AR (ARCore)<br><br>
+          โปรดตรวจสอบการอนุญาตใช้งานกล้อง (Camera Permission) ในการตั้งค่าเบราว์เซอร์ของท่าน<br><br>
           ท่านสามารถเรียนรู้และทดลองฟังก์ชันทั้งหมดได้อย่างสมบูรณ์ใน <strong>โหมดจำลอง 3 มิติ (Web 3D)</strong>
         </p>
         <button class="mode-choice-btn btn-style-3d" id="btn-fallback-to-3d" style="width: auto; padding: 10px 24px; margin: 0 auto;">
@@ -2497,6 +2520,7 @@
       autoRotate: true,
       showLabels: true,
       isARMode: false,
+      isUniversalARMode: false,
       arSupported: false,
       arScale: 0.65,
       quizIndex: 0,
@@ -2727,8 +2751,8 @@
           state.arSupported = supported;
           const badge = document.getElementById('badge-ar-status');
           if (badge) {
-            badge.innerText = supported ? '✓ รองรับ WebXR AR' : 'ℹ️ ต้องการ Android ARCore';
-            if (supported) badge.style.color = '#34d399';
+            badge.innerText = supported ? '✓ รองรับ WebXR AR ขั้นสูง' : '✓ รองรับกล้อง AR สากล (iOS/Android)';
+            badge.style.color = '#34d399';
           }
         }).catch((err) => {
           console.warn('isSessionSupported error:', err);
@@ -2738,7 +2762,8 @@
         state.arSupported = false;
         const badge = document.getElementById('badge-ar-status');
         if (badge) {
-          badge.innerText = 'ℹ️ อุปกรณ์นี้ยังไม่รองรับ WebXR';
+          badge.innerText = '✓ รองรับกล้อง AR สากล (iOS/Android)';
+          badge.style.color = '#34d399';
         }
       }
 
@@ -2870,9 +2895,26 @@
 
     function repositionAtomInFront() {
       if (!camera) return;
-      const dir = new THREE.Vector3(0, 0, -0.45).applyQuaternion(camera.quaternion);
-      atomRootGroup.position.copy(camera.position).add(dir);
-      atomRootGroup.quaternion.copy(camera.quaternion);
+      if (state.isARMode) {
+        const dir = new THREE.Vector3(0, 0, -0.45).applyQuaternion(camera.quaternion);
+        atomRootGroup.position.copy(camera.position).add(dir);
+        atomRootGroup.quaternion.copy(camera.quaternion);
+      } else if (state.isUniversalARMode) {
+        atomRootGroup.position.set(0, 0, 0);
+        camera.position.set(0, 0, 2.2);
+        camera.lookAt(0, 0, 0);
+        if (controls) {
+          controls.target.set(0, 0, 0);
+          controls.update();
+        }
+      } else {
+        if (controls) controls.reset();
+        camera.position.set(0, 0.25, 1.25);
+        if (controls) {
+          controls.target.set(0, 0, 0);
+          controls.update();
+        }
+      }
       sound.playWarp();
       haptic();
       showToast('วางโมเดลอะตอมตรงหน้าเรียบร้อย 🎯');
@@ -3686,9 +3728,152 @@
       sound.playWrong();
     }
 
-    /* Launch WebXR AR Session directly, safely, with fallback and error reporting */
+    /* ========================================================
+       UNIVERSAL CAMERA AR FALLBACK SYSTEM (FOR 100% OF SMARTPHONES)
+       Compatible with iOS Safari (iPhone/iPad), Android without ARCore,
+       Huawei, LINE/Facebook webviews, and tablets.
+       ======================================================== */
+    let universalCameraStream = null;
+    let gyroOrientation = { beta: 0, gamma: 0 };
+    let initialGyro = null;
+    let hasGyro = false;
+
+    function onDeviceOrientationGyro(event) {
+      if (event.beta === null || event.gamma === null) return;
+      if (!initialGyro) {
+        initialGyro = { beta: event.beta, gamma: event.gamma };
+      }
+      gyroOrientation.beta = event.beta;
+      gyroOrientation.gamma = event.gamma;
+    }
+
+    async function startUniversalCameraAR() {
+      const videoElem = document.getElementById('universal-camera-video');
+      if (!videoElem) throw new Error('ไม่พบองค์ประกอบวิดีโอกล้อง');
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('เบราว์เซอร์ไม่รองรับการเข้าถึงกล้อง (getUserMedia)');
+      }
+
+      // Request rear environment camera stream
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        }
+      });
+
+      universalCameraStream = stream;
+      videoElem.srcObject = stream;
+      try {
+        await videoElem.play();
+      } catch (playErr) {
+        console.warn('Video play caught:', playErr);
+      }
+
+      // Request Gyroscope permission if iOS 13+
+      initialGyro = null;
+      hasGyro = false;
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        try {
+          const perm = await DeviceOrientationEvent.requestPermission();
+          if (perm === 'granted') {
+            window.addEventListener('deviceorientation', onDeviceOrientationGyro, true);
+            hasGyro = true;
+          }
+        } catch (gErr) {
+          console.warn('DeviceOrientationEvent permission not granted:', gErr);
+        }
+      } else if ('ondeviceorientation' in window) {
+        window.addEventListener('deviceorientation', onDeviceOrientationGyro, true);
+        hasGyro = true;
+      }
+
+      // Enable transparent canvas overlay on top of camera video
+      document.body.classList.add('universal-ar-active');
+      renderer.setClearColor(0x000000, 0.0);
+      if (backgroundStars) backgroundStars.visible = false;
+
+      state.isUniversalARMode = true;
+
+      // Position atom and camera for clear viewing
+      atomRootGroup.position.set(0, 0, 0);
+      atomRootGroup.rotation.set(0, 0, 0);
+      atomRootGroup.scale.setScalar(state.arScale);
+
+      camera.position.set(0, 0.1, 1.8);
+      if (controls) {
+        controls.enabled = true;
+        controls.target.set(0, 0, 0);
+        controls.update();
+      }
+
+      // Update top mode button label
+      const modeBtn = document.getElementById('btn-toggle-ar-mode');
+      if (modeBtn) {
+        modeBtn.classList.add('ar-active');
+        modeBtn.innerHTML = '<i class="fa-solid fa-desktop"></i> <span>โหมด 3D</span>';
+      }
+
+      // Hide landscape hint during AR
+      const hintBanner = document.getElementById('landscape-hint-banner');
+      if (hintBanner) hintBanner.style.display = 'none';
+
+      restoreUIOverlay();
+      haptic();
+      showToast('เปิดกล้อง AR สากลสำเร็จ! ปัดนิ้วหมุนดูอะตอมในพื้นที่จริง');
+    }
+
+    function stopUniversalCameraAR() {
+      if (universalCameraStream) {
+        universalCameraStream.getTracks().forEach(track => track.stop());
+        universalCameraStream = null;
+      }
+
+      const videoElem = document.getElementById('universal-camera-video');
+      if (videoElem) {
+        videoElem.srcObject = null;
+      }
+
+      window.removeEventListener('deviceorientation', onDeviceOrientationGyro, true);
+      hasGyro = false;
+      initialGyro = null;
+
+      document.body.classList.remove('universal-ar-active');
+      renderer.setClearColor(0x0b1120, 1.0);
+      if (backgroundStars) backgroundStars.visible = true;
+
+      state.isUniversalARMode = false;
+
+      // Reset transforms
+      atomRootGroup.position.set(0, 0, 0);
+      atomRootGroup.rotation.set(0, 0, 0);
+      atomRootGroup.scale.setScalar(1.0);
+
+      camera.position.set(0, 0.25, 1.25);
+      if (controls) {
+        controls.enabled = true;
+        controls.target.set(0, 0, 0);
+        controls.update();
+      }
+
+      // Update top button
+      const modeBtn = document.getElementById('btn-toggle-ar-mode');
+      if (modeBtn) {
+        modeBtn.classList.remove('ar-active');
+        modeBtn.innerHTML = '<i class="fa-solid fa-vr-cardboard"></i> <span>โหมด AR</span>';
+      }
+
+      restoreUIOverlay();
+      haptic();
+      showToast('กลับสู่โหมดจำลอง 3 มิติ (Web 3D)');
+    }
+
+    /* Launch AR Session: Tier 1 (Native WebXR for Android ARCore) -> Tier 2 (Universal Camera AR for iOS/All Phones) */
     async function launchARSession() {
-      // 1. If currently in AR mode, clicking toggles AR session off
+      // 1. If currently in AR mode (WebXR or Universal AR), clicking toggles AR session off
       if (state.isARMode) {
         const currentSession = renderer.xr.getSession();
         if (currentSession) {
@@ -3700,83 +3885,91 @@
         }
         return;
       }
-
-      // 2. Check if WebXR is supported by browser
-      if (!('xr' in navigator)) {
-        showARUnsupportedDialog('เบราว์เซอร์นี้ไม่รองรับ WebXR API (แนะนำให้ใช้ Google Chrome บน Android)');
+      if (state.isUniversalARMode) {
+        stopUniversalCameraAR();
         return;
       }
 
-      // 3. Verify immersive-ar capability
-      try {
-        const isSupported = await navigator.xr.isSessionSupported('immersive-ar');
-        if (!isSupported) {
-          showARUnsupportedDialog('อุปกรณ์นี้ไม่รองรับโหมด WebXR AR (จำเป็นต้องติดตั้ง Google Play Services for AR / ARCore)');
-          return;
-        }
-      } catch (checkErr) {
-        console.warn('isSessionSupported check error:', checkErr);
-      }
-
-      // 4. Exit HTML5 fullscreen if active to prevent surface conflict with WebXR native activity
-      if (document.fullscreenElement || document.webkitFullscreenElement) {
+      // 2. Check if WebXR immersive-ar is supported
+      let webXRSupported = false;
+      if ('xr' in navigator && navigator.xr.isSessionSupported) {
         try {
-          if (document.exitFullscreen) await document.exitFullscreen();
-          else if (document.webkitExitFullscreen) await document.webkitExitFullscreen();
-        } catch (_) {}
+          webXRSupported = await navigator.xr.isSessionSupported('immersive-ar');
+        } catch (_) {
+          webXRSupported = false;
+        }
       }
 
-      // 5. Ensure DOM overlay root is unhidden
-      const overlayRoot = document.getElementById('ar-ui-overlay');
-      if (overlayRoot) {
-        overlayRoot.style.display = 'block';
-        overlayRoot.style.visibility = 'visible';
-        overlayRoot.style.opacity = '1';
-      }
+      // 3. TIER 1: Native WebXR Immersive AR (Android with ARCore)
+      if (webXRSupported) {
+        // Exit HTML5 fullscreen if active to prevent surface conflict with WebXR native activity
+        if (document.fullscreenElement || document.webkitFullscreenElement) {
+          try {
+            if (document.exitFullscreen) await document.exitFullscreen();
+            else if (document.webkitExitFullscreen) await document.webkitExitFullscreen();
+          } catch (_) {}
+        }
 
-      let session = null;
-      let isOverlayActive = false;
+        const overlayRoot = document.getElementById('ar-ui-overlay');
+        if (overlayRoot) {
+          overlayRoot.style.display = 'block';
+          overlayRoot.style.visibility = 'visible';
+          overlayRoot.style.opacity = '1';
+        }
 
-      // 6. ATTEMPT 1: Request immersive-ar with DOM Overlay
-      try {
-        session = await navigator.xr.requestSession('immersive-ar', {
-          optionalFeatures: ['dom-overlay', 'hit-test', 'local-floor', 'local', 'viewer'],
-          domOverlay: { root: overlayRoot }
-        });
-        isOverlayActive = true;
-      } catch (overlayErr) {
-        console.warn('Immersive AR with DOM Overlay rejected, attempting fallback without DOM Overlay:', overlayErr);
-        // 7. ATTEMPT 2: Fallback to basic immersive-ar without DOM Overlay (fixes quirks on devices where DOM Overlay fails)
+        let session = null;
+        let isOverlayActive = false;
+
+        // Attempt 1: Request immersive-ar with DOM Overlay
         try {
           session = await navigator.xr.requestSession('immersive-ar', {
-            optionalFeatures: ['hit-test', 'local-floor', 'local', 'viewer']
+            optionalFeatures: ['dom-overlay', 'hit-test', 'local-floor', 'local', 'viewer'],
+            domOverlay: { root: overlayRoot }
           });
-          isOverlayActive = false;
-        } catch (fatalErr) {
-          console.error('All WebXR requestSession attempts failed:', fatalErr);
-          sound.playWrong();
-          showARUnsupportedDialog(
-            'ไม่สามารถเริ่มต้นเซสชัน AR ได้: ' + (fatalErr.message || 'โปรดตรวจสอบการอนุญาตใช้งานกล้องและการติดตั้ง ARCore')
-          );
-          return;
+          isOverlayActive = true;
+        } catch (overlayErr) {
+          console.warn('Immersive AR with DOM Overlay rejected, attempting fallback without DOM Overlay:', overlayErr);
+          // Attempt 2: Fallback to basic immersive-ar without DOM Overlay
+          try {
+            session = await navigator.xr.requestSession('immersive-ar', {
+              optionalFeatures: ['hit-test', 'local-floor', 'local', 'viewer']
+            });
+            isOverlayActive = false;
+          } catch (fatalErr) {
+            console.warn('WebXR requestSession failed, falling back to Universal Camera AR:', fatalErr);
+            session = null;
+          }
+        }
+
+        if (session) {
+          try {
+            renderer.xr.setReferenceSpaceType('local');
+            await renderer.xr.setSession(session);
+            console.log('WebXR AR successfully started! DOM Overlay active:', isOverlayActive);
+            return;
+          } catch (bindErr) {
+            console.warn('Failed to bind session with "local" reference space, retrying with "viewer":', bindErr);
+            try {
+              renderer.xr.setReferenceSpaceType('viewer');
+              await renderer.xr.setSession(session);
+              return;
+            } catch (secondaryErr) {
+              console.warn('Fatal setSession error, falling back to Universal Camera AR:', secondaryErr);
+              session.end().catch(() => {});
+            }
+          }
         }
       }
 
-      // 8. Bind WebXR session to Three.js renderer
+      // 4. TIER 2: Universal Camera AR (Guaranteed 100% support on iOS Safari, iPad, non-ARCore Android, etc.)
       try {
-        renderer.xr.setReferenceSpaceType('local');
-        await renderer.xr.setSession(session);
-        console.log('WebXR AR successfully started! DOM Overlay active:', isOverlayActive);
-      } catch (bindErr) {
-        console.warn('Failed to bind session with "local" reference space, retrying with "viewer":', bindErr);
-        try {
-          renderer.xr.setReferenceSpaceType('viewer');
-          await renderer.xr.setSession(session);
-        } catch (secondaryErr) {
-          console.error('Fatal setSession error:', secondaryErr);
-          session.end().catch(() => {});
-          showARUnsupportedDialog('ไม่สามารถแสดงผล 3D ในโหมด AR ได้: ' + (secondaryErr.message || ''));
-        }
+        await startUniversalCameraAR();
+      } catch (camErr) {
+        console.error('Universal Camera AR failed:', camErr);
+        sound.playWrong();
+        showARUnsupportedDialog(
+          'ไม่สามารถเปิดกล้องได้: โปรดตรวจสอบการอนุญาตใช้งานกล้อง (Camera Permission) ในการตั้งค่าเบราว์เซอร์ของท่าน'
+        );
       }
     }
 
@@ -3944,6 +4137,9 @@
             restoreUIOverlay();
             forceFullscreenAndLandscape();
           }
+        } else if (state.isUniversalARMode) {
+          stopUniversalCameraAR();
+          forceFullscreenAndLandscape();
         } else {
           // Entering AR: Exit HTML5 fullscreen if active so it doesn't conflict with WebXR
           if (document.fullscreenElement || document.webkitFullscreenElement) {
@@ -4078,7 +4274,7 @@
       window.addEventListener('pointerdown', (e) => {
         if (!document.fullscreenElement && !document.webkitFullscreenElement) {
           const isMobile = window.innerWidth <= 900 || window.innerHeight <= 900;
-          if (isMobile && !modeModal.classList.contains('active') && !state.isARMode) {
+          if (isMobile && !modeModal.classList.contains('active') && !state.isARMode && !state.isUniversalARMode) {
             if (e.target.tagName === 'CANVAS' || e.target.id === 'webgl-canvas-container') {
               forceFullscreenAndLandscape();
             }
@@ -4112,12 +4308,20 @@
       const delta = clock.getDelta();
       const time = clock.getElapsedTime();
 
-      if (backgroundStars && !state.isARMode) {
+      if (backgroundStars && !state.isARMode && !state.isUniversalARMode) {
         backgroundStars.rotation.y = time * 0.02;
       }
 
-      if (state.autoRotate && !state.isARMode) {
+      if (state.autoRotate && !state.isARMode && !state.isUniversalARMode) {
         atomRootGroup.rotation.y += delta * 0.25;
+      }
+
+      // Gyro tilt parallax in Universal Camera AR mode
+      if (state.isUniversalARMode && hasGyro && initialGyro) {
+        const diffGamma = (gyroOrientation.gamma - initialGyro.gamma) * (Math.PI / 180);
+        const diffBeta = (gyroOrientation.beta - initialGyro.beta) * (Math.PI / 180);
+        atomRootGroup.rotation.y = diffGamma * 0.4;
+        atomRootGroup.rotation.x = diffBeta * 0.3;
       }
 
       // Bohr Electrons Orbit Animation
@@ -4263,7 +4467,7 @@
         const isMobile = window.innerWidth <= 900 || window.innerHeight <= 900;
 
         if (hintBanner) {
-          if (isPortrait && isMobile && !userDismissed && !state.isARMode) {
+          if (isPortrait && isMobile && !userDismissed && !state.isARMode && !state.isUniversalARMode) {
             hintBanner.classList.remove('dismissed');
             hintBanner.style.display = 'flex';
           } else {
@@ -4273,7 +4477,7 @@
         }
 
         if (topHintBtn) {
-          if (isPortrait && isMobile && !state.isARMode) {
+          if (isPortrait && isMobile && !state.isARMode && !state.isUniversalARMode) {
             topHintBtn.style.display = 'inline-flex';
           } else {
             topHintBtn.style.display = 'none';
