@@ -103,6 +103,13 @@
       background-color: #0b1120;
     }
 
+    /* WebXR AR Camera Passthrough: Ensure transparent canvas container & body during AR */
+    body.ar-active,
+    body.ar-active #webgl-canvas-container {
+      background: transparent !important;
+      background-color: transparent !important;
+    }
+
     #webgl-canvas-container canvas {
       display: block;
       width: 100%;
@@ -1955,7 +1962,7 @@
       <div class="ar-unsupported-panel">
         <i class="fa-solid fa-circle-exclamation" style="font-size: 38px; color: #f59e0b; margin-bottom: 12px;"></i>
         <h3 style="font-size: 16px; margin-bottom: 8px; color: #fff;">อุปกรณ์นี้ยังไม่รองรับ WebXR AR</h3>
-        <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px;">
+        <p id="ar-unsupported-desc" style="font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px;">
           โหมดกล้องเสมือนจริง (AR) ต้องการเบราว์เซอร์ Google Chrome บน Android ที่รองรับ Google Play Services for AR (ARCore)<br><br>
           ท่านสามารถเรียนรู้และทดลองฟังก์ชันทั้งหมดได้อย่างสมบูรณ์ใน <strong>โหมดจำลอง 3 มิติ (Web 3D)</strong>
         </p>
@@ -2222,15 +2229,11 @@
 
   </div> <!-- End #ar-ui-overlay -->
 
-  <!-- Container for WebXR AR Button (hidden, programmatically triggered) -->
-  <span id="ar-button-slot" style="display: none;"></span>
-
   <!-- ==========================================
        MAIN THREE.JS & INTERACTIVE LOGIC
        ========================================== -->
   <script type="module">
     import * as THREE from 'three';
-    import { ARButton } from 'three/addons/webxr/ARButton.js';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
     /* ========================================================
@@ -2515,7 +2518,6 @@
     const container = document.getElementById('webgl-canvas-container');
     const toast = document.getElementById('toast-msg');
     const popover = document.getElementById('subatomic-popover');
-    let nativeArButton = null;
 
     function init3D() {
       scene = new THREE.Scene();
@@ -2719,18 +2721,7 @@
     }
 
     function setupWebXR() {
-      const arSlot = document.getElementById('ar-button-slot');
-      const overlayRoot = document.getElementById('ar-ui-overlay');
-      
-      // CRITICAL FIX: Pass overlayRoot instead of document.body so the WebGL canvas is NEVER inside the DOM overlay!
-      nativeArButton = ARButton.createButton(renderer, {
-        optionalFeatures: ['dom-overlay'],
-        domOverlay: { root: overlayRoot }
-      });
-
-      arSlot.appendChild(nativeArButton);
-
-      // Check if WebXR AR is supported
+      // 1. Check if WebXR AR is supported and update status badge
       if ('xr' in navigator && navigator.xr.isSessionSupported) {
         navigator.xr.isSessionSupported('immersive-ar').then((supported) => {
           state.arSupported = supported;
@@ -2739,11 +2730,19 @@
             badge.innerText = supported ? '✓ รองรับ WebXR AR' : 'ℹ️ ต้องการ Android ARCore';
             if (supported) badge.style.color = '#34d399';
           }
-        }).catch(() => {
+        }).catch((err) => {
+          console.warn('isSessionSupported error:', err);
           state.arSupported = false;
         });
+      } else {
+        state.arSupported = false;
+        const badge = document.getElementById('badge-ar-status');
+        if (badge) {
+          badge.innerText = 'ℹ️ อุปกรณ์นี้ยังไม่รองรับ WebXR';
+        }
       }
 
+      // 2. WebXR Session Start: Prepare camera passthrough & AR atom position
       renderer.xr.addEventListener('sessionstart', () => {
         state.isARMode = true;
 
@@ -2760,11 +2759,22 @@
           });
         }
 
-        // Make canvas transparent so AR camera feed passes through
+        // CRITICAL FOR AR CAMERA PASSTHROUGH:
+        // Set transparent backgrounds on WebGL, canvas container, body and document
         renderer.setClearColor(0x000000, 0.0);
+        document.documentElement.style.background = 'transparent';
+        document.body.style.background = 'transparent';
+        const canvasContainer = document.getElementById('webgl-canvas-container');
+        if (canvasContainer) {
+          canvasContainer.style.background = 'transparent';
+          canvasContainer.style.backgroundColor = 'transparent';
+        }
+        document.body.classList.add('ar-active');
+
         backgroundStars.visible = false;
         controls.enabled = false;
 
+        // Position atom model 45cm directly in front of the phone camera
         atomRootGroup.position.set(0, 0, -0.45);
         atomRootGroup.scale.setScalar(state.arScale);
         
@@ -2780,45 +2790,54 @@
         if (hintBanner) hintBanner.style.display = 'none';
 
         haptic();
-        showToast('เข้าสู่โหมด AR แล้ว — แตะเม็ดอนุภาคเพื่อดูคำอธิบาย');
+        showToast('เข้าสู่โหมด AR แล้ว — ส่องกล้องไปที่โต๊ะหรือพื้นที่ว่าง');
       });
 
+      // 3. WebXR Session End: Cleanly restore opaque classroom 3D view
       renderer.xr.addEventListener('sessionend', () => {
         state.isARMode = false;
         
-        // 1. Immediately restore opaque classroom background color
+        // Restore dark classroom background colors
+        document.documentElement.style.background = '';
+        document.body.style.background = '';
+        const canvasContainer = document.getElementById('webgl-canvas-container');
+        if (canvasContainer) {
+          canvasContainer.style.background = '';
+          canvasContainer.style.backgroundColor = '#0b1120';
+        }
+        document.body.classList.remove('ar-active');
         renderer.setClearColor(0x0b1120, 1.0);
         
-        // 2. Restore background stars
+        // Restore background stars
         if (backgroundStars) backgroundStars.visible = true;
 
-        // 3. Reset camera transform and projection cleanly
+        // Reset camera transform and projection cleanly
         camera.matrixAutoUpdate = true;
         camera.position.set(0, 0.25, 1.25);
         camera.quaternion.identity();
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
 
-        // 4. Restore OrbitControls cleanly
+        // Restore OrbitControls cleanly
         if (controls) {
           controls.enabled = true;
           controls.target.set(0, 0, 0);
           controls.update();
         }
         
-        // 5. Reset atom model transform to center
+        // Reset atom model transform to center
         atomRootGroup.position.set(0, 0, 0);
         atomRootGroup.rotation.set(0, 0, 0);
         atomRootGroup.scale.setScalar(1.0);
         
-        // 6. Update top mode button label
+        // Update top mode button label
         const modeBtn = document.getElementById('btn-toggle-ar-mode');
         if (modeBtn) {
           modeBtn.classList.remove('ar-active');
           modeBtn.innerHTML = '<i class="fa-solid fa-vr-cardboard"></i> <span>โหมด AR</span>';
         }
 
-        // 7. CRITICAL RESTORATION: Explicitly restore UI Overlay from WebXR DOM Overlay teardown
+        // Explicitly restore UI Overlay from WebXR DOM Overlay teardown
         restoreUIOverlay();
         requestAnimationFrame(restoreUIOverlay);
         setTimeout(restoreUIOverlay, 50);
@@ -2826,20 +2845,11 @@
         setTimeout(restoreUIOverlay, 350);
         setTimeout(restoreUIOverlay, 600);
 
-        // 8. Re-apply Fullscreen & Landscape lock when returning to 3D mode on mobile
-        setTimeout(() => {
-          forceFullscreenAndLandscape();
-        }, 200);
-        setTimeout(() => {
-          forceFullscreenAndLandscape();
-        }, 500);
-
         haptic();
         showToast('กลับสู่โหมดจำลอง 3 มิติ (Web 3D)');
       });
 
-      // Controller interaction: Raycast for particle inspection ONLY!
-      // NEVER reposition model on tap!
+      // 4. Controller interaction: Raycast for particle inspection ONLY!
       const controller = renderer.xr.getController(0);
       controller.addEventListener('select', (event) => {
         if (!state.isARMode) return;
@@ -3666,35 +3676,107 @@
       });
     }
 
-    /* Launch WebXR AR Session safely */
-    function launchARSession() {
+    function showARUnsupportedDialog(msg) {
+      const modal = document.getElementById('ar-unsupported-modal');
+      const desc = document.getElementById('ar-unsupported-desc');
+      if (desc && msg) {
+        desc.innerHTML = `${msg}<br><br>ท่านสามารถเรียนรู้และทดลองฟังก์ชันทั้งหมดได้อย่างสมบูรณ์ใน <strong>โหมดจำลอง 3 มิติ (Web 3D)</strong>`;
+      }
+      if (modal) modal.style.display = 'flex';
+      sound.playWrong();
+    }
+
+    /* Launch WebXR AR Session directly, safely, with fallback and error reporting */
+    async function launchARSession() {
+      // 1. If currently in AR mode, clicking toggles AR session off
       if (state.isARMode) {
-        if (renderer.xr.getSession()) {
-          renderer.xr.getSession().end().catch(() => {});
+        const currentSession = renderer.xr.getSession();
+        if (currentSession) {
+          try {
+            await currentSession.end();
+          } catch (e) {
+            console.warn('Error ending AR session:', e);
+          }
         }
         return;
       }
 
-      if (!state.arSupported) {
-        document.getElementById('ar-unsupported-modal').style.display = 'flex';
-        sound.playWrong();
+      // 2. Check if WebXR is supported by browser
+      if (!('xr' in navigator)) {
+        showARUnsupportedDialog('เบราว์เซอร์นี้ไม่รองรับ WebXR API (แนะนำให้ใช้ Google Chrome บน Android)');
         return;
       }
 
-      const nativeBtn = document.querySelector('#ar-button-slot button');
-      if (nativeBtn) {
-        nativeBtn.click();
-      } else {
-        const overlayRoot = document.getElementById('ar-ui-overlay');
-        navigator.xr.requestSession('immersive-ar', {
-          optionalFeatures: ['dom-overlay'],
+      // 3. Verify immersive-ar capability
+      try {
+        const isSupported = await navigator.xr.isSessionSupported('immersive-ar');
+        if (!isSupported) {
+          showARUnsupportedDialog('อุปกรณ์นี้ไม่รองรับโหมด WebXR AR (จำเป็นต้องติดตั้ง Google Play Services for AR / ARCore)');
+          return;
+        }
+      } catch (checkErr) {
+        console.warn('isSessionSupported check error:', checkErr);
+      }
+
+      // 4. Exit HTML5 fullscreen if active to prevent surface conflict with WebXR native activity
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        try {
+          if (document.exitFullscreen) await document.exitFullscreen();
+          else if (document.webkitExitFullscreen) await document.webkitExitFullscreen();
+        } catch (_) {}
+      }
+
+      // 5. Ensure DOM overlay root is unhidden
+      const overlayRoot = document.getElementById('ar-ui-overlay');
+      if (overlayRoot) {
+        overlayRoot.style.display = 'block';
+        overlayRoot.style.visibility = 'visible';
+        overlayRoot.style.opacity = '1';
+      }
+
+      let session = null;
+      let isOverlayActive = false;
+
+      // 6. ATTEMPT 1: Request immersive-ar with DOM Overlay
+      try {
+        session = await navigator.xr.requestSession('immersive-ar', {
+          optionalFeatures: ['dom-overlay', 'hit-test', 'local-floor', 'local', 'viewer'],
           domOverlay: { root: overlayRoot }
-        }).then(session => {
-          renderer.xr.setSession(session);
-        }).catch(err => {
-          console.warn('AR launch error:', err);
-          document.getElementById('ar-unsupported-modal').style.display = 'flex';
         });
+        isOverlayActive = true;
+      } catch (overlayErr) {
+        console.warn('Immersive AR with DOM Overlay rejected, attempting fallback without DOM Overlay:', overlayErr);
+        // 7. ATTEMPT 2: Fallback to basic immersive-ar without DOM Overlay (fixes quirks on devices where DOM Overlay fails)
+        try {
+          session = await navigator.xr.requestSession('immersive-ar', {
+            optionalFeatures: ['hit-test', 'local-floor', 'local', 'viewer']
+          });
+          isOverlayActive = false;
+        } catch (fatalErr) {
+          console.error('All WebXR requestSession attempts failed:', fatalErr);
+          sound.playWrong();
+          showARUnsupportedDialog(
+            'ไม่สามารถเริ่มต้นเซสชัน AR ได้: ' + (fatalErr.message || 'โปรดตรวจสอบการอนุญาตใช้งานกล้องและการติดตั้ง ARCore')
+          );
+          return;
+        }
+      }
+
+      // 8. Bind WebXR session to Three.js renderer
+      try {
+        renderer.xr.setReferenceSpaceType('local');
+        await renderer.xr.setSession(session);
+        console.log('WebXR AR successfully started! DOM Overlay active:', isOverlayActive);
+      } catch (bindErr) {
+        console.warn('Failed to bind session with "local" reference space, retrying with "viewer":', bindErr);
+        try {
+          renderer.xr.setReferenceSpaceType('viewer');
+          await renderer.xr.setSession(session);
+        } catch (secondaryErr) {
+          console.error('Fatal setSession error:', secondaryErr);
+          session.end().catch(() => {});
+          showARUnsupportedDialog('ไม่สามารถแสดงผล 3D ในโหมด AR ได้: ' + (secondaryErr.message || ''));
+        }
       }
     }
 
@@ -3863,7 +3945,13 @@
             forceFullscreenAndLandscape();
           }
         } else {
-          await forceFullscreenAndLandscape();
+          // Entering AR: Exit HTML5 fullscreen if active so it doesn't conflict with WebXR
+          if (document.fullscreenElement || document.webkitFullscreenElement) {
+            try {
+              if (document.exitFullscreen) await document.exitFullscreen();
+              else if (document.webkitExitFullscreen) await document.webkitExitFullscreen();
+            } catch (_) {}
+          }
           launchARSession();
         }
       });
@@ -3885,7 +3973,13 @@
         modeModal.classList.remove('active');
         sound.playSelect();
         haptic();
-        await forceFullscreenAndLandscape();
+        // WebXR immersive-ar runs natively in full screen; avoid HTML5 fullscreen conflicts
+        if (document.fullscreenElement || document.webkitFullscreenElement) {
+          try {
+            if (document.exitFullscreen) await document.exitFullscreen();
+            else if (document.webkitExitFullscreen) await document.webkitExitFullscreen();
+          } catch (_) {}
+        }
         launchARSession();
       };
 
