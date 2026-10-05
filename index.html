@@ -2539,9 +2539,108 @@
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
+    let arReticleGroup, arContactShadow;
+    let xrHitTestSource = null;
+    let xrHitTestSourceRequested = false;
+
+    // Spatial AR Tracking Math & State
+    let deviceQuatTarget = new THREE.Quaternion();
+    let deviceQuatRaw = new THREE.Quaternion();
+    let hasDeviceOrientation = false;
+    let initialAnchorPlaced = false;
+    const _zee = new THREE.Vector3(0, 0, 1);
+    const _euler = new THREE.Euler();
+    const _q0 = new THREE.Quaternion();
+    const _q1 = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5)); // -PI/2 around X axis
+    
+    // Inertial 6DoF Translation Tracking
+    let camVelocity = new THREE.Vector3(0, 0, 0);
+    let camOffset = new THREE.Vector3(0, 0, 0);
+
     const container = document.getElementById('webgl-canvas-container');
     const toast = document.getElementById('toast-msg');
     const popover = document.getElementById('subatomic-popover');
+
+    function createContactShadowTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 128;
+      canvas.height = 128;
+      const ctx = canvas.getContext('2d');
+      const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+      gradient.addColorStop(0, 'rgba(0, 0, 0, 0.7)');
+      gradient.addColorStop(0.35, 'rgba(0, 0, 0, 0.42)');
+      gradient.addColorStop(0.7, 'rgba(0, 0, 0, 0.12)');
+      gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 128, 128);
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    function createContactShadow() {
+      const shadowGeo = new THREE.PlaneGeometry(1.4, 1.4);
+      const shadowMat = new THREE.MeshBasicMaterial({
+        map: createContactShadowTexture(),
+        transparent: true,
+        opacity: 0.7,
+        depthWrite: false
+      });
+      const mesh = new THREE.Mesh(shadowGeo, shadowMat);
+      mesh.rotation.x = -Math.PI / 2;
+      mesh.visible = false;
+      return mesh;
+    }
+
+    function createARReticle() {
+      const group = new THREE.Group();
+
+      // Outer glowing ring
+      const ringGeo1 = new THREE.RingGeometry(0.18, 0.20, 36);
+      const ringMat1 = new THREE.MeshBasicMaterial({
+        color: 0x38bdf8,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.85
+      });
+      const ring1 = new THREE.Mesh(ringGeo1, ringMat1);
+      group.add(ring1);
+
+      // Inner ring
+      const ringGeo2 = new THREE.RingGeometry(0.06, 0.08, 32);
+      const ringMat2 = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.75
+      });
+      const ring2 = new THREE.Mesh(ringGeo2, ringMat2);
+      group.add(ring2);
+
+      // Center dot
+      const dotGeo = new THREE.CircleGeometry(0.025, 24);
+      const dotMat = new THREE.MeshBasicMaterial({
+        color: 0x38bdf8,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.95
+      });
+      const dot = new THREE.Mesh(dotGeo, dotMat);
+      group.add(dot);
+
+      // Crosshairs
+      const crossMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.75 });
+      for (let i = 0; i < 4; i++) {
+        const crossGeo = new THREE.PlaneGeometry(0.06, 0.015);
+        const cross = new THREE.Mesh(crossGeo, crossMat);
+        const angle = (i * Math.PI) / 2;
+        cross.position.set(Math.cos(angle) * 0.24, Math.sin(angle) * 0.24, 0);
+        cross.rotation.z = angle;
+        group.add(cross);
+      }
+
+      group.rotation.x = -Math.PI / 2;
+      group.visible = false;
+      return group;
+    }
 
     function init3D() {
       scene = new THREE.Scene();
@@ -2613,6 +2712,13 @@
       atomRootGroup.add(orbitsGroup);
       atomRootGroup.add(cloudGroup);
       atomRootGroup.add(labelsGroup);
+
+      // AR Reticle & Contact Ground Shadow
+      arReticleGroup = createARReticle();
+      scene.add(arReticleGroup);
+
+      arContactShadow = createContactShadow();
+      scene.add(arContactShadow);
 
       window.addEventListener('resize', onWindowResize);
       window.addEventListener('pointerdown', onPointerDown);
@@ -2799,9 +2905,11 @@
         backgroundStars.visible = false;
         controls.enabled = false;
 
-        // Position atom model 45cm directly in front of the phone camera
-        atomRootGroup.position.set(0, 0, -0.45);
+        // Position atom model in front and show reticle/shadow
         atomRootGroup.scale.setScalar(state.arScale);
+        if (arReticleGroup) arReticleGroup.visible = true;
+        if (arContactShadow) arContactShadow.visible = true;
+        repositionAtomInFront();
         
         // Update top mode button label
         const modeBtn = document.getElementById('btn-toggle-ar-mode');
@@ -2822,6 +2930,12 @@
       renderer.xr.addEventListener('sessionend', () => {
         state.isARMode = false;
         
+        // Hide AR reticle and shadow
+        if (arReticleGroup) arReticleGroup.visible = false;
+        if (arContactShadow) arContactShadow.visible = false;
+        xrHitTestSource = null;
+        xrHitTestSourceRequested = false;
+
         // Restore dark classroom background colors
         document.documentElement.style.background = '';
         document.body.style.background = '';
@@ -2888,6 +3002,13 @@
         if (intersects.length > 0) {
           const item = intersects[0].object;
           openSubatomicPopover(item.userData.category || item.userData.type);
+        } else if (arReticleGroup && arReticleGroup.visible) {
+          // Tap on surface to place atom
+          atomRootGroup.position.copy(arReticleGroup.position);
+          atomRootGroup.position.y += 0.25 * state.arScale;
+          sound.playSelect();
+          haptic();
+          showToast('วางโมเดลบนพื้นผิวแล้ว 🎯');
         }
       });
       scene.add(controller);
@@ -2896,16 +3017,38 @@
     function repositionAtomInFront() {
       if (!camera) return;
       if (state.isARMode) {
-        const dir = new THREE.Vector3(0, 0, -0.45).applyQuaternion(camera.quaternion);
-        atomRootGroup.position.copy(camera.position).add(dir);
+        if (arReticleGroup && arReticleGroup.visible) {
+          atomRootGroup.position.copy(arReticleGroup.position);
+          atomRootGroup.position.y += 0.25 * state.arScale;
+        } else {
+          const dir = new THREE.Vector3(0, -0.15, -0.65).applyQuaternion(camera.quaternion);
+          atomRootGroup.position.copy(camera.position).add(dir);
+        }
         atomRootGroup.quaternion.copy(camera.quaternion);
+
+        if (arContactShadow) {
+          arContactShadow.position.set(
+            atomRootGroup.position.x,
+            atomRootGroup.position.y - (0.28 * state.arScale),
+            atomRootGroup.position.z
+          );
+          arContactShadow.scale.setScalar(state.arScale);
+          arContactShadow.visible = true;
+        }
       } else if (state.isUniversalARMode) {
-        atomRootGroup.position.set(0, 0, 0);
-        camera.position.set(0, 0, 2.2);
-        camera.lookAt(0, 0, 0);
-        if (controls) {
-          controls.target.set(0, 0, 0);
-          controls.update();
+        // Universal Camera AR: Place atom anchored 1.1m in front of current camera heading
+        const fwd = new THREE.Vector3(0, -0.18, -1.1).applyQuaternion(camera.quaternion);
+        atomRootGroup.position.copy(camera.position).add(fwd);
+        atomRootGroup.rotation.set(0, 0, 0); // Keep upright in room
+
+        if (arContactShadow) {
+          arContactShadow.position.set(
+            atomRootGroup.position.x,
+            atomRootGroup.position.y - (0.28 * state.arScale),
+            atomRootGroup.position.z
+          );
+          arContactShadow.scale.setScalar(state.arScale);
+          arContactShadow.visible = true;
         }
       } else {
         if (controls) controls.reset();
@@ -2914,10 +3057,12 @@
           controls.target.set(0, 0, 0);
           controls.update();
         }
+        atomRootGroup.position.set(0, 0, 0);
+        atomRootGroup.rotation.set(0, 0, 0);
       }
       sound.playWarp();
       haptic();
-      showToast('วางโมเดลอะตอมตรงหน้าเรียบร้อย 🎯');
+      showToast('ปักหมุดตำแหน่งอะตอมตรงหน้าเรียบร้อย 🎯');
     }
 
     function createBackgroundStars() {
@@ -3538,8 +3683,80 @@
       if (intersects.length > 0) {
         const item = intersects[0].object;
         openSubatomicPopover(item.userData.category || item.userData.type);
+        return;
+      }
+
+      // In AR mode, tapping on empty floor/table moves the atom to the reticle position
+      if ((state.isARMode || state.isUniversalARMode) && arReticleGroup && arReticleGroup.visible) {
+        atomRootGroup.position.copy(arReticleGroup.position);
+        atomRootGroup.position.y += 0.28 * state.arScale;
+        sound.playSelect();
+        haptic();
+        showToast('ย้ายตำแหน่งอะตอมมาที่เป้าเล็งแล้ว 🎯');
       }
     }
+
+    /* AR Touch Gestures: 1 finger slides atom on floor, 2 fingers pinch to scale */
+    let touchStartPos = { x: 0, y: 0 };
+    let isDraggingAtom = false;
+    let pinchStartDist = 0;
+    let initialPinchScale = 0.65;
+
+    window.addEventListener('touchstart', (e) => {
+      if (!state.isUniversalARMode) return;
+      if (e.target.closest('#top-nav') || 
+          e.target.closest('#bottom-floating-controls') || 
+          e.target.closest('#science-drawer') || 
+          e.target.closest('#quiz-modal') ||
+          e.target.closest('#mode-selection-modal') ||
+          e.target.closest('#subatomic-popover')) return;
+
+      if (e.touches.length === 1) {
+        touchStartPos.x = e.touches[0].clientX;
+        touchStartPos.y = e.touches[0].clientY;
+        isDraggingAtom = true;
+      } else if (e.touches.length === 2) {
+        isDraggingAtom = false;
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        pinchStartDist = Math.hypot(dx, dy);
+        initialPinchScale = state.arScale;
+      }
+    }, { passive: true });
+
+    window.addEventListener('touchmove', (e) => {
+      if (!state.isUniversalARMode) return;
+
+      if (e.touches.length === 1 && isDraggingAtom) {
+        const dx = (e.touches[0].clientX - touchStartPos.x) / window.innerWidth;
+        const dy = (e.touches[0].clientY - touchStartPos.y) / window.innerHeight;
+        touchStartPos.x = e.touches[0].clientX;
+        touchStartPos.y = e.touches[0].clientY;
+
+        // Slide atom on camera-aligned floor plane
+        const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
+        const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+        right.y = 0; right.normalize();
+        fwd.y = 0; fwd.normalize();
+
+        atomRootGroup.position.addScaledVector(right, dx * 1.6);
+        atomRootGroup.position.addScaledVector(fwd, -dy * 1.6);
+      } else if (e.touches.length === 2 && pinchStartDist > 0) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const dist = Math.hypot(dx, dy);
+        const factor = dist / pinchStartDist;
+        state.arScale = Math.max(0.15, Math.min(2.5, initialPinchScale * factor));
+        atomRootGroup.scale.setScalar(state.arScale);
+        const scaleTxt = document.getElementById('scale-indicator-txt');
+        if (scaleTxt) scaleTxt.innerText = `${state.arScale.toFixed(1)}x`;
+      }
+    }, { passive: true });
+
+    window.addEventListener('touchend', () => {
+      isDraggingAtom = false;
+      pinchStartDist = 0;
+    }, { passive: true });
 
     function openSubatomicPopover(category) {
       const data = SUBATOMIC_DETAILS[category];
@@ -3734,17 +3951,58 @@
        Huawei, LINE/Facebook webviews, and tablets.
        ======================================================== */
     let universalCameraStream = null;
-    let gyroOrientation = { beta: 0, gamma: 0 };
-    let initialGyro = null;
-    let hasGyro = false;
 
-    function onDeviceOrientationGyro(event) {
-      if (event.beta === null || event.gamma === null) return;
-      if (!initialGyro) {
-        initialGyro = { beta: event.beta, gamma: event.gamma };
+    function setCameraQuaternionFromDevice(alpha, beta, gamma, orient) {
+      const alphaRad = alpha ? THREE.MathUtils.degToRad(alpha) : 0;
+      const betaRad = beta ? THREE.MathUtils.degToRad(beta) : 0;
+      const gammaRad = gamma ? THREE.MathUtils.degToRad(gamma) : 0;
+      const orientRad = orient ? THREE.MathUtils.degToRad(orient) : 0;
+
+      _euler.set(betaRad, alphaRad, -gammaRad, 'YXZ');
+      deviceQuatRaw.setFromEuler(_euler);
+      deviceQuatRaw.multiply(_q1);
+      deviceQuatRaw.multiply(_q0.setFromAxisAngle(_zee, -orientRad));
+
+      deviceQuatTarget.copy(deviceQuatRaw);
+    }
+
+    function onDeviceOrientation(event) {
+      if (!state.isUniversalARMode) return;
+      if (event.beta === null && event.gamma === null) return;
+
+      hasDeviceOrientation = true;
+
+      const orient = (window.screen && window.screen.orientation) 
+        ? window.screen.orientation.angle 
+        : (window.orientation || 0);
+
+      setCameraQuaternionFromDevice(event.alpha || 0, event.beta || 0, event.gamma || 0, orient);
+
+      // On first sensor event, calibrate initial heading and anchor atom right in front of user
+      if (!initialAnchorPlaced) {
+        camera.quaternion.copy(deviceQuatTarget);
+        repositionAtomInFront();
+        initialAnchorPlaced = true;
       }
-      gyroOrientation.beta = event.beta;
-      gyroOrientation.gamma = event.gamma;
+    }
+
+    function onDeviceMotion(event) {
+      if (!state.isUniversalARMode) return;
+      const acc = event.acceleration;
+      if (!acc || (acc.x === null && acc.y === null && acc.z === null)) return;
+
+      const ax = Math.abs(acc.x || 0) > 0.18 ? acc.x : 0;
+      const ay = Math.abs(acc.y || 0) > 0.18 ? acc.y : 0;
+      const az = Math.abs(acc.z || 0) > 0.18 ? acc.z : 0;
+
+      // Transform local device acceleration to world coordinates using camera quaternion
+      const localAcc = new THREE.Vector3(ax, ay, -az).applyQuaternion(camera.quaternion);
+
+      camVelocity.addScaledVector(localAcc, 0.016 * 0.22);
+      camVelocity.multiplyScalar(0.85); // high damping to prevent runaway drift
+
+      camOffset.add(camVelocity);
+      camOffset.multiplyScalar(0.95); // elastic spring constraint back to anchor
     }
 
     async function startUniversalCameraAR() {
@@ -3773,42 +4031,58 @@
         console.warn('Video play caught:', playErr);
       }
 
-      // Request Gyroscope permission if iOS 13+
-      initialGyro = null;
-      hasGyro = false;
+      // Reset spatial tracking states
+      hasDeviceOrientation = false;
+      initialAnchorPlaced = false;
+      camVelocity.set(0, 0, 0);
+      camOffset.set(0, 0, 0);
+      camera.position.set(0, 0, 0);
+      camera.quaternion.identity();
+
+      // Request Gyroscope & Motion Permissions (iOS 13+ & Android)
       if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
         try {
           const perm = await DeviceOrientationEvent.requestPermission();
           if (perm === 'granted') {
-            window.addEventListener('deviceorientation', onDeviceOrientationGyro, true);
-            hasGyro = true;
+            window.addEventListener('deviceorientation', onDeviceOrientation, true);
           }
         } catch (gErr) {
-          console.warn('DeviceOrientationEvent permission not granted:', gErr);
+          console.warn('DeviceOrientation permission error:', gErr);
         }
       } else if ('ondeviceorientation' in window) {
-        window.addEventListener('deviceorientation', onDeviceOrientationGyro, true);
-        hasGyro = true;
+        window.addEventListener('deviceorientation', onDeviceOrientation, true);
       }
 
-      // Enable transparent canvas overlay on top of camera video
+      if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+        try {
+          const mPerm = await DeviceMotionEvent.requestPermission();
+          if (mPerm === 'granted') {
+            window.addEventListener('devicemotion', onDeviceMotion, true);
+          }
+        } catch (_) {}
+      } else if ('ondevicemotion' in window) {
+        window.addEventListener('devicemotion', onDeviceMotion, true);
+      }
+
+      // Transparency setup
       document.body.classList.add('universal-ar-active');
       renderer.setClearColor(0x000000, 0.0);
       if (backgroundStars) backgroundStars.visible = false;
 
       state.isUniversalARMode = true;
 
-      // Position atom and camera for clear viewing
-      atomRootGroup.position.set(0, 0, 0);
-      atomRootGroup.rotation.set(0, 0, 0);
-      atomRootGroup.scale.setScalar(state.arScale);
-
-      camera.position.set(0, 0.1, 1.8);
+      // CRITICAL: Disable OrbitControls completely in AR mode so physical sensors control camera!
       if (controls) {
-        controls.enabled = true;
-        controls.target.set(0, 0, 0);
-        controls.update();
+        controls.enabled = false;
       }
+
+      // Show reticle and contact shadow
+      if (arReticleGroup) arReticleGroup.visible = true;
+      if (arContactShadow) arContactShadow.visible = true;
+
+      // Place initial atom anchor in front
+      atomRootGroup.scale.setScalar(state.arScale);
+      repositionAtomInFront();
 
       // Update top mode button label
       const modeBtn = document.getElementById('btn-toggle-ar-mode');
@@ -3823,7 +4097,7 @@
 
       restoreUIOverlay();
       haptic();
-      showToast('เปิดกล้อง AR สากลสำเร็จ! ปัดนิ้วหมุนดูอะตอมในพื้นที่จริง');
+      showToast('เข้าสู่โหมดกล้อง AR แล้ว! ขยับมือถือเพื่อส่องดูอะตอมในพื้นที่จริง 🎯');
     }
 
     function stopUniversalCameraAR() {
@@ -3837,9 +4111,10 @@
         videoElem.srcObject = null;
       }
 
-      window.removeEventListener('deviceorientation', onDeviceOrientationGyro, true);
-      hasGyro = false;
-      initialGyro = null;
+      window.removeEventListener('deviceorientation', onDeviceOrientation, true);
+      window.removeEventListener('devicemotion', onDeviceMotion, true);
+      hasDeviceOrientation = false;
+      initialAnchorPlaced = false;
 
       document.body.classList.remove('universal-ar-active');
       renderer.setClearColor(0x0b1120, 1.0);
@@ -3847,19 +4122,23 @@
 
       state.isUniversalARMode = false;
 
-      // Reset transforms
+      // Hide AR reticle and shadow
+      if (arReticleGroup) arReticleGroup.visible = false;
+      if (arContactShadow) arContactShadow.visible = false;
+
+      // Reset camera and re-enable OrbitControls for 3D classroom mode
+      camera.position.set(0, 0.25, 1.25);
+      camera.quaternion.identity();
       atomRootGroup.position.set(0, 0, 0);
       atomRootGroup.rotation.set(0, 0, 0);
       atomRootGroup.scale.setScalar(1.0);
 
-      camera.position.set(0, 0.25, 1.25);
       if (controls) {
         controls.enabled = true;
         controls.target.set(0, 0, 0);
         controls.update();
       }
 
-      // Update top button
       const modeBtn = document.getElementById('btn-toggle-ar-mode');
       if (modeBtn) {
         modeBtn.classList.remove('ar-active');
@@ -4316,12 +4595,74 @@
         atomRootGroup.rotation.y += delta * 0.25;
       }
 
-      // Gyro tilt parallax in Universal Camera AR mode
-      if (state.isUniversalARMode && hasGyro && initialGyro) {
-        const diffGamma = (gyroOrientation.gamma - initialGyro.gamma) * (Math.PI / 180);
-        const diffBeta = (gyroOrientation.beta - initialGyro.beta) * (Math.PI / 180);
-        atomRootGroup.rotation.y = diffGamma * 0.4;
-        atomRootGroup.rotation.x = diffBeta * 0.3;
+      // 1. WebXR AR Mode: Surface Hit-Testing & Reticle on physical surfaces
+      if (state.isARMode && renderer.xr.isPresenting) {
+        const frame = renderer.xr.getFrame();
+        const session = renderer.xr.getSession();
+
+        if (session && !xrHitTestSourceRequested) {
+          session.requestReferenceSpace('viewer').then((viewerSpace) => {
+            session.requestHitTestSource({ space: viewerSpace }).then((source) => {
+              xrHitTestSource = source;
+            }).catch(() => {});
+          }).catch(() => {});
+          xrHitTestSourceRequested = true;
+        }
+
+        if (xrHitTestSource && frame) {
+          const hitTestResults = frame.getHitTestResults(xrHitTestSource);
+          if (hitTestResults.length > 0) {
+            const hit = hitTestResults[0];
+            const referenceSpace = renderer.xr.getReferenceSpace();
+            const hitPose = hit.getPose(referenceSpace);
+            if (hitPose && arReticleGroup) {
+              arReticleGroup.visible = true;
+              arReticleGroup.matrix.fromArray(hitPose.transform.matrix);
+              arReticleGroup.matrix.decompose(arReticleGroup.position, arReticleGroup.quaternion, arReticleGroup.scale);
+            }
+          }
+        }
+      }
+
+      // 2. Universal Camera AR: 1:1 World-Locked Spatial Tracking with Phone IMU
+      if (state.isUniversalARMode) {
+        if (hasDeviceOrientation) {
+          // Butter-smooth SLERP matching physical phone rotation in real space
+          camera.quaternion.slerp(deviceQuatTarget, 0.35);
+          camera.position.copy(camOffset);
+        }
+
+        // Animate AR Reticle on virtual table / floor plane
+        if (arReticleGroup) {
+          const camPos = camera.position;
+          const camDir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+
+          if (camDir.y < -0.05) {
+            const floorY = atomRootGroup.position.y - (0.28 * state.arScale);
+            const t = (floorY - camPos.y) / camDir.y;
+            if (t > 0.2 && t < 4.5) {
+              arReticleGroup.position.set(camPos.x + camDir.x * t, floorY + 0.005, camPos.z + camDir.z * t);
+              arReticleGroup.visible = true;
+            }
+          } else {
+            arReticleGroup.position.copy(camPos).addScaledVector(camDir, 1.1);
+            arReticleGroup.position.y = atomRootGroup.position.y - (0.28 * state.arScale);
+            arReticleGroup.visible = true;
+          }
+          arReticleGroup.rotation.z += delta * 0.8;
+          arReticleGroup.scale.setScalar(1.0 + Math.sin(time * 3) * 0.06);
+        }
+
+        // Ground contact shadow under atom
+        if (arContactShadow) {
+          arContactShadow.visible = true;
+          arContactShadow.position.set(
+            atomRootGroup.position.x,
+            atomRootGroup.position.y - (0.28 * state.arScale),
+            atomRootGroup.position.z
+          );
+          arContactShadow.scale.setScalar(state.arScale);
+        }
       }
 
       // Bohr Electrons Orbit Animation
@@ -4360,7 +4701,8 @@
         });
       }
 
-      if (!state.isARMode && controls) {
+      // CRITICAL: controls.update() ONLY in 3D classroom mode!
+      if (!state.isARMode && !state.isUniversalARMode && controls) {
         controls.update();
       }
 
